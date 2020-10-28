@@ -4,7 +4,7 @@ import Post, { postShape } from './post/Post';
 
 function PostsView({ posts }) {
   return (
-    <div className="discussion-posts d-flex flex-column">
+    <div className="list-group list-group-flush">
       { posts.map(post => <Post post={post} key={post.id} />) }
     </div>
   );
