@@ -5,7 +5,7 @@ import { useDispatch } from 'react-redux';
 import { injectIntl, intlShape } from '@edx/frontend-platform/i18n';
 import { Button, SearchField } from '@edx/paragon';
 
-import { setSearchQuery } from '../data';
+import { setSearchQuery, showPostEditor } from '../data';
 import messages from './messages';
 
 function PostActionsBar({ intl }) {
@@ -16,7 +16,11 @@ function PostActionsBar({ intl }) {
         placeholder={intl.formatMessage(messages.searchAllPosts)}
         onSubmit={(value) => dispatch(setSearchQuery(value))}
       />
-      <Button variant="outline-primary" className="ml-2">
+      <Button
+        variant="outline-primary"
+        className="ml-2"
+        onClick={() => dispatch(showPostEditor())}
+      >
         {intl.formatMessage(messages.addAPost)}
       </Button>
     </div>
