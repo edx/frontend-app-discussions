@@ -1,11 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { faFlag, faStar as faEmptyStar } from '@fortawesome/free-regular-svg-icons';
-import { faEllipsisV, faStar as faSolidStar } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
-import { Button } from '@edx/paragon';
+import { Button, Icon } from '@edx/paragon';
+import {
+  Flag,
+  StarFilled,
+  StarOutline,
+} from '@edx/paragon/icons';
 
 function CommentIcons({ abuseFlagged, following }) {
   return (
@@ -15,22 +16,19 @@ function CommentIcons({ abuseFlagged, following }) {
         following
           ? (
             <Button variant="link" className="p-0" size="xs">
-              <FontAwesomeIcon icon={faSolidStar} />
+              <Icon src={StarFilled} />
             </Button>
           ) : (
             <Button variant="link" className="p-0" size="xs">
-              <FontAwesomeIcon icon={faEmptyStar} />
+              <Icon src={StarOutline} />
             </Button>
           )
       )}
-      { abuseFlagged && (
+      {abuseFlagged && (
         <Button variant="link" className="p-0" size="xs">
-          <FontAwesomeIcon icon={faFlag} />
+          <Icon src={Flag} />
         </Button>
-      ) }
-      <Button variant="link" className="p-0" size="xs">
-        <FontAwesomeIcon icon={faEllipsisV} />
-      </Button>
+      )}
     </div>
   );
 }

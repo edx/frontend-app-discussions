@@ -2,8 +2,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import { Icon } from '@edx/paragon';
+import { Flag, QuestionAnswer } from '@edx/paragon/icons';
 import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons';
-import { faComments, faFlag } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useParams } from 'react-router';
 import { Link } from 'react-router-dom';
@@ -37,12 +38,12 @@ function Topic({
           {questions}
         </div>
         <div className="badge mr-4">
-          <FontAwesomeIcon className="mr-2" icon={faComments} />
+          <Icon className="mr-2" src={QuestionAnswer} />
           {discussions}
         </div>
         {flags !== null && (
           <div className="badge">
-            <FontAwesomeIcon className="mr-2" icon={faFlag} />
+            <Icon className="mr-2" src={Flag} />
             {flags}
           </div>
         )}
