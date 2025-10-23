@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
+
 import { PageBanner } from '@openedx/paragon';
+
 import { useIntl } from '@edx/frontend-platform/i18n';
 
 import messages from '../discussions/messages';
@@ -40,9 +42,17 @@ const SpamWarningBanner = ({ className = '' }) => {
       dismissible={false}
       className={`spam-warning-banner ${className}`}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          width: '100%',
+        }}
+      >
         <span>
-          <strong>{intl.formatMessage(messages.spamWarningHeading)}:</strong> {intl.formatMessage(messages.spamWarningMessage)}
+          <strong>{intl.formatMessage(messages.spamWarningHeading)}:</strong>{' '}
+          {intl.formatMessage(messages.spamWarningMessage)}
         </span>
         <button
           type="button"

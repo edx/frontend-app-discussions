@@ -1,13 +1,12 @@
-import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import React, { act } from 'react';
+
+import { fireEvent, render, screen } from '@testing-library/react';
 import { IntlProvider } from 'react-intl';
-import { act } from 'react';
 
 import { initializeMockApp } from '@edx/frontend-platform';
 import { AppProvider } from '@edx/frontend-platform/react';
 
 import { initializeStore } from '../store';
-import messages from '../discussions/messages';
 import SpamWarningBanner from './SpamWarningBanner';
 
 const localStorageMock = {
@@ -52,35 +51,35 @@ describe('SpamWarningBanner', () => {
 
   it('renders banner when not dismissed', () => {
     localStorageMock.getItem.mockReturnValue(null);
-    
+
     renderComponent();
-    
+
     expect(screen.getByText('Security Notice:')).toBeInTheDocument();
     expect(localStorageMock.getItem).toHaveBeenCalledWith('discussions.spamWarningDismissed');
   });
 
   it('does not render banner when previously dismissed', () => {
     localStorageMock.getItem.mockReturnValue('true');
-    
+
     renderComponent();
-    
+
     expect(screen.queryByText('Security Notice:')).not.toBeInTheDocument();
   });
 
   it('dismisses banner when close button is clicked', () => {
     localStorageMock.getItem.mockReturnValue(null);
-    
+
     renderComponent();
-    
+
     expect(screen.getByText('Security Notice:')).toBeInTheDocument();
-    
+
     const closeButton = screen.getByRole('button', { name: /close warning/i });
     act(() => {
       fireEvent.click(closeButton);
     });
-    
+
     expect(localStorageMock.setItem).toHaveBeenCalledWith('discussions.spamWarningDismissed', 'true');
-    
+
     act(() => {
       expect(screen.queryByText('Security Notice:')).not.toBeInTheDocument();
     });
@@ -88,19 +87,19 @@ describe('SpamWarningBanner', () => {
 
   it('persists dismissal state across page reloads', () => {
     localStorageMock.getItem.mockReturnValue('true');
-    
+
     renderComponent();
-    
+
     expect(screen.queryByText('Security Notice:')).not.toBeInTheDocument();
-    
+
     expect(localStorageMock.getItem).toHaveBeenCalledWith('discussions.spamWarningDismissed');
   });
 
   it('applies custom className when provided', () => {
     localStorageMock.getItem.mockReturnValue(null);
-    
+
     renderComponent({ className: 'custom-test-class' });
-    
+
     const bannerElement = document.querySelector('.spam-warning-banner.custom-test-class');
     expect(bannerElement).toBeInTheDocument();
   });

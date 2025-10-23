@@ -10,7 +10,7 @@ import {
 
 import { LearningHeader as Header } from '@edx/frontend-component-header';
 
-import { Spinner, SpamWarningBanner } from '../../components';
+import { SpamWarningBanner, Spinner } from '../../components';
 import selectCourseTabs from '../../components/NavigationBar/data/selectors';
 import { ALL_ROUTES, DiscussionProvider, Routes as ROUTES } from '../../data/constants';
 import DiscussionContext from '../common/context';
