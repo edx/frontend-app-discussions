@@ -54,7 +54,7 @@ describe('SpamWarningBanner', () => {
 
     renderComponent();
 
-    expect(screen.getByText('Security Notice:')).toBeInTheDocument();
+    expect(screen.getByText('Reminder:')).toBeInTheDocument();
     expect(localStorageMock.getItem).toHaveBeenCalledWith('discussions.spamWarningDismissed');
   });
 
@@ -63,7 +63,7 @@ describe('SpamWarningBanner', () => {
 
     renderComponent();
 
-    expect(screen.queryByText('Security Notice:')).not.toBeInTheDocument();
+    expect(screen.queryByText('Reminder:')).not.toBeInTheDocument();
   });
 
   it('dismisses banner when close button is clicked', () => {
@@ -71,7 +71,7 @@ describe('SpamWarningBanner', () => {
 
     renderComponent();
 
-    expect(screen.getByText('Security Notice:')).toBeInTheDocument();
+    expect(screen.getByText('Reminder:')).toBeInTheDocument();
 
     const closeButton = screen.getByRole('button', { name: /close warning/i });
     act(() => {
@@ -81,7 +81,7 @@ describe('SpamWarningBanner', () => {
     expect(localStorageMock.setItem).toHaveBeenCalledWith('discussions.spamWarningDismissed', 'true');
 
     act(() => {
-      expect(screen.queryByText('Security Notice:')).not.toBeInTheDocument();
+      expect(screen.queryByText('Reminder:')).not.toBeInTheDocument();
     });
   });
 
@@ -90,7 +90,7 @@ describe('SpamWarningBanner', () => {
 
     renderComponent();
 
-    expect(screen.queryByText('Security Notice:')).not.toBeInTheDocument();
+    expect(screen.queryByText('Reminder:')).not.toBeInTheDocument();
 
     expect(localStorageMock.getItem).toHaveBeenCalledWith('discussions.spamWarningDismissed');
   });

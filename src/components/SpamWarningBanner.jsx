@@ -50,9 +50,23 @@ const SpamWarningBanner = ({ className = '' }) => {
           width: '100%',
         }}
       >
-        <span>
+        <span style={{ textAlign: 'left', display: 'block' }}>
           <strong>{intl.formatMessage(messages.spamWarningHeading)}:</strong>{' '}
-          {intl.formatMessage(messages.spamWarningMessage)}
+          {(() => {
+            const msg = intl.formatMessage(messages.spamWarningMessage);
+            const boldText = 'never invite you to join external groups or ask for personal or financial information';
+            const idx = msg.indexOf(boldText);
+            if (idx === -1) {
+              return msg;
+            }
+            return (
+              <>
+                {msg.slice(0, idx)}
+                <strong>{boldText}</strong>
+                {msg.slice(idx + boldText.length)}
+              </>
+            );
+          })()}
         </span>
         <button
           type="button"
