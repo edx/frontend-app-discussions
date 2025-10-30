@@ -8,7 +8,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { getConfig } from '@edx/frontend-platform';
+import { getAuthenticatedUser } from '@edx/frontend-platform/auth';
 import { useIntl } from '@edx/frontend-platform/i18n';
+import { logError } from '@edx/frontend-platform/logging';
 
 import HTMLLoader from '../../../components/HTMLLoader';
 import { ContentActions, getFullUrl } from '../../../data/constants';
@@ -22,14 +24,16 @@ import { selectContentCreationRateLimited, selectShouldShowEmailConfirmation, se
 import { selectTopic } from '../../topics/data/selectors';
 import { truncatePath } from '../../utils';
 import { selectThread } from '../data/selectors';
-import { removeThread, updateExistingThread } from '../data/thunks';
+import {
+  removeThread, updateExistingThread,
+} from '../data/thunks';
 import ClosePostReasonModal from './ClosePostReasonModal';
 import messages from './messages';
 import PostFooter from './PostFooter';
 import PostHeader from './PostHeader';
 
 const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
-  const { enableInContextSidebar, postId } = useContext(DiscussionContext);
+  const { enableInContextSidebar, postId, courseId } = useContext(DiscussionContext);
   const {
     topicId, abuseFlagged, closed, pinned, voted, hasEndorsed, following, closedBy, voteCount, groupId, groupName,
     closeReason, authorLabel, type: postType, author, title, createdAt, renderedBody, lastEdit, editByLabel,
@@ -39,7 +43,6 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { courseId } = useContext(DiscussionContext);
   const topic = useSelector(selectTopic(topicId));
   const getTopicSubsection = useSelector(selectorForUnitSubsection);
   const topicContext = useSelector(selectTopicContext(topicId));
@@ -54,14 +57,15 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
 
   const handleDeleteConfirmation = useCallback(async () => {
     const basePath = truncatePath(location.pathname);
+    const authenticatedUser = getAuthenticatedUser();
 
-    await dispatch(removeThread(postId));
+    await dispatch(removeThread(postId, courseId, authenticatedUser.userId || authenticatedUser.id));
     navigate({
       pathname: basePath,
       search: enableInContextSidebar && '?inContextSidebar',
     });
     hideDeleteConfirmation();
-  }, [enableInContextSidebar, postId, hideDeleteConfirmation]);
+  }, [enableInContextSidebar, postId, courseId, hideDeleteConfirmation]);
 
   const handleReportConfirmation = useCallback(() => {
     dispatch(updateExistingThread(postId, { flagged: !abuseFlagged }));
@@ -101,15 +105,47 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
     }
   }, [abuseFlagged, postId, showReportConfirmation]);
 
+  const handleSoftDelete = useCallback(async () => {
+    try {
+      const authenticatedUser = getAuthenticatedUser();
+      const { performSoftDeleteThread } = await import('../../data/thunks');
+      const result = await dispatch(performSoftDeleteThread(postId, authenticatedUser.userId || authenticatedUser.id, courseId));
+      if (result.success) {
+        // Refresh the thread list to reflect the change
+        // The post will now appear in the deleted filter
+        window.location.reload(); // TODO: Replace with proper state update
+      }
+    } catch (error) {
+      logError(error);
+    }
+  }, [postId, courseId, dispatch]);
+
+  const handleRestore = useCallback(async () => {
+    try {
+      const { performRestoreThread } = await import('../../data/thunks');
+      const result = await dispatch(performRestoreThread(postId, courseId));
+      if (result.success) {
+        // Refresh the thread list to reflect the change
+        // The post will now appear in the active filter
+        window.location.reload(); // TODO: Replace with proper state update
+      }
+    } catch (error) {
+      logError(error);
+    }
+  }, [postId, courseId, dispatch]);
+
   const actionHandlers = useMemo(() => ({
     [ContentActions.EDIT_CONTENT]: handlePostContentEdit,
     [ContentActions.DELETE]: showDeleteConfirmation,
+    [ContentActions.SOFT_DELETE]: handleSoftDelete,
+    [ContentActions.RESTORE]: handleRestore,
     [ContentActions.CLOSE]: handlePostClose,
     [ContentActions.COPY_LINK]: handlePostCopyLink,
     [ContentActions.PIN]: handlePostPin,
     [ContentActions.REPORT]: handlePostReport,
   }), [
     handlePostClose, handlePostContentEdit, handlePostCopyLink, handlePostPin, handlePostReport, showDeleteConfirmation,
+    handleSoftDelete, handleRestore,
   ]);
 
   const handleClosePostConfirmation = useCallback((closeReasonCode) => {

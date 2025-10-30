@@ -7,7 +7,12 @@ import {
 import { setContentCreationRateLimited } from '../../data/slices';
 import { getHttpErrorStatus } from '../../utils';
 import {
-  deleteThread, getThread, getThreads, postThread, sendEmailForAccountActivation, updateThread,
+  deleteThread,
+  getThread,
+  getThreads,
+  postThread,
+  sendEmailForAccountActivation,
+  updateThread,
 } from './api';
 import {
   deleteThreadDenied,
@@ -140,6 +145,12 @@ export function fetchThreads(courseId, {
   }
   if (filters.cohort) {
     options.cohort = filters.cohort;
+  }
+  if (filters.status === PostsStatusFilter.ACTIVE) {
+    options.isDeleted = false;
+  }
+  if (filters.status === PostsStatusFilter.DELETED) {
+    options.isDeleted = true;
   }
   return async (dispatch) => {
     try {
@@ -297,11 +308,13 @@ export function updateExistingThread(threadId, {
   };
 }
 
-export function removeThread(threadId) {
+export function removeThread(threadId, courseId, userId) {
   return async (dispatch) => {
     try {
       dispatch(deleteThreadRequest({ threadId }));
-      await deleteThread(threadId);
+      // Use soft delete instead of hard delete
+      const { softDeleteThread } = await import('../../data/services/softDeleteService');
+      await softDeleteThread(threadId, userId, courseId);
       dispatch(deleteThreadSuccess({ threadId }));
     } catch (error) {
       if (getHttpErrorStatus(error) === 403) {

@@ -171,6 +171,11 @@ const messages = defineMessages({
     defaultMessage: 'you are not following this post',
     description: 'tell screen readers if user is not following a post',
   },
+  deleted: {
+    id: 'discussions.post.deleted',
+    defaultMessage: 'Deleted',
+    description: 'Label shown on deleted threads',
+  },
 });
 
 export default messages;

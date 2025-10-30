@@ -76,6 +76,16 @@ const FilterBar = ({
       value: PostsStatusFilter.UNRESPONDED,
     },
     {
+      id: 'status-active',
+      label: intl.formatMessage(messages.filterActive),
+      value: PostsStatusFilter.ACTIVE,
+    },
+    {
+      id: 'status-deleted',
+      label: intl.formatMessage(messages.filterDeleted),
+      value: PostsStatusFilter.DELETED,
+    },
+    {
       id: 'sort-activity',
       label: intl.formatMessage(messages.lastActivityAt),
       value: ThreadOrdering.BY_LAST_ACTIVITY,

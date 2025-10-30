@@ -46,7 +46,7 @@ const threadsSlice = createSlice({
     textSearchRewrite: null,
     postStatus: RequestStatus.SUCCESSFUL,
     filters: {
-      status: PostsStatusFilter.ALL,
+      status: PostsStatusFilter.ACTIVE,
       postType: ThreadType.ALL,
       cohort: '',
       search: '',
@@ -55,6 +55,7 @@ const threadsSlice = createSlice({
     redirectToThread: null,
     sortedBy: ThreadOrdering.BY_LAST_ACTIVITY,
     confirmEmailStatus: RequestStatus.IDLE,
+    isDeletedView: false,
   },
   reducers: {
     fetchLearnerThreadsRequest: (state, { payload }) => (
@@ -387,16 +388,24 @@ const threadsSlice = createSlice({
       ...state,
       confirmEmailStatus: RequestStatus.SUCCESSFUL,
     }),
-    sendAccountActivationEmailFailed: (state) => (
-      {
-        ...state,
-        confirmEmailStatus: RequestStatus.FAILED,
-      }
-    ),
     sendAccountActivationEmailDenied: (state) => (
       {
         ...state,
         confirmEmailStatus: RequestStatus.DENIED,
+      }
+    ),
+    toggleDeletedView: (state) => (
+      {
+        ...state,
+        isDeletedView: !state.isDeletedView,
+        pages: [], // Clear pages when switching views
+      }
+    ),
+    setDeletedView: (state, { payload }) => (
+      {
+        ...state,
+        isDeletedView: payload,
+        pages: [], // Clear pages when switching views
       }
     ),
   },
@@ -441,6 +450,8 @@ export const {
   sendAccountActivationEmailFailed,
   sendAccountActivationEmailRequest,
   sendAccountActivationEmailSuccess,
+  toggleDeletedView,
+  setDeletedView,
 } = threadsSlice.actions;
 
 export const threadsReducer = threadsSlice.reducer;

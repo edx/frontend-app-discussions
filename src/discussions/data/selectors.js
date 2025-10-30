@@ -111,3 +111,14 @@ export const selectIsUserLearner = createSelector(
     ) || false
   ),
 );
+
+// Threads selectors for soft delete functionality
+export const selectThreadsFilter = state => state.threads?.filter || 'active';
+
+export const selectThreadsLoading = state => state.threads?.loading || false;
+
+export const selectSelectedThreadIds = state => state.threads?.selectedThreadIds || [];
+
+export const selectBulkActionStatus = state => state.threads?.bulkActionStatus;
+
+export const selectBulkActionError = state => state.threads?.bulkActionError;

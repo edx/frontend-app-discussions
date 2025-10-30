@@ -65,6 +65,7 @@ export async function getUserPosts(courseId, {
   threadType,
   countFlagged,
   cohort,
+  isDeleted,
 } = {}) {
   const params = snakeCaseObject({
     page,
@@ -77,6 +78,7 @@ export async function getUserPosts(courseId, {
     username: author,
     countFlagged,
     groupId: cohort,
+    isDeleted,
   });
 
   const { data } = await getAuthenticatedHttpClient()

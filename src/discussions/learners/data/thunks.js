@@ -111,6 +111,12 @@ export function fetchUserPosts(courseId, {
   if (filters.cohort) {
     options.cohort = filters.cohort;
   }
+  if (filters.status === PostsStatusFilter.ACTIVE) {
+    options.isDeleted = false;
+  }
+  if (filters.status === PostsStatusFilter.DELETED) {
+    options.isDeleted = true;
+  }
   return async (dispatch) => {
     try {
       dispatch(fetchLearnerThreadsRequest({ courseId, author }));

@@ -185,3 +185,29 @@ export function removeComment(commentId, threadId) {
     }
   };
 }
+
+export function performSoftDeleteComment(commentId, userId, courseId) {
+  return async () => {
+    try {
+      const { softDeleteComment } = await import('../../../data/services/softDeleteService');
+      await softDeleteComment(commentId, userId, courseId);
+      return { success: true };
+    } catch (error) {
+      logError(error);
+      return { success: false, error: error.message };
+    }
+  };
+}
+
+export function performRestoreComment(commentId, courseId) {
+  return async () => {
+    try {
+      const { restoreComment } = await import('../../../data/services/softDeleteService');
+      await restoreComment(commentId, courseId);
+      return { success: true };
+    } catch (error) {
+      logError(error);
+      return { success: false, error: error.message };
+    }
+  };
+}

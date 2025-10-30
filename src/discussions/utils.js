@@ -2,7 +2,7 @@ import { useCallback, useContext, useMemo } from 'react';
 
 import {
   CheckCircle, CheckCircleOutline, Delete, Edit, InsertLink,
-  Institution, Lock, LockOpen, Pin, Report, School,
+  Institution, Lock, LockOpen, Pin, Report, RestoreFromTrash, School,
   Verified, VerifiedOutline,
 } from '@openedx/paragon/icons';
 import { getIn } from 'formik';
@@ -66,6 +66,10 @@ export function checkPermissions(content, action) {
   // For delete action we check `content.canDelete`
   if (action === ContentActions.DELETE) {
     return true;
+  }
+  // For soft delete and restore actions we check `content.canDelete`
+  if (action === ContentActions.SOFT_DELETE || action === ContentActions.RESTORE) {
+    return content.canDelete;
   }
   return false;
 }
@@ -183,6 +187,20 @@ export const ACTIONS_LIST = [
     icon: Delete,
     label: messages.deleteAction,
     conditions: { canDelete: true },
+  },
+  {
+    id: 'soft-delete',
+    action: ContentActions.SOFT_DELETE,
+    icon: Delete,
+    label: messages.softDeleteAction,
+    conditions: { canDelete: true, isDeleted: false },
+  },
+  {
+    id: 'restore',
+    action: ContentActions.RESTORE,
+    icon: RestoreFromTrash,
+    label: messages.restoreAction,
+    conditions: { canDelete: true, isDeleted: true },
   },
 ];
 

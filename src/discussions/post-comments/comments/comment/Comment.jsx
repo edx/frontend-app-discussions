@@ -8,6 +8,8 @@ import classNames from 'classnames';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { useIntl } from '@edx/frontend-platform/i18n';
+import { getAuthenticatedUser } from '@edx/frontend-platform/auth';
+import { logError } from '@edx/frontend-platform/logging';
 
 import HTMLLoader from '../../../../components/HTMLLoader';
 import { ContentActions, EndorsementStatus } from '../../../../data/constants';
@@ -113,12 +115,41 @@ const Comment = ({
     await dispatch(editComment(id, { voted: !voted }));
   }, [id, voted]);
 
+  const handleSoftDelete = useCallback(async () => {
+    try {
+      const authenticatedUser = getAuthenticatedUser();
+      const { performSoftDeleteComment } = await import('../../data/thunks');
+      const result = await dispatch(performSoftDeleteComment(id, authenticatedUser.userId || authenticatedUser.id, courseId));
+      if (result.success) {
+        // Refresh the thread to reflect the change
+        await dispatch(fetchThread(threadId, courseId));
+      }
+    } catch (error) {
+      logError(error);
+    }
+  }, [id, courseId, threadId, dispatch]);
+
+  const handleRestore = useCallback(async () => {
+    try {
+      const { performRestoreComment } = await import('../../data/thunks');
+      const result = await dispatch(performRestoreComment(id, courseId));
+      if (result.success) {
+        // Refresh the thread to reflect the change
+        await dispatch(fetchThread(threadId, courseId));
+      }
+    } catch (error) {
+      logError(error);
+    }
+  }, [id, courseId, threadId, dispatch]);
+
   const actionHandlers = useMemo(() => ({
     [ContentActions.EDIT_CONTENT]: handleEditContent,
     [ContentActions.ENDORSE]: handleCommentEndorse,
     [ContentActions.DELETE]: showDeleteConfirmation,
+    [ContentActions.SOFT_DELETE]: handleSoftDelete,
+    [ContentActions.RESTORE]: handleRestore,
     [ContentActions.REPORT]: handleAbusedFlag,
-  }), [handleEditContent, handleCommentEndorse, showDeleteConfirmation, handleAbusedFlag]);
+  }), [handleEditContent, handleCommentEndorse, showDeleteConfirmation, handleSoftDelete, handleRestore, handleAbusedFlag]);
 
   const handleLoadMoreComments = useCallback(() => (
     dispatch(fetchCommentResponses(id, {

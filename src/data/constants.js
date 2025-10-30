@@ -51,6 +51,8 @@ export const ContentActions = {
   COPY_LINK: 'copy_link',
   REPORT: 'abuse_flagged',
   DELETE: 'delete',
+  SOFT_DELETE: 'soft_delete',
+  RESTORE: 'restore',
   FOLLOWING: 'following',
   CHANGE_GROUP: 'group_id',
   MARK_READ: 'read',
@@ -109,6 +111,8 @@ export const PostsStatusFilter = {
   REPORTED: 'statusReported',
   UNANSWERED: 'statusUnanswered',
   UNRESPONDED: 'statusUnresponded',
+  ACTIVE: 'statusActive',
+  DELETED: 'statusDeleted',
 };
 
 /**

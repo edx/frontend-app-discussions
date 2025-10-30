@@ -36,7 +36,7 @@ const PostLink = ({
   const {
     topicId, hasEndorsed, type, author, authorLabel, abuseFlagged, abuseFlaggedCount, read, commentCount,
     unreadCommentCount, id, pinned, previewBody, title, voted, voteCount, following, groupId, groupName, createdAt,
-    users: postUsers,
+    users: postUsers, isDeleted,
   } = useSelector(selectThread(postId));
   const { pathname } = discussionsPath(Routes.COMMENTS.PAGES[page], {
     0: enableInContextSidebar ? 'in-context' : undefined,
@@ -75,8 +75,10 @@ const PostLink = ({
               'd-flex flex-row pt-2 pb-2 px-4 border-primary-500 position-relative',
               { 'bg-light-300': isPostRead },
               { 'post-summary-card-selected': id === selectedPostId },
+              { 'bg-light-200': isDeleted }, // Gray background for deleted threads
             )
           }
+        style={isDeleted ? { opacity: 0.7 } : {}} // Slightly faded for deleted threads
       >
         <PostAvatar
           postType={type}
@@ -93,10 +95,20 @@ const PostLink = ({
                 <span className={classNames(
                   'font-weight-500 text-primary-500 font-style align-bottom mr-1',
                   { 'font-weight-bolder': !read },
+                  { 'text-decoration-line-through': isDeleted }, // Line-through for deleted threads
                 )}
                 >
                   {title}
                 </span>
+                {isDeleted && (
+                  <Badge
+                    variant="danger"
+                    className="font-weight-500 ml-2"
+                    style={{ fontSize: '12px' }}
+                  >
+                    {intl.formatMessage(messages.deleted)}
+                  </Badge>
+                )}
                 <span className="text-gray-700 font-weight-normal  font-style align-bottom">
                   {isPostPreviewAvailable(previewBody) ? previewBody : intl.formatMessage(messages.postWithoutPreview)}
                 </span>
