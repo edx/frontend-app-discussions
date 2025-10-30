@@ -223,6 +223,26 @@ const messages = defineMessages({
     defaultMessage: 'Taking the course just like you',
     description: 'tooltip for course learners',
   },
+  newLearnerMessage: {
+    id: 'discussions.author.newLearner.message',
+    defaultMessage: '👋 Hi, I am a new learner',
+    description: 'Message displayed below username for new learners who have only viewed the course outline',
+  },
+  learnerMessage: {
+    id: 'discussions.author.learner.message',
+    defaultMessage: 'Learner',
+    description: 'Message displayed below username for regular learners',
+  },
+  spamWarningHeading: {
+    id: 'discussions.spamWarning.heading',
+    defaultMessage: 'Reminder',
+    description: 'Heading for the spam warning banner',
+  },
+  spamWarningMessage: {
+    id: 'discussions.spamWarning.message',
+    defaultMessage: 'Faculty and staff will never invite you to join external groups or ask for personal or financial information in the discussions. Stay safe, and if you see suspicious activity, please report it.',
+    description: 'Warning message about spam and impersonation in discussion forums',
+  },
 });
 
 export default messages;
