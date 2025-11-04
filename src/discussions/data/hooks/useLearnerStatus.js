@@ -3,10 +3,10 @@ import { useMemo } from 'react';
 /**
  * Custom hook to determine learner status (new learner, regular learner, or neither).
  *
- * This hook consumes both is_new_learner and is_regular_learner fields from the backend API.
+ * This hook consumes the learner_status field from the backend API.
  * The backend determines learner status based on actual engagement metrics and enrollment data.
  *
- * @param {Object} postData - The thread or comment data from the API that includes learner fields
+ * @param {Object} postData - The thread or comment data from the API that includes learner_status field
  * @param {string} author - The username of the author; used to check for anonymous and retired users
  * to suppress learner messages
  * @param {string} authorLabel - The author's role label (Staff, Moderator, etc.)
@@ -26,20 +26,26 @@ export const useLearnerStatus = (postData, author, authorLabel) => useMemo(() =>
     };
   }
 
-  // Always rely on backend-provided fields
-  // Note: Backend sends 'is_new_learner'/'is_regular_learner' but frontend may transform to camelCase
+  // Always rely on backend-provided learner_status field
   if (postData && typeof postData === 'object') {
-    const isNewLearner = postData.isNewLearner
-      || postData.is_new_learner
-      || false;
-    const isRegularLearner = postData.isRegularLearner
-      || postData.is_regular_learner
-      || false;
+    const learnerStatus = postData.learnerStatus || postData.learner_status;
+    
+    // Also check for legacy boolean fields for backward compatibility
+    const legacyIsNewLearner = postData.isNewLearner || postData.is_new_learner;
+    const legacyIsRegularLearner = postData.isRegularLearner || postData.is_regular_learner;
 
-    return {
-      isNewLearner,
-      isRegularLearner,
-    };
+    // Use new learner_status field if available, otherwise fall back to legacy boolean fields
+    if (learnerStatus) {
+      return {
+        isNewLearner: learnerStatus === 'new',
+        isRegularLearner: learnerStatus === 'regular',
+      };
+    } else if (legacyIsNewLearner !== undefined || legacyIsRegularLearner !== undefined) {
+      return {
+        isNewLearner: Boolean(legacyIsNewLearner),
+        isRegularLearner: Boolean(legacyIsRegularLearner),
+      };
+    }
   }
 
   // If postData is not available, return false for both
