@@ -29,7 +29,7 @@ export const useLearnerStatus = (postData, author, authorLabel) => useMemo(() =>
   // Always rely on backend-provided learner_status field
   if (postData && typeof postData === 'object') {
     const learnerStatus = postData.learnerStatus || postData.learner_status;
-    
+
     // Also check for legacy boolean fields for backward compatibility
     const legacyIsNewLearner = postData.isNewLearner || postData.is_new_learner;
     const legacyIsRegularLearner = postData.isRegularLearner || postData.is_regular_learner;
@@ -40,7 +40,7 @@ export const useLearnerStatus = (postData, author, authorLabel) => useMemo(() =>
         isNewLearner: learnerStatus === 'new',
         isRegularLearner: learnerStatus === 'regular',
       };
-    } else if (legacyIsNewLearner !== undefined || legacyIsRegularLearner !== undefined) {
+    } if (legacyIsNewLearner !== undefined || legacyIsRegularLearner !== undefined) {
       return {
         isNewLearner: Boolean(legacyIsNewLearner),
         isRegularLearner: Boolean(legacyIsRegularLearner),
