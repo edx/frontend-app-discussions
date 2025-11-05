@@ -40,6 +40,7 @@ export const getThreads = async (courseId, {
   threadType,
   countFlagged,
   cohort,
+  isDeleted,
 } = {}) => {
   const params = snakeCaseObject({
     courseId,
@@ -56,6 +57,7 @@ export const getThreads = async (courseId, {
     flagged,
     countFlagged,
     groupId: cohort,
+    isDeleted,
   });
   const { data } = await getAuthenticatedHttpClient().get(getThreadsApiUrl(), { params });
   return data;
@@ -212,5 +214,56 @@ export const sendEmailForAccountActivation = async () => {
   const url = `${getConfig().LMS_BASE_URL}/api/send_account_activation_email`;
   const { data } = await getAuthenticatedHttpClient()
     .post(url);
+  return data;
+};
+
+/**
+ * Soft delete a thread.
+ * @param {string} threadId
+ * @param {string} userId
+ * @returns {Promise<{}>}
+ */
+export const softDeleteThread = async (threadId, userId) => {
+  const url = `${getThreadsApiUrl()}${threadId}/soft_delete/`;
+  const { data } = await getAuthenticatedHttpClient().post(url, { user_id: userId });
+  return data;
+};
+
+/**
+ * Restore a soft deleted thread.
+ * @param {string} threadId
+ * @returns {Promise<{}>}
+ */
+export const restoreThread = async (threadId) => {
+  const url = `${getThreadsApiUrl()}${threadId}/restore/`;
+  const { data } = await getAuthenticatedHttpClient().post(url);
+  return data;
+};
+
+/**
+ * Bulk soft delete threads.
+ * @param {string[]} threadIds
+ * @param {string} userId
+ * @returns {Promise<{}>}
+ */
+export const bulkSoftDeleteThreads = async (threadIds, userId) => {
+  const url = `${getThreadsApiUrl()}bulk_soft_delete/`;
+  const { data } = await getAuthenticatedHttpClient().post(url, {
+    thread_ids: threadIds.join(','),
+    user_id: userId,
+  });
+  return data;
+};
+
+/**
+ * Bulk restore soft deleted threads.
+ * @param {string[]} threadIds
+ * @returns {Promise<{}>}
+ */
+export const bulkRestoreThreads = async (threadIds) => {
+  const url = `${getThreadsApiUrl()}bulk_restore/`;
+  const { data } = await getAuthenticatedHttpClient().post(url, {
+    thread_ids: threadIds.join(','),
+  });
   return data;
 };

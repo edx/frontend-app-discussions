@@ -1,23 +1,28 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, {
+  useCallback, useContext, useMemo, useState,
+} from 'react';
 import PropTypes from 'prop-types';
 
-import { Avatar, useToggle } from '@openedx/paragon';
+import { Avatar, Badge, useToggle } from '@openedx/paragon';
 import { useDispatch, useSelector } from 'react-redux';
 import * as timeago from 'timeago.js';
 
 import { useIntl } from '@edx/frontend-platform/i18n';
+import { logError } from '@edx/frontend-platform/logging';
 
 import HTMLLoader from '../../../../components/HTMLLoader';
 import { AvatarOutlineAndLabelColors, ContentActions } from '../../../../data/constants';
 import {
   ActionsDropdown, AlertBanner, AuthorLabel, Confirmation,
 } from '../../../common';
+import DiscussionContext from '../../../common/context';
 import timeLocale from '../../../common/time-locale';
 import { ContentTypes } from '../../../data/constants';
 import { useAlertBannerVisible } from '../../../data/hooks';
-import { selectAuthorAvatar } from '../../../posts/data/selectors';
+import { selectAuthorAvatar, selectThread } from '../../../posts/data/selectors';
+import { fetchThread } from '../../../posts/data/thunks';
 import { selectCommentOrResponseById } from '../../data/selectors';
-import { editComment, removeComment } from '../../data/thunks';
+import { editComment } from '../../data/thunks';
 import messages from '../../messages';
 import CommentEditor from './CommentEditor';
 
@@ -25,12 +30,17 @@ const Reply = ({ responseId }) => {
   timeago.register('time-locale', timeLocale);
   const {
     id, abuseFlagged, author, authorLabel, endorsed, lastEdit, closed, closedBy,
-    closeReason, createdAt, threadId, parentId, rawBody, renderedBody, editByLabel, closedByLabel,
+    closeReason, createdAt, threadId, parentId, rawBody, renderedBody, editByLabel, closedByLabel, isDeleted,
   } = useSelector(selectCommentOrResponseById(responseId));
   const intl = useIntl();
   const dispatch = useDispatch();
+  const { courseId } = useContext(DiscussionContext);
+  // Get the post's isDeleted state for priority rules
+  const post = useSelector(selectThread(threadId));
+  const postIsDeleted = post?.isDeleted || false;
   const [isEditing, setEditing] = useState(false);
   const [isDeleting, showDeleteConfirmation, hideDeleteConfirmation] = useToggle(false);
+  const [isRestoring, showRestoreConfirmation, hideRestoreConfirmation] = useToggle(false);
   const [isReporting, showReportConfirmation, hideReportConfirmation] = useToggle(false);
   const colorClass = AvatarOutlineAndLabelColors[authorLabel];
   const hasAnyAlert = useAlertBannerVisible({
@@ -41,10 +51,18 @@ const Reply = ({ responseId }) => {
   });
   const authorAvatar = useSelector(selectAuthorAvatar(author));
 
-  const handleDeleteConfirmation = useCallback(() => {
-    dispatch(removeComment(id));
+  const handleDeleteConfirmation = useCallback(async () => {
+    try {
+      const { performSoftDeleteComment } = await import('../../data/thunks');
+      const result = await dispatch(performSoftDeleteComment(id));
+      if (result.success) {
+        await dispatch(fetchThread(threadId, courseId));
+      }
+    } catch (error) {
+      logError(error);
+    }
     hideDeleteConfirmation();
-  }, [id, hideDeleteConfirmation]);
+  }, [id, courseId, threadId, dispatch, hideDeleteConfirmation]);
 
   const handleReportConfirmation = useCallback(() => {
     dispatch(editComment(id, { flagged: !abuseFlagged }));
@@ -67,6 +85,27 @@ const Reply = ({ responseId }) => {
     }
   }, [abuseFlagged, id, showReportConfirmation]);
 
+  const handleSoftDelete = useCallback(() => {
+    showDeleteConfirmation();
+  }, [showDeleteConfirmation]);
+
+  const handleRestore = useCallback(() => {
+    showRestoreConfirmation();
+  }, [showRestoreConfirmation]);
+
+  const handleRestoreConfirmation = useCallback(async () => {
+    try {
+      const { performRestoreComment } = await import('../../data/thunks');
+      const result = await dispatch(performRestoreComment(id));
+      if (result.success) {
+        await dispatch(fetchThread(threadId, courseId));
+      }
+    } catch (error) {
+      logError(error);
+    }
+    hideRestoreConfirmation();
+  }, [id, courseId, threadId, dispatch, hideRestoreConfirmation]);
+
   const handleCloseEditor = useCallback(() => {
     setEditing(false);
   }, []);
@@ -74,9 +113,10 @@ const Reply = ({ responseId }) => {
   const actionHandlers = useMemo(() => ({
     [ContentActions.EDIT_CONTENT]: handleEditContent,
     [ContentActions.ENDORSE]: handleReplyEndorse,
-    [ContentActions.DELETE]: showDeleteConfirmation,
+    [ContentActions.SOFT_DELETE]: handleSoftDelete,
+    [ContentActions.RESTORE]: handleRestore,
     [ContentActions.REPORT]: handleAbusedFlag,
-  }), [handleEditContent, handleReplyEndorse, showDeleteConfirmation, handleAbusedFlag]);
+  }), [handleEditContent, handleReplyEndorse, handleSoftDelete, handleRestore, handleAbusedFlag]);
 
   return (
     <div className="d-flex flex-column mt-2.5 " data-testid={`reply-${id}`} role="listitem">
@@ -88,6 +128,14 @@ const Reply = ({ responseId }) => {
         confirmAction={handleDeleteConfirmation}
         closeButtonVariant="tertiary"
         confirmButtonText={intl.formatMessage(messages.deleteConfirmationDelete)}
+      />
+      <Confirmation
+        isOpen={isRestoring}
+        title={intl.formatMessage(messages.undeleteCommentTitle)}
+        description={intl.formatMessage(messages.undeleteCommentDescription)}
+        onClose={hideRestoreConfirmation}
+        confirmAction={handleRestoreConfirmation}
+        closeButtonVariant="tertiary"
       />
       {!abuseFlagged && (
         <Confirmation
@@ -134,15 +182,27 @@ const Reply = ({ responseId }) => {
           className="bg-light-300 pl-4 pt-2.5 pr-2.5 pb-10px flex-fill"
           style={{ borderRadius: '0rem 0.375rem 0.375rem', maxWidth: 'calc(100% - 50px)' }}
         >
-          <div className="d-flex flex-row justify-content-between">
-            <AuthorLabel
-              author={author}
-              authorLabel={authorLabel}
-              labelColor={colorClass && `text-${colorClass}`}
-              linkToProfile
-              postCreatedAt={createdAt}
-              postOrComment
-            />
+          <div className="d-flex flex-row justify-content-between flex-wrap">
+            <div className="d-flex align-items-center flex-wrap">
+              <AuthorLabel
+                author={author}
+                authorLabel={authorLabel}
+                labelColor={colorClass && `text-${colorClass}`}
+                linkToProfile
+                postCreatedAt={createdAt}
+                postOrComment
+              />
+              {isDeleted && !postIsDeleted && (
+                <Badge
+                  variant="light"
+                  data-testid="deleted-reply-badge"
+                  className="font-weight-500 ml-2 bg-light-400 text-dark"
+                >
+                  {intl.formatMessage(messages.deletedComment)}
+                  <span className="sr-only">{' '}deleted comment</span>
+                </Badge>
+              )}
+            </div>
             <div className="ml-auto d-flex">
               <ActionsDropdown
                 actionHandlers={actionHandlers}

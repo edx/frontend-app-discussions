@@ -10,7 +10,7 @@ import FilterBar from '../../../components/FilterBar';
 import { PostsStatusFilter, ThreadType } from '../../../data/constants';
 import selectCourseCohorts from '../../cohorts/data/selectors';
 import fetchCourseCohorts from '../../cohorts/data/thunks';
-import { selectUserHasModerationPrivileges, selectUserIsGroupTa } from '../../data/selectors';
+import { selectUserHasModerationPrivileges, selectUserIsGroupTa, selectUserIsStaff } from '../../data/selectors';
 import { setPostFilter } from '../data/slices';
 
 const LearnerPostFilterBar = () => {
@@ -18,6 +18,7 @@ const LearnerPostFilterBar = () => {
   const { courseId } = useParams();
   const userHasModerationPrivileges = useSelector(selectUserHasModerationPrivileges);
   const userIsGroupTa = useSelector(selectUserIsGroupTa);
+  const userIsStaff = useSelector(selectUserIsStaff);
   const cohorts = useSelector(selectCourseCohorts);
   const postFilter = useSelector(state => state.learners.postFilter);
 
@@ -36,8 +37,15 @@ const LearnerPostFilterBar = () => {
     },
   ];
 
-  if (userHasModerationPrivileges || userIsGroupTa) {
+  if (userHasModerationPrivileges || userIsGroupTa || userIsStaff) {
+    // Add reported filter to the regular status filters
     filtersToShow[1].filters.splice(2, 0, 'status-reported');
+    // Add Active/Deleted as a separate filter section at the bottom with a separator
+    filtersToShow.push({
+      name: 'status',
+      filters: ['status-active', 'status-deleted'],
+      hasSeparator: true, // Add visual separator before this section
+    });
   }
 
   const handleFilterChange = (event) => {
@@ -102,7 +110,7 @@ const LearnerPostFilterBar = () => {
       filters={filtersToShow}
       selectedFilters={postFilter}
       onFilterChange={handleFilterChange}
-      showCohortsFilter={userHasModerationPrivileges || userIsGroupTa}
+      showCohortsFilter={userHasModerationPrivileges || userIsGroupTa || userIsStaff}
     />
   );
 };

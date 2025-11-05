@@ -4,20 +4,25 @@ import React, {
 import PropTypes from 'prop-types';
 
 import { Button, useToggle } from '@openedx/paragon';
+import { DeleteOutline } from '@openedx/paragon/icons';
 import classNames from 'classnames';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { useIntl } from '@edx/frontend-platform/i18n';
+import { logError } from '@edx/frontend-platform/logging';
 
 import HTMLLoader from '../../../../components/HTMLLoader';
-import { ContentActions, EndorsementStatus } from '../../../../data/constants';
-import { AlertBanner, Confirmation, EndorsedAlertBanner } from '../../../common';
+import { AvatarOutlineAndLabelColors, ContentActions, EndorsementStatus } from '../../../../data/constants';
+import {
+  AlertBanner, AuthorLabel, Confirmation, EndorsedAlertBanner,
+} from '../../../common';
 import DiscussionContext from '../../../common/context';
 import HoverCard from '../../../common/HoverCard';
 import withPostingRestrictions from '../../../common/withPostingRestrictions';
 import { ContentTypes } from '../../../data/constants';
 import { useUserPostingEnabled } from '../../../data/hooks';
 import { selectContentCreationRateLimited, selectShouldShowEmailConfirmation } from '../../../data/selectors';
+import { selectThread } from '../../../posts/data/selectors';
 import { fetchThread } from '../../../posts/data/thunks';
 import LikeButton from '../../../posts/post/LikeButton';
 import { useActions } from '../../../utils';
@@ -29,7 +34,7 @@ import {
   selectCommentResponsesIds,
   selectCommentSortOrder,
 } from '../../data/selectors';
-import { editComment, fetchCommentResponses, removeComment } from '../../data/thunks';
+import { editComment, fetchCommentResponses } from '../../data/thunks';
 import messages from '../../messages';
 import PostCommentsContext from '../../postCommentsContext';
 import CommentEditor from './CommentEditor';
@@ -46,7 +51,7 @@ const Comment = ({
   const {
     id, parentId, childCount, abuseFlagged, endorsed, threadId, endorsedAt, endorsedBy, endorsedByLabel, renderedBody,
     voted, following, voteCount, authorLabel, author, createdAt, lastEdit, rawBody, closed, closedBy, closeReason,
-    editByLabel, closedByLabel, users: postUsers,
+    editByLabel, closedByLabel, users: postUsers, isDeleted, deletedByLabel,
   } = comment;
   const intl = useIntl();
   const hasChildren = childCount > 0;
@@ -54,9 +59,13 @@ const Comment = ({
   const dispatch = useDispatch();
   const { courseId } = useContext(DiscussionContext);
   const { isClosed } = useContext(PostCommentsContext);
+  // Get the post's isDeleted state for priority rules
+  const post = useSelector(selectThread(threadId));
+  const postIsDeleted = post?.isDeleted || false;
   const [isEditing, setEditing] = useState(false);
   const [isReplying, setReplying] = useState(false);
   const [isDeleting, showDeleteConfirmation, hideDeleteConfirmation] = useToggle(false);
+  const [isRestoring, showRestoreConfirmation, hideRestoreConfirmation] = useToggle(false);
   const [isReporting, showReportConfirmation, hideReportConfirmation] = useToggle(false);
   const inlineReplies = useSelector(selectCommentResponses(id));
   const inlineRepliesIds = useSelector(selectCommentResponsesIds(id));
@@ -89,7 +98,7 @@ const Comment = ({
   const handleCommentEndorse = useCallback(async () => {
     await dispatch(editComment(id, { endorsed: !endorsed }));
     await dispatch(fetchThread(threadId, courseId));
-  }, [id, endorsed, threadId]);
+  }, [id, endorsed, threadId, courseId, dispatch]);
 
   const handleAbusedFlag = useCallback(() => {
     if (abuseFlagged) {
@@ -99,10 +108,18 @@ const Comment = ({
     }
   }, [abuseFlagged, id, showReportConfirmation]);
 
-  const handleDeleteConfirmation = useCallback(() => {
-    dispatch(removeComment(id));
+  const handleDeleteConfirmation = useCallback(async () => {
+    try {
+      const { performSoftDeleteComment } = await import('../../data/thunks');
+      const result = await dispatch(performSoftDeleteComment(id));
+      if (result.success) {
+        await dispatch(fetchThread(threadId, courseId));
+      }
+    } catch (error) {
+      logError(error);
+    }
     hideDeleteConfirmation();
-  }, [id, hideDeleteConfirmation]);
+  }, [id, courseId, threadId, dispatch, hideDeleteConfirmation]);
 
   const handleReportConfirmation = useCallback(() => {
     dispatch(editComment(id, { flagged: !abuseFlagged }));
@@ -113,12 +130,35 @@ const Comment = ({
     await dispatch(editComment(id, { voted: !voted }));
   }, [id, voted]);
 
+  const handleSoftDelete = useCallback(() => {
+    showDeleteConfirmation();
+  }, [showDeleteConfirmation]);
+
+  const handleRestore = useCallback(() => {
+    showRestoreConfirmation();
+  }, [showRestoreConfirmation]);
+
+  const handleRestoreConfirmation = useCallback(async () => {
+    try {
+      const { performRestoreComment } = await import('../../data/thunks');
+      const result = await dispatch(performRestoreComment(id));
+      if (result.success) {
+        // Refresh the thread to reflect the change
+        await dispatch(fetchThread(threadId, courseId));
+      }
+    } catch (error) {
+      logError(error);
+    }
+    hideRestoreConfirmation();
+  }, [id, courseId, threadId, dispatch, hideRestoreConfirmation]);
+
   const actionHandlers = useMemo(() => ({
     [ContentActions.EDIT_CONTENT]: handleEditContent,
     [ContentActions.ENDORSE]: handleCommentEndorse,
-    [ContentActions.DELETE]: showDeleteConfirmation,
+    [ContentActions.SOFT_DELETE]: handleSoftDelete,
+    [ContentActions.RESTORE]: handleRestore,
     [ContentActions.REPORT]: handleAbusedFlag,
-  }), [handleEditContent, handleCommentEndorse, showDeleteConfirmation, handleAbusedFlag]);
+  }), [handleEditContent, handleCommentEndorse, handleSoftDelete, handleRestore, handleAbusedFlag]);
 
   const handleLoadMoreComments = useCallback(() => (
     dispatch(fetchCommentResponses(id, {
@@ -156,12 +196,28 @@ const Comment = ({
       >
         <Confirmation
           isOpen={isDeleting}
-          title={intl.formatMessage(messages.deleteResponseTitle)}
-          description={intl.formatMessage(messages.deleteResponseDescription)}
+          title={intl.formatMessage(
+            isNested ? messages.deleteCommentTitle : messages.deleteResponseTitle,
+          )}
+          description={intl.formatMessage(
+            isNested ? messages.deleteCommentDescription : messages.deleteResponseDescription,
+          )}
           onClose={hideDeleteConfirmation}
           confirmAction={handleDeleteConfirmation}
           closeButtonVariant="tertiary"
           confirmButtonText={intl.formatMessage(messages.deleteConfirmationDelete)}
+        />
+        <Confirmation
+          isOpen={isRestoring}
+          title={intl.formatMessage(
+            isNested ? messages.undeleteCommentTitle : messages.undeleteResponseTitle,
+          )}
+          description={intl.formatMessage(
+            isNested ? messages.undeleteCommentDescription : messages.undeleteResponseDescription,
+          )}
+          onClose={hideRestoreConfirmation}
+          confirmAction={handleRestoreConfirmation}
+          closeButtonVariant="tertiary"
         />
         {!abuseFlagged && (
           <Confirmation
@@ -191,7 +247,25 @@ const Comment = ({
             voted={voted}
             following={following}
             endorseIcons={endorseIcons}
+            isDeleted={isDeleted}
           />
+          {isDeleted && deletedByLabel && (
+            <div className="alert alert-info px-3 shadow-none mb-1 py-10px bg-light-200 d-flex align-items-start">
+              <DeleteOutline className="mr-2 text-dark-500 flex-shrink-0" style={{ width: '1.5rem', height: '1.5rem' }} />
+              <div className="d-flex align-items-center flex-wrap text-gray-700 font-style">
+                {intl.formatMessage(messages.deletedBy)}
+                <span className="ml-1">
+                  <AuthorLabel
+                    author={author}
+                    authorLabel={deletedByLabel}
+                    labelColor={AvatarOutlineAndLabelColors[deletedByLabel] && `text-${AvatarOutlineAndLabelColors[deletedByLabel]}`}
+                    linkToProfile
+                    postOrComment
+                  />
+                </span>
+              </div>
+            </div>
+          )}
           <AlertBanner
             author={author}
             abuseFlagged={abuseFlagged}
@@ -210,6 +284,9 @@ const Comment = ({
             createdAt={createdAt}
             lastEdit={lastEdit}
             postUsers={postUsers}
+            isDeleted={isDeleted}
+            parentId={parentId}
+            postIsDeleted={postIsDeleted}
           />
           {isEditing ? (
             <CommentEditor

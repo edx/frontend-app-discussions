@@ -10,7 +10,8 @@ import { setStatusFilter } from '../posts/data';
 import { getHttpErrorStatus } from '../utils';
 import { getDiscussionsConfig, getDiscussionsSettings } from './api';
 import {
-  fetchConfigDenied, fetchConfigFailed, fetchConfigRequest, fetchConfigSuccess,
+  bulkActionFailed,
+  bulkActionRequest, bulkActionSuccess, fetchConfigDenied, fetchConfigFailed, fetchConfigRequest, fetchConfigSuccess,
 } from './slices';
 
 /**
@@ -48,6 +49,65 @@ export default function fetchCourseConfig(courseId) {
         dispatch(fetchConfigFailed());
       }
       logError(error);
+    }
+  };
+}
+
+// Soft delete thunks
+export function performBulkSoftDelete(threadIds, userId, courseId) {
+  return async (dispatch) => {
+    try {
+      dispatch(bulkActionRequest());
+      const { bulkSoftDeleteThreads } = await import('./services/softDeleteService');
+      await bulkSoftDeleteThreads(threadIds, userId, courseId);
+      dispatch(bulkActionSuccess());
+      return { success: true };
+    } catch (error) {
+      dispatch(bulkActionFailed(error.message || 'Failed to delete threads'));
+      logError(error);
+      return { success: false, error: error.message };
+    }
+  };
+}
+
+export function performBulkRestore(threadIds, courseId) {
+  return async (dispatch) => {
+    try {
+      dispatch(bulkActionRequest());
+      const { bulkRestoreThreads } = await import('./services/softDeleteService');
+      await bulkRestoreThreads(threadIds, courseId);
+      dispatch(bulkActionSuccess());
+      return { success: true };
+    } catch (error) {
+      dispatch(bulkActionFailed(error.message || 'Failed to restore threads'));
+      logError(error);
+      return { success: false, error: error.message };
+    }
+  };
+}
+
+export function performSoftDeleteThread(threadId, userId, courseId) {
+  return async () => {
+    try {
+      const { softDeleteThread } = await import('./services/softDeleteService');
+      await softDeleteThread(threadId, userId, courseId);
+      return { success: true };
+    } catch (error) {
+      logError(error);
+      return { success: false, error: error.message };
+    }
+  };
+}
+
+export function performRestoreThread(threadId, courseId) {
+  return async () => {
+    try {
+      const { restoreThread } = await import('./services/softDeleteService');
+      await restoreThread(threadId, courseId);
+      return { success: true };
+    } catch (error) {
+      logError(error);
+      return { success: false, error: error.message };
     }
   };
 }
