@@ -118,8 +118,7 @@ const Comment = ({
     } catch (error) {
       logError(error);
     }
-    hideDeleteConfirmation();
-  }, [id, courseId, threadId, dispatch, hideDeleteConfirmation]);
+  }, [id, threadId, courseId, dispatch]);
 
   const handleReportConfirmation = useCallback(() => {
     dispatch(editComment(id, { flagged: !abuseFlagged }));
