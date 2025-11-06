@@ -28,10 +28,13 @@ import CommentEditor from './CommentEditor';
 
 const Reply = ({ responseId }) => {
   timeago.register('time-locale', timeLocale);
+  const commentData = useSelector(selectCommentOrResponseById(responseId));
   const {
     id, abuseFlagged, author, authorLabel, endorsed, lastEdit, closed, closedBy,
     closeReason, createdAt, threadId, parentId, rawBody, renderedBody, editByLabel, closedByLabel, isDeleted,
   } = useSelector(selectCommentOrResponseById(responseId));
+    closeReason, createdAt, threadId, parentId, rawBody, renderedBody, editByLabel, closedByLabel,
+  } = commentData;
   const intl = useIntl();
   const dispatch = useDispatch();
   const { courseId } = useContext(DiscussionContext);
@@ -162,6 +165,7 @@ const Reply = ({ responseId }) => {
               lastEdit={lastEdit}
               editByLabel={editByLabel}
               closedByLabel={closedByLabel}
+              postData={commentData}
             />
           </div>
         </div>
@@ -203,6 +207,16 @@ const Reply = ({ responseId }) => {
                 </Badge>
               )}
             </div>
+          <div className="d-flex flex-row justify-content-between">
+            <AuthorLabel
+              author={author}
+              authorLabel={authorLabel}
+              labelColor={colorClass && `text-${colorClass}`}
+              linkToProfile
+              postCreatedAt={createdAt}
+              postOrComment
+              postData={commentData}
+            />
             <div className="ml-auto d-flex">
               <ActionsDropdown
                 actionHandlers={actionHandlers}

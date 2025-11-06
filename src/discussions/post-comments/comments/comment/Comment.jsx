@@ -287,6 +287,7 @@ const Comment = ({
             isDeleted={isDeleted}
             parentId={parentId}
             postIsDeleted={postIsDeleted}
+            postData={comment}
           />
           {isEditing ? (
             <CommentEditor

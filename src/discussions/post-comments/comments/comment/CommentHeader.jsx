@@ -25,6 +25,7 @@ const CommentHeader = ({
   isDeleted,
   parentId,
   postIsDeleted,
+  postData,
 }) => {
   const intl = useIntl();
   const colorClass = AvatarOutlineAndLabelColors[authorLabel];
@@ -70,6 +71,7 @@ const CommentHeader = ({
           linkToProfile
           postCreatedAt={createdAt}
           postOrComment
+          postData={postData}
         />
         {shouldShowDeletedBadge && (
           <Badge
@@ -100,6 +102,7 @@ CommentHeader.propTypes = {
   isDeleted: PropTypes.bool,
   parentId: PropTypes.string,
   postIsDeleted: PropTypes.bool,
+  postData: PropTypes.shape({}),
 };
 
 CommentHeader.defaultProps = {
@@ -109,6 +112,7 @@ CommentHeader.defaultProps = {
   isDeleted: false,
   parentId: null,
   postIsDeleted: false,
+  postData: null,
 };
 
 export default React.memo(CommentHeader);
