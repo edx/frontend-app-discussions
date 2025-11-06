@@ -34,19 +34,14 @@ import PostHeader from './PostHeader';
 
 const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
   const { enableInContextSidebar, postId, courseId } = useContext(DiscussionContext);
-  const {
-    topicId, abuseFlagged, closed, pinned, voted, hasEndorsed, following, closedBy, voteCount, groupId, groupName,
-    closeReason, authorLabel, type: postType, author, title, createdAt, renderedBody, lastEdit, editByLabel,
-    closedByLabel, users: postUsers, isDeleted, deletedByLabel,
-  } = useSelector(selectThread(postId));
 
-  const { enableInContextSidebar, postId } = useContext(DiscussionContext);
   const threadData = useSelector(selectThread(postId));
   const {
     topicId, abuseFlagged, closed, pinned, voted, hasEndorsed, following, closedBy, voteCount, groupId, groupName,
     closeReason, authorLabel, type: postType, author, title, createdAt, renderedBody, lastEdit, editByLabel,
-    closedByLabel, users: postUsers,
+    closedByLabel, users: postUsers, isDeleted, deletedByLabel,
   } = threadData;
+
   const intl = useIntl();
   const location = useLocation();
   const navigate = useNavigate();
@@ -72,7 +67,6 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
         performSoftDeleteThread(postId, authenticatedUser.userId || authenticatedUser.id, courseId),
       );
       if (result.success) {
-        // Refresh the thread list to reflect the change
         window.location.reload();
       }
     } catch (error) {
@@ -84,12 +78,12 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
   const handleReportConfirmation = useCallback(() => {
     dispatch(updateExistingThread(postId, { flagged: !abuseFlagged }));
     hideReportConfirmation();
-  }, [abuseFlagged, postId, hideReportConfirmation]);
+  }, [abuseFlagged, postId, dispatch, hideReportConfirmation]);
 
   const handlePostContentEdit = useCallback(() => navigate({
     ...location,
     pathname: `${location.pathname}/edit`,
-  }), [location.pathname]);
+  }), [navigate, location]);
 
   const handlePostClose = useCallback(() => {
     if (closed) {
@@ -97,19 +91,19 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
     } else {
       showClosePostModal();
     }
-  }, [closed, postId, showClosePostModal]);
+  }, [closed, postId, dispatch, showClosePostModal]);
 
   const handlePostCopyLink = useCallback(() => {
     navigator.clipboard.writeText(getFullUrl(`${courseId}/posts/${postId}`));
-  }, [window.location.origin, postId, courseId]);
+  }, [courseId, postId]);
 
   const handlePostPin = useCallback(() => dispatch(
     updateExistingThread(postId, { pinned: !pinned }),
-  ), [postId, pinned]);
+  ), [postId, pinned, dispatch]);
 
   const handlePostLike = useCallback(() => {
     dispatch(updateExistingThread(postId, { voted: !voted }));
-  }, [postId, voted]);
+  }, [postId, voted, dispatch]);
 
   const handlePostReport = useCallback(() => {
     if (abuseFlagged) {
@@ -117,7 +111,7 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
     } else {
       showReportConfirmation();
     }
-  }, [abuseFlagged, postId, showReportConfirmation]);
+  }, [abuseFlagged, postId, dispatch, showReportConfirmation]);
 
   const handleSoftDelete = useCallback(() => {
     showDeleteConfirmation();
@@ -132,9 +126,7 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
       const { performRestoreThread } = await import('../../data/thunks');
       const result = await dispatch(performRestoreThread(postId, courseId));
       if (result.success) {
-        // Refresh the thread list to reflect the change
-        // The post will now appear in the active filter
-        window.location.reload(); // TODO: Replace with proper state update
+        window.location.reload();
       }
     } catch (error) {
       logError(error);
@@ -151,18 +143,18 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
     [ContentActions.PIN]: handlePostPin,
     [ContentActions.REPORT]: handlePostReport,
   }), [
-    handlePostClose, handlePostContentEdit, handlePostCopyLink, handlePostPin, handlePostReport, showDeleteConfirmation,
+    handlePostClose, handlePostContentEdit, handlePostCopyLink, handlePostPin, handlePostReport,
     handleSoftDelete, handleRestore,
   ]);
 
   const handleClosePostConfirmation = useCallback((closeReasonCode) => {
     dispatch(updateExistingThread(postId, { closed: true, closeReasonCode }));
     hideClosePostModal();
-  }, [postId, hideClosePostModal]);
+  }, [postId, dispatch, hideClosePostModal]);
 
   const handlePostFollow = useCallback(() => {
     dispatch(updateExistingThread(postId, { following: !following }));
-  }, [postId, following]);
+  }, [postId, following, dispatch]);
 
   const getTopicCategoryName = useCallback(topicData => (
     topicData.usageKey ? getTopicSubsection(topicData.usageKey)?.displayName : topicData.categoryId

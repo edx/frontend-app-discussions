@@ -33,8 +33,6 @@ const Reply = ({ responseId }) => {
     id, abuseFlagged, author, authorLabel, endorsed, lastEdit, closed, closedBy,
     closeReason, createdAt, threadId, parentId, rawBody, renderedBody, editByLabel, closedByLabel, isDeleted,
   } = useSelector(selectCommentOrResponseById(responseId));
-    closeReason, createdAt, threadId, parentId, rawBody, renderedBody, editByLabel, closedByLabel,
-  } = commentData;
   const intl = useIntl();
   const dispatch = useDispatch();
   const { courseId } = useContext(DiscussionContext);
@@ -207,6 +205,7 @@ const Reply = ({ responseId }) => {
                 </Badge>
               )}
             </div>
+          </div>
           <div className="d-flex flex-row justify-content-between">
             <AuthorLabel
               author={author}
