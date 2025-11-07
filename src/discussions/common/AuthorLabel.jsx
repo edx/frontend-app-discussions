@@ -205,7 +205,7 @@ const AuthorLabel = ({
           )}
           {labelContents}
         </div>
-        {learnerMessageComponent}
+        {postOrComment && learnerMessageComponent}
       </div>
     </div>
   ) : (
@@ -215,7 +215,7 @@ const AuthorLabel = ({
           {authorName}
           {labelContents}
         </div>
-        {learnerMessageComponent}
+        {postOrComment && learnerMessageComponent}
       </div>
     </div>
   );
