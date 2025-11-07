@@ -46,7 +46,7 @@ const Comment = ({
   const {
     id, parentId, childCount, abuseFlagged, endorsed, threadId, endorsedAt, endorsedBy, endorsedByLabel, renderedBody,
     voted, following, voteCount, authorLabel, author, createdAt, lastEdit, rawBody, closed, closedBy, closeReason,
-    editByLabel, closedByLabel, users: postUsers, is_spam,
+    editByLabel, closedByLabel, users: postUsers, isSpam,
   } = comment;
   const intl = useIntl();
   const hasChildren = childCount > 0;
@@ -67,8 +67,8 @@ const Comment = ({
   const isUserPrivilegedInPostingRestriction = useUserPostingEnabled();
   const shouldShowEmailConfirmation = useSelector(selectShouldShowEmailConfirmation);
   const contentCreationRateLimited = useSelector(selectContentCreationRateLimited);
-  // If is_spam is not provided in the API response, default to false
-  const isSpamFlagged = is_spam || true;
+  // If isSpam is not provided in the API response, default to false
+  const isSpamFlagged = isSpam || false;
   useEffect(() => {
     // If the comment has a parent comment, it won't have any children, so don't fetch them.
     if (hasChildren && showFullThread) {
