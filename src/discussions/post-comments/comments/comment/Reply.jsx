@@ -26,7 +26,7 @@ const Reply = ({ responseId }) => {
   const commentData = useSelector(selectCommentOrResponseById(responseId));
   const {
     id, abuseFlagged, author, authorLabel, endorsed, lastEdit, closed, closedBy,
-    closeReason, createdAt, threadId, parentId, rawBody, renderedBody, editByLabel, closedByLabel, is_spam,
+    closeReason, createdAt, threadId, parentId, rawBody, renderedBody, editByLabel, closedByLabel, isSpam,
   } = commentData;
   const intl = useIntl();
   const dispatch = useDispatch();
@@ -34,8 +34,8 @@ const Reply = ({ responseId }) => {
   const [isDeleting, showDeleteConfirmation, hideDeleteConfirmation] = useToggle(false);
   const [isReporting, showReportConfirmation, hideReportConfirmation] = useToggle(false);
   const colorClass = AvatarOutlineAndLabelColors[authorLabel];
-  // If is_spam is not provided in the API response, default to false
-  const isSpamFlagged = is_spam || true;
+  // If isSpam is not provided in the API response, default to false
+  const isSpamFlagged = isSpam || false;
   const hasAnyAlert = useAlertBannerVisible({
     author,
     abuseFlagged,
