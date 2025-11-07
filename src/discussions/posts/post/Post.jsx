@@ -34,7 +34,7 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
   const {
     topicId, abuseFlagged, closed, pinned, voted, hasEndorsed, following, closedBy, voteCount, groupId, groupName,
     closeReason, authorLabel, type: postType, author, title, createdAt, renderedBody, lastEdit, editByLabel,
-    closedByLabel, users: postUsers, is_spam,
+    closedByLabel, users: postUsers, isSpam,
   } = threadData;
   const intl = useIntl();
   const location = useLocation();
@@ -50,8 +50,8 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
   const userHasModerationPrivileges = useSelector(selectUserHasModerationPrivileges);
   const shouldShowEmailConfirmation = useSelector(selectShouldShowEmailConfirmation);
   const contentCreationRateLimited = useSelector(selectContentCreationRateLimited);
-  // If is_spam is not provided in the API response, default to false
-  const isSpamFlagged = is_spam || true;
+  // If isSpam is not provided in the API response, default to false
+  const isSpamFlagged = isSpam || false;
   const displayPostFooter = following || voteCount || closed || (groupId && userHasModerationPrivileges);
 
   const handleDeleteConfirmation = useCallback(async () => {
