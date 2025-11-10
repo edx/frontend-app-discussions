@@ -1,0 +1,792 @@
+[33m1e079de[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mCOSMO2-771-ai-moderation-ui[m[33m, [m[1;31morigin/COSMO2-771-ai-moderation-ui[m[33m)[m chore: Linting error fix
+[33m072021a[m chore: Linting error fix
+[33m90d383a[m chore: test
+[33m5b24bcd[m Rename is_spam to isSpam and update default value
+[33m077fa3d[m feat: Fix variable naming and default value for isSpam
+[33m5d2f979[m feat: Fix isSpam flag default value in Comment component
+[33m4da3002[m Merge branch 'master' into COSMO2-771-ai-moderation-ui
+[33md67623b[m feat: Integrate AutoSpamAlertBanner and update spam handling
+[33m27b1c6c[m feat: Integrate AutoSpamAlertBanner for spam notifications
+[33m6d5af8f[m feat: Add AutoSpamAlertBanner to Comment component
+[33m0afbb30[m feat: Add AutoSpamAlertBanner export to index.js
+[33m24eb0e3[m feat: Add auto spam messages and modal explanations
+[33m470f325[m feat: Add AutoSpamAlertBanner component
+[33m675f4fc[m[33m ([m[1;31morigin/edxCOSMO2-771-ai-moderation-ui[m[33m)[m feat: update new learner display and logic for improved visibility (#5)
+[33mc711d5d[m feat: add public safety warning banner in discussions to prevent spam (#4)
+[33mc4feed8[m fix: resolve ProductTour crash from false values in tours array (#3)
+[33m2481ada[m feat: restore bulk delete user posts feature for privileged users (#2)
+[33m90782b8[m fix: resolve InContext Sidebar post menu dropdown clipping that triggered scroll (#1)
+[33m231c15a[m Merge pull request #808 from Alam-2U/ealam/LP-85
+[33m4d51cf8[m revert: feat: added bulk delete user posts feature for privileged users (#818)
+[33mdf53c7c[m build: remove unused @edx/reactifex package (#813)
+[33m902490c[m test: Remove support for Node 20 (#811)
+[33m899d1fa[m feat: Profile image on user posts (#574)
+[33m7ca3d9b[m build: Upgrade to Node 24
+[33md4a6c20[m test: Add Node 24 to CI matrix (#809)
+[33m3e1c953[m fix: update frontend-build to fix install issues (#806)
+[33m5bef624[m refactor: Replace injectIntl with the useIntl() hook (#798)
+[33m28b1b19[m feat: updated v2 captcha to v3 in post editor (#803)
+[33m76fabbf[m feat: added confirm email banner for unverified users (#801)
+[33m5d13622[m fix: make learner name capitalized (#800)
+[33m9e7b7ae[m feat: added tooltips for like and follow button (#799)
+[33mec800dd[m fix: fixed rate limit dialogue for edit contents (#797)
+[33ma026911[m feat: added rate limit dialogue (#796)
+[33m3b527d9[m feat: added tooltip for author role (#795)
+[33md36c4af[m feat: captcha only for learners (#792)
+[33mfa77205[m fix: fixed email confirmation params issue (#791)
+[33m76da74a[m feat: Modified discussions FE so that ONLY users with verified emails (#789)
+[33m750720f[m fix: fixed disappering modal description while deleting (#790)
+[33m909d133[m feat: added bulk delete user posts feature for privileged users (#788)
+[33m3cda02b[m fix: add replace prop to fallback route (#782)
+[33m806c989[m fix: fixed captcha issue with response (#787)
+[33m2241575[m feat: added captcha to discussion post creation (#785)
+[33m8618e8c[m fix: fixed active state border issue for add a new post button (#784)
+[33m3b7239d[m feat: added product tour to notify all learners (#783)
+[33m7ebdf1b[m feat: Add notify all learners discussion post checkbox (#779)
+[33m5d75e03[m fix: fixed camel case issue so profile image shows for all users (#781)
+[33medd3f73[m feat: made user profile image visible (#778)
+[33m33375a5[m feat!: add design tokens support (#777)
+[33mac471e2[m fix(deps): update dependency @edx/frontend-platform to v8.3.7 (#768)
+[33mf04429f[m fix: add null check for post objects in usePostList hook (#752)
+[33mbad1246[m feat: import `FooterSlot` from component package instead of slot package (#765)
+[33mec915f6[m fix(deps): update dependency @edx/frontend-component-header to v6.4.0 (#766)
+[33m60da5ea[m chore: remove husky 🪓🐶 (#761)
+[33m05cf174[m feat: upgrade react to v18 (#759)
+[33mff72dab[m chore(deps): update `@openedx` dependencies to versions that support React 18 (#758)
+[33mc38887e[m docs: Update edx.rtd links to docs.openedx.org
+[33m58aa512[m Merge pull request #749 from salman2013/salman/update-catalog-info-file
+[33m62a5c11[m chore: Update catalog-info file for release data and remove openedx.yaml file
+[33m3ef8515[m fix: block overflow when editing comment (#706)
+[33m3cc39d8[m fix: Adds a fix to remove "Add a post" button when discussion is restricted (#742)
+[33maf6cd18[m revert: revert: "test: Remove support for Node 18 (#736)" (#740) (#744)
+[33m79a2fa4[m feat(deps): update header to 5.6.0 (#741)
+[33m472bbe2[m Revert "test: Remove support for Node 18 (#736)" (#740)
+[33mdc5f097[m test: Remove support for Node 18 (#736)
+[33m5e8c825[m build: Upgrade to Node 20 (#734)
+[33m0d6692c[m test: Add Node 20 to CI matrix (#735)
+[33m3391e96[m feat: added help section for post documentation (#733)
+[33m4297a96[m feat: updated frontend-build & frontend-platform major versions (#626)
+[33mdb883ca[m feat: added draft functionality for comment and responses (#727)
+[33m422fbf6[m fix: fixed author liking its own post (#720)
+[33me862ee6[m fix: post editor breaking for moderator (#717)
+[33meeae6d4[m build: Update codecov and use token
+[33m71b88bc[m fix: fixed sidebar inconsistent font size (#716)
+[33mc808069[m Revert "feat: updated course config api version (#702)" (#715)
+[33mb9543c6[m fix: fixed font-size of load more buttons and add a post heading (#708)
+[33ma545d0b[m fix: responsiveness of MFE discussions (#697)
+[33m8d86e6d[m feat: updated course config api version (#702)
+[33m3778156[m fix: fix redirection to new tab issue (#704)
+[33m50948ac[m feat: import `FooterSlot` from `frontend-slot-footer` package
+[33m4de1011[m Revert "feat: use frontend-plugin-framework to provide a FooterSlot" (#700)
+[33md747478[m feat: use frontend-plugin-framework to provide a FooterSlot
+[33me1c78dd[m fix: fixed limited content visibility due to oversized sidebar (#692)
+[33mf282da5[m fix: fixed commentsInThreads[s] is not iterable (#693)
+[33md7fcc86[m fix: fixed api calling issues for admin (#691)
+[33mc0873df[m fix: render favicon and siteName in title (#668)
+[33m12fbe7e[m fix: Discussions UI fixes on mobile resolutions (#689)
+[33m7db4fde[m feat: restricted unnecessary api calls (#683)
+[33m4914f51[m fix: fixed crash issue for post in learner tab (#684)
+[33m80073e3[m feat: updated redux structure using updated comments api (#670)
+[33m3aacdda[m feat: remove Transifex calls for OEP-58 for discussion MFE (#682)
+[33m1a2068d[m chore(deps): update paragon and frontend-build to openedx scope
+[33m3a7b705[m fix: user content unavailable content issue for learner (#674)
+[33m6875165[m fix: now content unavailable ui is only for learner (#672)
+[33m8fc6665[m feat: add auto scroll to editor functionality (#671)
+[33mddb6c96[m fix: table is now showing properly in preview and post lists (#669)
+[33mac17fd7[m feat: implemented error handling mockup (#663)
+[33mf0a4586[m feat: modified TA icon according to role (#665)
+[33m9eaed2b[m fix: fixed question icon and its position (#662)
+[33m71a18c5[m feat: tutor-mfe compatiblilty for `atlas pull` (#660)
+[33me845804[m fix: fixed redirection to learners tab in inContext view (#659)
+[33mf69b2c1[m chore: removed eslint-disable statements (#658)
+[33m88a985d[m fix: updated css styling to prevent content spilling (#655)
+[33m3aef3b0[m chore(i18n): update translations
+[33m095d429[m fix: fixed Learner Post filter issue (#651)
+[33mfa83570[m fix: anonymous post should not be visible in my post (#654)
+[33mbb341df[m chore(i18n): update translations
+[33mffb3864[m fix: sort menu collapse after filter selection (#645)
+[33m5df51f2[m fix: fixed hover color issue throughout MFE (#644)
+[33m92adec3[m chore(deps): update actions/setup-node action to v4 (#643)
+[33mce786af[m chore(deps): update actions/checkout action to v4 (#642)
+[33m4dbb4f5[m chore(i18n): update translations
+[33m733046f[m fix: fixed post card border color issue (#640)
+[33m6cacde4[m fix(deps): update dependency yup to v0.32.11 (#632)
+[33m8015f6c[m fix(deps): update dependency classnames to v2.5.1 (#636)
+[33m035d766[m feat: removed sort and filter tour (#638)
+[33mee61d1c[m chore: removed enable_learners_tab_in_discussions_mfe flag dependency (#637)
+[33m9e95458[m feat: Editor bar visibility (#582)
+[33mb467298[m fix: fixed UI issues of discussion for incontext sidebar (#633)
+[33mb5d036a[m fix(deps): update dependency regenerator-runtime to v0.14.1
+[33mbc99710[m chore(deps): update dependency @edx/frontend-build to v13.0.14 (#628)
+[33m6ae5130[m feat: fixed page styles (#577)
+[33m67d79cb[m chore(i18n): update translations
+[33mf31a0e7[m fix(deps): update dependency formik to v2.4.5 (#619)
+[33m9761787[m fix(deps): update dependency @reduxjs/toolkit to v1.9.7 (#616)
+[33me5a21f4[m chore(deps): update dependency @edx/frontend-build to v13.0.12 (#624)
+[33m1d89e95[m fix(deps): update dependency @edx/frontend-component-footer to v12.6.1 (#625)
+[33mb35632d[m feat: upgrade react router to v6 (#542)
+[33mb36c026[m fix: null error at useRouteMatch when running on tutor (#613)
+[33m0d5df18[m fix(deps): update dependency redux to v4.2.1 (#621)
+[33mc614355[m fix(deps): update dependency regenerator-runtime to v0.14.0 (#622)
+[33mdf4a3c2[m chore(deps): update dependency rosie to v2.1.1 (#605)
+[33mac635ed[m chore(deps): update dependency @edx/frontend-build to v13.0.8 (#608)
+[33mc4f7115[m fix(deps): update dependency @edx/frontend-component-footer to v12.6.0 (#609)
+[33m5cc8ba4[m fix(deps): update dependency @edx/frontend-component-header to v4.10.1 (#610)
+[33m6850582[m fix(deps): update dependency @edx/paragon to v20.46.3 (#611)
+[33mc6d953f[m feat: removed enable_moderation_reason_codes flag (#615)
+[33ma479f5a[m chore(i18n): update translations
+[33m48b2b9d[m fix: container indents and style imports (#600)
+[33m352fa0e[m chore(deps): update dependency @edx/frontend-build to v13.0.5 (#604)
+[33m6930e90[m refactor: update lock file version (#559)
+[33m4994de9[m fix: unify font-family with paragon component styles (#598)
+[33m6d90da7[m chore(deps): update dependency @testing-library/jest-dom to v5.17.0 (#588)
+[33mbcb43df[m fix: resolved load more posts delay issue (#602)
+[33m7d7221b[m fix(deps): update dependency @edx/frontend-component-footer to v12.5.1 (#590)
+[33m7cd93bd[m fix(deps): update dependency @edx/frontend-component-header to v4.9.1 (#594)
+[33m6afa984[m chore(i18n): update translations
+[33m46ddd6d[m chore(deps): update dependency @edx/reactifex to v1.1.0 (#580)
+[33m5bd1565[m chore(deps): update dependency axios-mock-adapter to v1.22.0 (#589)
+[33m27f73e3[m feat: babel-plugin-react-intl to babel-plugin-formatjs migration (#572)
+[33m67700e8[m refactor: updated README file to reflect template changes (#592)
+[33m1cb8ad3[m Merge pull request #591 from openedx/feanil/update_security_emails
+[33m4068b9e[m docs: Update the security e-mail address.
+[33m5db3a18[m fix: Persian language (#555)
+[33m3a6a783[m chore: Update to the new version of brand-openedx in the new scope. (#585)
+[33m69e0689[m fix(deps): update dependency @edx/frontend-platform to v4.6.3 (#566)
+[33mf795d9f[m fix(deps): update dependency tinymce to v5.10.7 (#570)
+[33m68c1852[m fix(deps): update dependency classnames to v2.3.2 (#568)
+[33mf49f272[m chore(deps): update dependency @edx/browserslist-config to v1.2.0 (#571)
+[33m6721225[m chore(i18n): update translations
+[33maf5b10a[m fix: now discussion sidebar modal appears above the fold (#563)
+[33mfb2be35[m chore(i18n): update translations
+[33m10adf11[m chore(i18n): update translations
+[33m2609380[m fix: moved feedback widget behind the env variable (#557)
+[33m61d0f9a[m chore(i18n): update translations
+[33mea235cf[m fix: fixed leak issue when checkpoint will be undefined (#553)
+[33mb8f11c3[m chore(i18n): update translations
+[33m1769692[m chore(i18n): update translations
+[33m3d6b71c[m fix: learning header constant height (#551)
+[33mbd42521[m style: add important in post type card border (#550)
+[33m445caca[m Merge pull request #540 from DmytroAlipov/fix-discussion-search
+[33m4a2b324[m fix: issue with a repeated search query
+[33ma16bd78[m build: update react-redux (#549)
+[33mdf1a16e[m feat: update react & react-dom to v17 (#537)
+[33m6569353[m chore(i18n): update translations
+[33m2498f74[m chore: added renovate file structure based on provided template (#546)
+[33m99ad3af[m test: fixed postcommentsview test cases (#543)
+[33me2bb68a[m chore: update codecov ref from edx to openedx (#544)
+[33mf694b48[m chore(i18n): update translations
+[33m228a771[m fix: error 400  editing comment (#533)
+[33mc821033[m Merge pull request #505 from igobranco/igobranco/new-translation-languages
+[33m7ce4566[m chore(i18n): add languages
+[33ma02771f[m chore(i18n): update translations
+[33m8c53a7a[m feat: integrated backend discussions restriction with MFE (#529)
+[33mc8500a0[m fix: post sharing URL (#445)
+[33mf7ad949[m chore(i18n): update translations
+[33m733a74d[m feat: use `atlas` in `make pull_translations` (#502)
+[33mb2b33b7[m feat: upgraded to node v18, added .nvmrc and updated workflows (#471)
+[33m70f6541[m build: edx namespace packages upgrade & resolved respective eslint issue (#508)
+[33m8228549[m fix: switch to use PUBLIC_PATH for routes (#525)
+[33m0854ee3[m test: resolved console warnings in test cases (#523)
+[33m7aaa1fb[m test: fixed test cases after MFE optimization (#522)
+[33m4f0b5f9[m test: fixed test cases after MFE optimization (#521)
+[33m6d6c61d[m fix: direct link thread no found issue (#516)
+[33m84e18b9[m fix: after optimization issues (#515)
+[33m3dc7f74[m fix: postLink footer icon size (#514)
+[33m0844ee6[m Perf: improved discussions MFE's components re-rendering and loading time (#513)
+[33m7b7c249[m Revert "Perf: improved discussions MFE's components re-rendering and loading time (#485)" (#512)
+[33m59b4366[m Perf: improved discussions MFE's components re-rendering and loading time (#485)
+[33m8e68d3a[m chore: console react version (#511)
+[33m7ceaea1[m chore: enable profiler on production build (#510)
+[33m2bf6086[m chore: enable profiler on production for data collection (#509)
+[33m59349f4[m chore(i18n): update translations
+[33m1eb4c65[m Revert "[FC-0014] update frontend-platform version to v4.2.0" (#506)
+[33m7ef4d2d[m Merge pull request #501 from raccoongang/sagirov/tCRIL_GA-58
+[33m0871217[m chore: update frontend-platform version to v4.2.0
+[33mee382b7[m fix: action dropdown UI issues (#500)
+[33mf1a9922[m fix: added role for editedby and closedby user (#498)
+[33m009417b[m fix: fixed feedback widget position issue (#499)
+[33mf13b34c[m fix: updated post actions dropdown design (#495)
+[33m1ba5b93[m fix: typeset failed: Cannot read properties of undefined (#496)
+[33mc1478db[m fix: fixed dynamic learner profile issue (#493)
+[33m5cc5156[m test: added test cases of navigation bar (#487) (#489)
+[33m8c28d46[m fix: typeset failed: window.MathJax.typesetClear is not a function (#494)
+[33mc16843f[m temp: fix tends to resolve increased script error (#492)
+[33m1117ed0[m fix: changes empty state image and text to monochrome (#490)
+[33m242740d[m chore(i18n): update translations
+[33m2013dcf[m style: tooltips aligned to the side in topic stats (#488)
+[33m3cdf082[m fix: removes outline around comment cards (#487)
+[33md0d80a2[m fix: removes double line between tabs (#486)
+[33m5240d0d[m feat: added support for dual feedback forms (#478)
+[33mb171de2[m fix: lock is used for post close or reopen (#484)
+[33m24163d1[m fix: hover color removed when filter buttons are clicked (#483)
+[33m58b6b69[m fix: typeset failed: window.MathJax.typesetClear is not a function (#482)
+[33m025edf7[m temp: fix for typeset failed:e.typesetPromise is not a function (#479)
+[33m1e47d10[m test: added newly cases to cover codeCov (#474)
+[33m39da42e[m fix: fix post height and remove overstate from author label (#472)
+[33m15aee6a[m temp: fix for resize observer loop limit exceeded (#477)
+[33mcd2d67e[m fix: fix typeset failed error (#475)
+[33mc4f861c[m chore(i18n): update translations
+[33m78a8525[m test: added test cases of learners and post (#470)
+[33mb21048e[m fix: Fix for code block formatting on the post preview and published post view (#450)
+[33m45dea79[m test: added test cases for learner post view (#466)
+[33m530f2ce[m test: added test cases for learner view (#465)
+[33m91cb347[m refactor: remove unused tranisfex v2 url (#463)
+[33m04745d6[m chore(i18n): update translations
+[33maad6702[m feat: sort comments based on sort order dropdown (#468)
+[33md39a196[m feat: added product tour for response sort (#462)
+[33m7b000f1[m feat: send enableInContextSidebar param to backend to identify source of content for events
+[33m627390c[m test: added testcases of redux, selector and api (#459)
+[33m1db9471[m fix: more actions dropdown was not visible (#461)
+[33m24d0235[m fix: fix topic info for course-wide discussion topics (#458)
+[33mf66cdda[m chore(i18n): update translations
+[33m07b56e6[m style: add border on focused post (#460)
+[33mbe1a2cc[m fix: fixed post coment actions menu accessibilty for keyboard (#456)
+[33med0c73e[m Merge pull request #454 from openedx/repo_checks/ensure_workflows
+[33m1041b3e[m build: Updating a missing workflow file `add-depr-ticket-to-depr-board.yml`.
+[33m493a061[m build: Creating a missing workflow file `add-remove-label-on-comment.yml`.
+[33m679e21c[m build: Creating a missing workflow file `self-assign-issue.yml`.
+[33m62eb9f5[m test: Added test cases for noncourseware and courseware topic posts (#452)
+[33mdedbc25[m fix: incontext crashing (#453)
+[33m0f2ad8b[m fix: conditionally skipped some API calls and deffered script loading to improve performance
+[33m61581ff[m fix: resolved data retention issue in add a post form (#451)
+[33m3afce17[m feat: added event tracking on load more response (#442)
+[33m7e36e9f[m fix: post loading slow (#447)
+[33mc662310[m test: added  test cases for v3 Topics and units list page (#440)
+[33m682a118[m fix: reduced padding for topic names (#443)
+[33md34d0eb[m feat: hide the comments sort feature (#441)
+[33m6afb7c7[m temp: testing getFeedback widget response time (#444)
+[33m7dca99d[m chore(i18n): update translations
+[33m137795f[m feat: added stats at subsection level in topics tab (#437)
+[33m1c2da56[m fix: fix filter and sorting effect in discussion sidebar (#438)
+[33me99c30f[m fix: unnamed topic/unit issue in inContext topics (#432)
+[33meacc16b[m fix: copy link not working in in-context discussion (#439)
+[33mf8800de[m feat: added delay in post preview to avoid flashing of content
+[33mf7740de[m fix: topic info is fixed from posts in incontext discussions (#433)
+[33m4ca25c1[m fix: restrict tiny mce from converting url
+[33m8389d09[m Merge pull request #430 from openedx/sundas/INF-725
+[33m3233d70[m test: added redux test cases of in context topics
+[33m22474f4[m feat: add comments sorted by ascending and descending functionality (#408)
+[33mb5d4213[m chore(i18n): update translations
+[33m71931c8[m refactor: hovercard hover state refactoring  (#425)
+[33mf9ca375[m style:  in-context discussions style updates (#426)
+[33m3d8353d[m docs: updated read me and catalog info files (#428)
+[33m21bec39[m fix: fix mathjax text overflowing (#429)
+[33ma479ba5[m chore(i18n): update translations
+[33mbafb55a[m fix: use threads api in case of search (#419)
+[33m62ebd44[m style: post content style updates (#407)
+[33m04e0bb3[m chore(i18n): update translations
+[33m2a187ca[m Mathjax v3 fix (#423)
+[33m7de274a[m Revert "feat: added mathjax v3 support in platform (#420)" (#421)
+[33mad64061[m feat: added mathjax v3 support in platform (#420)
+[33m42fa6a6[m fix: changed ref to id for mathjax rendering div (#418)
+[33m4a49c13[m Moving code coverage from codecov package to CI  (#414)
+[33m19e7757[m fix: output format changed for mathjax script (#417)
+[33mb7e5dd0[m fix: testing mathjax issue fix with script change (#416)
+[33mf33e3c3[m fix: wrapped all content under mathjax script provider (#411)
+[33m4e659f8[m fix: resolve tour state update error (#415)
+[33m02cf34a[m chore(i18n): update translations
+[33m722da96[m fix: page width does not increase due to long text (#412)
+[33m6948a9f[m feat: added tour for not responded filter (#406)
+[33me1d8af4[m fix: editedBy and closedBy banner will be visible to global staff (#410)
+[33m2a50edc[m chore(i18n): update translations
+[33ma218c29[m style: fixes add/edit post section redesigned
+[33m6e03d5b[m fix: update post delete function to async (#404)
+[33mfd4dbef[m fix: deleting a post from sidebar renders entire MFE in the sidebar (#403)
+[33mf614c42[m chore(i18n): update translations
+[33m928108e[m style: username space issue post summary
+[33maade749[m fix: tooltip text updates according to new requirements
+[33m1494741[m fix: text update for blackout dates banner
+[33m0154773[m fix: inContext topics screen center issue on every loading (#399)
+[33m58e724d[m feat: display archived topics is post editor and topics list (#397)
+[33m9c576ff[m style: post summary card design updates
+[33m3f89040[m feat: implements new v3 in-context topics structure (#371)
+[33m3622d46[m fix: moved spinner to center and reply menu icon to right side (#396)
+[33m4eaac1e[m fix: loading icon and filter menu shows when api call is in progress in my posts tab (#389)
+[33m2a5e643[m chore(i18n): update translations
+[33mb47fc9b[m fix: post edit reason will not be sent in case of global staff own post
+[33mbb6e47c[m fix: disabled relative link
+[33mf378b21[m chore: code style fix
+[33mc6a81e6[m style: z-index fixes for UI elements in user dropdown and editor toolbar
+[33m283e16a[m fix: add response button does not show when no responses avaiable (#391)
+[33m0c71e8b[m feat: Support runtime configuration (second attempt)
+[33m49d6fbe[m fix: removed no endorsed responses from question type post (#383)
+[33mb1c1f1c[m fix: removed sidebar in case there are no posts (#367)
+[33maf029b4[m chore(i18n): update translations
+[33mb7aff94[m Merge pull request #372 from openedx/INF-685
+[33mc26c7d3[m fix: discussions navigation tab is not sticking to top
+[33m2eee6c3[m fix: fix cohort field on content filter event.
+[33me7a41b2[m fix: cleanup events and add filter content event to learners tab filters
+[33mad42959[m Merge pull request #382 from openedx/revert-377-support-runtime-config
+[33m67b0b33[m Revert "feat: Support runtime configuration"
+[33mda108a2[m chore(i18n): update translations
+[33m1005752[m fix: image paste is blocked in tinymce
+[33m31a66f6[m fix: filter result rendering fixed in topics
+[33m37053e9[m feat: add tracking event for content filtering in discussion MFE
+[33m9f84230[m feat: Support runtime configuration
+[33md60f1af[m feat: add event tracking for user sorting on learners tab in discussions MFE.
+[33mdf6a0d4[m chore(i18n): update translations
+[33me8bd91b[m Merge pull request #361 from openedx/INF-628
+[33mbdaa13a[m Merge branch 'master' into INF-628
+[33m5ab324c[m test: changed structure of test cases
+[33m00ab828[m fix: UI style fixed for medium screens
+[33m1719315[m Merge branch 'master' into INF-628
+[33m8e19eed[m test: testcases made for hook useusercanaddthreadinblackoutDate
+[33m11460a3[m Merge pull request #368 from openedx/INF-628-fix
+[33ma3d0273[m fix: lint fixes
+[33mf1d2de6[m Merge branch 'master' into INF-628
+[33m1169de0[m refactor: hook's return condition changed
+[33maa7a5a8[m Merge pull request #366 from openedx/INF-661
+[33m9d9377b[m refactor: used classname in conditional class
+[33mf45f47f[m style: 3 level topic hierarchy accomodated when incontext discussions is enabled
+[33mbea247f[m Merge pull request #357 from openedx/INF-666
+[33m9e878fc[m Merge branch 'master' into INF-666
+[33m2117613[m fix: removed divider from report in action drop down
+[33mb23846b[m fix: handled thread not found result on frontend
+[33m7912d70[m refactor: handled confirm action to functions
+[33m42f1efd[m refactor: confirmation modal modified  to handle variants
+[33m8e449ac[m refactor: changed  deleteconfirm and reportconfirm rename to comfirmAction and made it required
+[33m5f477cb[m fix: report icon changed to correct report icon
+[33mcf8f081[m fix: fixed test cases
+[33mb72dbae[m style: confirmation modal added when reporting content
+[33mf805f73[m refactor: modified hook to use can add thread in blackout dates
+[33m27c4d7e[m refactor: made hook to get privilage users
+[33mb976e81[m fix: add a post during active blackout dates fixed for all roles
+[33m5c3d561[m docs: Include in Open edX release
+[33me16dc59[m fix: Work around `Truncate` infinite loop
+[33mfc95d16[m fix: selectTopicsById selector was returning array of undefine (#356)
+[33m9ce791d[m Merge pull request #362 from openedx/INF-578
+[33m5e12d87[m fix: long post titles does not  shift menu position.
+[33m1a9899c[m chore(i18n): update translations
+[33mab18806[m fix: minor issue after MEF rollout (#358)
+[33m4595112[m fix: count_flagged param sent only for Privilege users (#359)
+[33md58b104[m style: fixed text truncate for title
+[33m990072e[m Merge pull request #346 from openedx/INF-626
+[33mb92e10e[m fix: endorse icons colors changed to respective background
+[33m1aadbd9[m style: icons for responses to endorse and mark as answered added
+[33me2619ef[m chore(i18n): update translations
+[33m9350922[m fix: incontext modal alignment changes (#353)
+[33m1c5b0ac[m fix: in-context discussion rendering in sidebar (#351)
+[33mb4da5d3[m style: design changes for post summary card
+[33m1886b22[m feat: implement user interactive posts API for my-post tab (#314)
+[33mdb92896[m Merge pull request #350 from openedx/INF-622
+[33mcff01eb[m fix: with active discussion blackout dates does not load add a post button
+[33m72df5ec[m Merge pull request #348 from openedx/revert-341-INF-528
+[33m32593f6[m fix: removed extra space besides authorlabel
+[33mf686fb4[m Revert "Topic information moved next to username"
+[33m257e249[m Merge pull request #341 from openedx/INF-528
+[33m87209ab[m style: truncation added for long topic namesd
+[33m41f9e5b[m style: Topic info moved next to username
+[33m32dc867[m chore(i18n): update translations
+[33mdfd880d[m feat: add unresponded posts filter
+[33m6d87bf8[m fix: unnamed category and subcatefory strings added
+[33mc68ed35[m feat: added recent sort in learners area (#344)
+[33m4df4aec[m chore(i18n): update translations
+[33mc2910af[m feat: added warning for images with large dimensions
+[33m7ced4b2[m feat: added filter options for learner posts (#340)
+[33m12dd08d[m Merge pull request #337 from openedx/INF-646
+[33mdeea2aa[m Merge pull request #329 from openedx/INF-372
+[33m2203f43[m fix: removed highlighted header-action-bar on confirmation pop-up
+[33m4fa2038[m refactor: removed function responsestext
+[33m0bdd100[m refactor: removed redundancy of responses text div using function
+[33mb01272a[m fix: loading more button does not create glitch in response text
+[33m3ec0b82[m refactor: fixed Lint tests
+[33m375af11[m fix: no respnses text does not show while api call to load responses is in progress
+[33mc5ad7cf[m fix: more formats for mathjax support added
+[33mdef74fd[m chore(i18n): update translations
+[33m69daea0[m chore(i18n): update translations
+[33m7965c3e[m fix: add autoresize plugin in TinyMCE editor (#333)
+[33m08d1833[m chore: upgraded paragon to match figma design
+[33m0a8d4d1[m feat: blackout dates information banner added
+[33mecae19b[m fix: convert clickable author label to text in posts summary list (#331)
+[33mfd9edd7[m chore(i18n): update translations
+[33m4f74016[m fix: fixed failing tests in transifex (#334)
+[33m0a4f2a4[m feat: learners area post summary will show reported if any comment is reported (#325)
+[33md7d159d[m fix: add flag for transifex pull command
+[33m8ef83c5[m fix: replace bodyheight with paragon windowSize (#327)
+[33m401d38c[m fix: learner tab is now visible irrespective of user role
+[33mcd204c8[m fix: fix for reported alert banner
+[33m9c1d68a[m chore: move feedback banner behin d the DISPLAY_FEEDBACK_BANNER env variable (#324)
+[33m4fecfab[m fix: add violates-guidelines edit reason as a default value for global staff (#323)
+[33m50b2e15[m feat: Add support for grouping at subsections (#281)
+[33m947204f[m fix: remove horizontal scrollbar (#322)
+[33mc5bda33[m chore(i18n): update translations
+[33m969df19[m fix: text search rewrite text added
+[33mb5ed63c[m fix: update topics listing UI (#317)
+[33m150f804[m fix: unnamed topic crash handled on fe
+[33m8eb3143[m feat: remove support for discussion mfe in iframe (#308)
+[33m5255014[m chore: upgrade paragon version to 20.12.1 (#315)
+[33m35ad0ae[m fix: ui refactoring of load more responses and comments button (#310)
+[33m11e9ebc[m fix: remove editor text persistence (#311)
+[33mfc86417[m fix: added hover to stats (#313)
+[33m315da6b[m fix: ui text changes
+[33mf438321[m fix: read/unread status fixed
+[33m8f8c5f2[m fix: Only show unread status for posts when the post itself is unread
+[33m4089b90[m chore(i18n): update translations
+[33m211323b[m fix: removed responses sort from frontend (#307)
+[33m52bd342[m test: fix failed test related to containerSize hook
+[33mde81833[m fix: post content vertical scroll issue
+[33m5974094[m revert: paragon downgraded to avoid action menu placement issue (#306)
+[33m4e1f3ae[m fix: double slash also supported now for mathjax rendering
+[33mab2c031[m fix: remove post sorting from frontend
+[33mb256238[m fix: updated header and navigation bar UI (#302)
+[33m72eed3d[m chore: upgrade paragon version to 20.11.1 (#296)
+[33mc6da71f[m chore(i18n): update translations
+[33m457ae28[m fix: match discussion header with learning header (#299)
+[33m421bc3d[m style: banner design fix
+[33m62f5566[m Merge pull request #297 from openedx/revert-283-add-response-fix
+[33m61c6f29[m Revert "fix: add response duplication button fixed"
+[33m576a02b[m style: buttin style fixed for when learn more is hidden
+[33m2812dac[m fix: removed extra zero in user stats (#294)
+[33m5e144de[m fix: permission fixes added for form
+[33m34e448d[m test: test added for isAdmin permission
+[33md47c783[m fix: admin form fix
+[33m66f23d0[m fix: test env loaded
+[33mac6765b[m fix: moved feedback form links to edx-internal
+[33m0f56b49[m feat: added feedback banner
+[33m7017f43[m fix: edit post action fixed in learner tab
+[33m1bcdcef[m chore(i18n): update translations
+[33mb5dce94[m feat: made violates-guidelines edit reason code default for admin (#288)
+[33m5ba964f[m fix: fixed landing url and filters
+[33m3506a23[m Merge pull request #282 from openedx/tcril/fix-gh-org-url
+[33madcd272[m fix: added insertlink icon (#285)
+[33mb774b6b[m feat: copy post functionality (#280)
+[33m4ed2f3b[m chore(i18n): update translations
+[33mbeda7d0[m fix: update path to .github workflows to read from openedx org
+[33m8baec0b[m fix: add response duplication button fixed
+[33mb49c5d6[m fix: fix github url strings (org edx -> openedx)
+[33m93387f1[m chore(i18n): update translations
+[33m77c28bc[m fix: sort order of responses are changing immediately (#278)
+[33mc45c468[m fix: hash displaying as encoded (#277)
+[33m02202e2[m fix: learner tab is hidden from learners
+[33mb0737da[m feat: added blackout dates implementation (#271)
+[33m8a73f23[m fix: small UI issue and post sorting (#274)
+[33m3d10b6d[m fix: updated search info and no result design (#246)
+[33m5704b40[m fix: threads lost issue on load more in topics
+[33m41ee555[m fix: Updated state logic for reported content (#264)
+[33meb2ece3[m fix: vertically centered no results found message (#270)
+[33m2fd1545[m chore(i18n): update translations
+[33m7998955[m Revert "Revert "fix: fix discussions MFE Header to LearningHeader""
+[33mf878a04[m fix: follow button should not open post (#267)
+[33mfab9d91[m fix: resolve issues with search functionality
+[33m19666b8[m fix: handle inIframe query_param when it is False
+[33m418f78c[m fix: updated reported icon, pointer cursor on search button and no search if empty string (#263)
+[33m45c596b[m fix: allow actions according to user role and privileges (#260)
+[33md1dcf20[m Revert "fix: fix discussions MFE Header to LearningHeader"
+[33m5d72cc5[m fix: fix discussions MFE Header to LearningHeader
+[33ma45aeee[m fix: no result found test remove when call in progress (#259)
+[33m9be71ff[m fix: anonymous user is not clickable (#258)
+[33m7ee5a8e[m fix: show searching when api call is in progress (#254)
+[33m332e5f0[m MFE fixes (#256)
+[33m7426ee8[m fix: fix added for screen flickering (#257)
+[33m77748be[m fix: long post title heading UI updated (#255)
+[33m928fa20[m fix: Resolved UI issues in learners tab (#252)
+[33m027e9c0[m fix: desktop responsiveness issue (#253)
+[33mb29f5d7[m Move clickable username behind the discussions.enable_learners_tab_in_discussions_mfe (#247)
+[33m592f63c[m fix: accessibility fixes (#249)
+[33m67618ab[m fix: style issues in add response bottom section (#250)
+[33mef9cfd7[m fix: removed learners list footer (#245)
+[33m2296735[m fix: response and comment UI (#244)
+[33m3e0e040[m fix: style issues for new post and edit post form (#242)
+[33mafe27d2[m fix: pinned post sorting issue (#243)
+[33m007a7c8[m fix: fix styles for header and footer
+[33m339e373[m fix: added no results bar to topics tab and search info to learners tab (#239)
+[33me34ebdb[m fix: accessibility fixes (#236)
+[33mb7d436f[m fix: add a response button added at the end of thread (#238)
+[33m314b31a[m fix: last login time is hidden from FE (#237)
+[33m3657767[m feat: add a posts list back button for small devices and improve responsiveness  (#230)
+[33mfd60e96[m fix: fix timeago detail for months to be in weeks. (#235)
+[33m7ea3e62[m fix: clickable username in post, comments and responses (#234)
+[33mb15fd96[m feat: added image upload size limit (#233)
+[33mf71e04c[m chore(i18n): update translations
+[33medd5b96[m feat: add languages for translations
+[33m4991eba[m fix: display post closed/edited reason to post author (#228)
+[33m5f29bff[m feat: add header footer for discussion MFE behind inIframe query_param
+[33mc90e77d[m feat: nav bar added as a separate component in discussion (#222)
+[33m25cf4ce[m fix: display direct link post at top of the list (#226)
+[33m2405040[m fix: scrollbar for safari (#224)
+[33m74e2169[m fix: show deactivated in case of retired user (#216)
+[33m97b92a1[m feat: add transifex configuration to allow translation jobs.
+[33m76595e5[m feat: added search button in place of clear button (#221)
+[33md3adb8b[m fix: response and comment UI according to Figma (#220)
+[33md71a53d[m fix: post avatar alignment and size (#214)
+[33mf447be1[m fix: added pushpin icon to mfe (#218)
+[33mc30637f[m fix: load thread if thread data doesnot exist in redux (#215)
+[33m98b97d4[m fix: updated pinned post icon (#212)
+[33m12da372[m fix: accessibility fix added for the threads section (#213)
+[33mc1b0aa0[m fix: no results found should be displayed afer api call (#211)
+[33md61045e[m fix: add learner partial username search functionality to the new search component.
+[33m67b634d[m fix: Update post content UI according to Figma (#209)
+[33mbf95335[m feat: update search in discussions mfe (#207)
+[33mca1783a[m fix: set default value for cohorts dropdown (#208)
+[33m70027d0[m feat: clickable username in post summery card (#201)
+[33mb2f5bd8[m Merge pull request #109 from openedx/kshitij/tnl-9673/archived-topics
+[33mdbf6679[m feat: Add support for archived topics
+[33ma49f71f[m fix: post editor images and preview images responsiveness (#206)
+[33ma089235[m fix: load-more button added in place of infinite scroll (#199)
+[33mae6397e[m fix: filtering posts in a topic doesn't work when filtered results are empty (#203)
+[33m5719b5c[m fix: Reported filter for global admin (#200)
+[33m8aeceb7[m fix: post content images overflow
+[33m59187d2[m feat: implement learners area new UI (#197)
+[33m8414895[m fix: accessibility issues
+[33m945e948[m style: changes in style for accessibility improvements
+[33mb024953[m chore: update dep frontend-build
+[33m275dd99[m fix: post summary card (#196)
+[33mb9cb2f3[m fix: ignored lint fix
+[33mc352030[m chore: upgraded frontend build version
+[33m34071b1[m chore: build fix revert package file
+[33m5d342f3[m Revert "fix: post summary card (#186)"
+[33m40572e1[m Revert "chore: generate new package-lock (#190)"
+[33m9cd06ce[m chore: generate new package-lock (#190)
+[33m478799e[m fix: post summary card (#186)
+[33m6d591c9[m fix: lint fixes
+[33m5e5c286[m chore: package lock issue fix attempt
+[33ma2cfbc2[m fix: tags added for reported/pinned/read/selected posts
+[33md7392af[m Merge pull request #185 from openedx/inf-283
+[33mad51e15[m fix: show no preview avaiable if preview has image or mathjax
+[33mc162061[m Merge pull request #184 from openedx/inf-167
+[33mef966a5[m fix: following the post while creating
+[33mc210642[m style: show preview button css fix in edit mode
+[33mb8b01e9[m fix: mathjax and mathjax inline syntax fix in regexx
+[33m57e1811[m fix: syntax support extended for latex
+[33m245f8a0[m fix: browser support config updated
+[33m5226cb3[m feat: added preview option for posts/comments/reponses
+[33m7502006[m feat: add cohort filter in filter action bar (#172)
+[33m2ea48f6[m Revert build fail (#179)
+[33m524366a[m Revert "Temp PR to check build issue. (#177)"
+[33m2f88aae[m Temp PR to check build issue. (#177)
+[33m8d02ad3[m fix: show reported label in case of reported response (#173)
+[33mc80c3b8[m build issue resolution try (#176)
+[33m8fd3ac7[m mathjax syntax support  (#175)
+[33m8dd19de[m Revert "temp: post preview removed temporarily to move fixes on prod"
+[33m20b9bba[m temp: post preview removed temporarily to move fixes on prod
+[33m5de4b44[m Revert "fix: mathjax syntax support extended" (#171)
+[33m759974c[m Revert "fix: lockfile regenerated to fix build issue (#169)" (#170)
+[33mfef9790[m fix: lockfile regenerated to fix build issue (#169)
+[33m2355c2f[m fix: mathjax syntax support extended
+[33mf6a65f9[m Merge pull request #162 from openedx/inf-226
+[33me6bb13d[m fix: image rendering fix for those uploaded using legacy experience (#165)
+[33m8f16f7f[m Merge pull request #166 from openedx/inf-211-2
+[33m3d3d565[m fix: post summary ui update
+[33ma6577bf[m feat: added preview option for tinyMCE content (#164)
+[33m2d1c41b[m Fix: for rendering latex in comments and responses and support for special symbols in TinyMCE (#160)
+[33me01d413[m Merge pull request #161 from openedx/inf-211
+[33m0269c0d[m fix: mark a post as read in redux when user clicks on a post  (#163)
+[33m1ed1013[m fix: change votes to likes in search filter
+[33m97f60d9[m fix: updated post summary
+[33mee3d1c4[m chore: update discussions MEF POST_MARK_AS_READ_DELAY to 0ms (#159)
+[33ma52c370[m revert: reverting wiris integration (#157)
+[33mdec3f3e[m fix: Fix pull_translations by using correct CLI flag for languages (#158)
+[33mc843d19[m fix: Don't force unread view to only discussions (#149)
+[33mfd984c6[m [INF154, 203]: tinyplugins support for mathjax and preview issues (#156)
+[33m243274a[m fix: discussion moderators can't create posts for specific cohorts (#155)
+[33m6818244[m Merge pull request #154 from openedx/jenkins/version-check-4fa31fe
+[33m3cb5e12[m Merge pull request #153 from openedx/drop-12
+[33m007972f[m feat: Add package-lock file version check
+[33m2ed6d14[m chore!: Dropped support for Node12
+[33m4fa31fe[m Merge pull request #150 from openedx/inf-132
+[33m3719e08[m fix: post summary size fix
+[33me5886c0[m Merge pull request #151 from openedx/inf-181
+[33m786c278[m fix: loading symbol remains after successful
+[33me247bf8[m fix: reported filter is missing for discussion moderator roles (#148)
+[33m3be4085[m fix: make the post, comment, response content images responsive (#147)
+[33m847a3b2[m fix: display comment actions alert in single row (#146)
+[33me2407e5[m fix: related to field not shown on posts (#145)
+[33ma550cfd[m Merge pull request #144 from openedx/inf-158
+[33maf670ec[m Merge pull request #143 from openedx/aansari/INF-156
+[33m4b7145d[m fix: post summary pinned bar
+[33m11f98d3[m refactor: structure the edit reason code condition
+[33mbea2390[m fix: add validation for edit reason code dropdown
+[33ma77b947[m fix: hide edit reason dropdown while adding a comment or response (#142)
+[33m34a0ae8[m Merge pull request #131 from openedx/kshitij/tnl-9841/tnl-9844
+[33mdfec88d[m fix: improve UX to match mockups better
+[33mc57dfc1[m fix: Fix constant reloading on topics page and posts links on category page [BD-38] [TNL-9868] [TNL-9846] (#128)
+[33md1dce4f[m Merge pull request #141 from openedx/inf-41
+[33me8a3e4e[m feat: add support for pagination on learner page [BD-38] [TNL-9844] (#129)
+[33m7e5ae2a[m fix: hyperlinks opening in current tab
+[33m36ff2fa[m fix: scroll the post close dialog into view when it appears (#119)
+[33m7a864ed[m Merge pull request #140 from openedx/aht007/node-16
+[33mdbade5d[m fix: update deps
+[33md9f0852[m Merge pull request #130 from openedx/tnl-9851
+[33mc0f675f[m revert: node 16 upgrade is reverted (#132)
+[33m7f49543[m Revert "fix: frontend build test fix for stage" (#138)
+[33m1d1b7eb[m Revert "revert: revert to node 12 to test build issue" (#136)
+[33ma059c50[m Revert "revert: downgraded node to 12 again to resolve build issue (#133)" (#137)
+[33mcf83775[m Merge pull request #135 from openedx/revert-3
+[33m6b98ef6[m revert: revert to node 12 to test build issue
+[33m45b3dd7[m revert: downgraded node to 12 again to resolve build issue (#133)
+[33m59f97ff[m fix: updated post summary design
+[33m86f7a07[m feat: allow anonymous post support is removed from add post section
+[33m4be926d[m style: content sections background color changed
+[33me426892[m fix: frontend build test fix for stage
+[33m80c3fee[m fix: version change test fix
+[33m43c03ca[m build: use shared browserslist config
+[33m6bd1561[m chore: upgrade frontend-build version to 9.1.4 (#124)
+[33m1f119c1[m chore: create new package-lock file after node 16 upgrade
+[33m8fc067e[m chore: add @edx/frontend-build in project dependency (#122)
+[33m428f2d2[m feat: upgrade node from 12 to 16 (#121)
+[33ma51f3ed[m fix: switching between subtopics are breaking the UI (#120)
+[33m7d6d2c4[m Merge pull request #117 from openedx/jenkins/npm-8-14fe0d4
+[33m038b8f8[m chore: Install dependencies using npm 8
+[33m14fe0d4[m feat: adds content area to browse learner contributions (#84)
+[33m3ce1946[m Merge pull request #114 from openedx/kshitij/tnl-9585/navigation-hints
+[33mdaacdbe[m feat: send message to learning MFE on navigation
+[33mf687b43[m fix: post summary box size is large (#113)
+[33mc5e972b[m Merge pull request #40 from openedx/kshitij/post-message-sidebar
+[33me43b943[m test: make tests for actions dropdown report more info on what's being tested
+[33m7d35df1[m feat: Add support for closing in-context sidebar
+[33mb6da098[m feat: Add support for specifying post close reasons [BD-38] [TNL-8843] [BB-5012] (#96)
+[33m9f3a5ec[m fix: color contrast improved for unread posts
+[33mb6eff47[m fix: UI adjustments to post summary and post details (#110)
+[33mc62f500[m fix: navbar shadow (#107)
+[33m6bc0065[m feat: use resize postmessage API to send size hints to parent (#100)
+[33ma15f144[m fix: removed edit reason code
+[33me441aa4[m fix: align empty state in the center and auto-grow container (#103)
+[33m38792dd[m fix: update post when comment is marked as answer; reload topics on open (#104)
+[33m45b17a5[m fix: show message outline icon when thread is read (#102)
+[33m3074ae8[m fix: post summaries are being repeated in the list (#105)
+[33mc4c001a[m fix: update icons to match mockups better (#94)
+[33m067de93[m Merge pull request #106 from openedx/tnl-9741
+[33m2c40685[m feat: Add Learners list [BD-38] [TNL-8841] (#83)
+[33m4de3305[m fix: add spacing to post count
+[33m4b17de8[m fix: answered marker not right aligned correctly (#101)
+[33m465d5af[m fix: spacing between answered and reported markers (#99)
+[33m84249b9[m fix: UI style update of answered and endorsed banners (#98)
+[33me809bbd[m fix: revert for TNL-9612 (#97)
+[33mf797c75[m fix: [BD-38] [BB-5598][TNL-9626] redirect home page to my posts, fallback  to all posts if user has no content (#87)
+[33m7d3a103[m fix: send request to fetch discussion settings only for admins (#95)
+[33m12a507f[m Merge pull request #56 from openedx/jenkins/node-16-c462119
+[33m6f88e41[m fix: [BD-38] [BB-5599] [TNL-9629] fix `Follow` button on post summary (#74)
+[33m3269a61[m fix: [BD-38] [TNL-5596][BB-5596] fix TinyMCE padding [BD-38] (#73)
+[33m26b661c[m fix: [BB-5597][TNL-9618] text leaking out from post summary (#91)
+[33mbf1cc61[m feat: Added support for Node 16
+[33m194a3f2[m feat: Add support for specifying edit reasons (#46)
+[33m935d0c5[m fix: clear saved post or comment on submit (#88)
+[33mce293e5[m fix: related link for posts should open in top frame (#93)
+[33md802e53[m fix: filtering by post type wasn't working [BD-38] [TNL-9609] (#82)
+[33m1d854b4[m Merge pull request #92 from openedx/tnl-9681
+[33m30afbfb[m fix: posts not loading when scrolled to bottom
+[33me791a06[m Merge pull request #86 from openedx/tnl-9648
+[33m3cbb7e0[m fix: card component update to handle paragon breaking changes
+[33m7893891[m chore: update paragon version to 19.6.0
+[33mc65230d[m feat: show empty state on posts pages [BD-38] [TNL-9484] [SE-5347] (#65)
+[33m4d8dff9[m feat: show check icons for endorsed comments (#85)
+[33m5470a21[m fix: report indicator showing different on post summary
+[33mf50334f[m fix: hover style added for card component
+[33mb04e7e7[m style: endorsed/unendorsed counts classfication removed from heading
+[33m7fd95a3[m Merge pull request #80 from openedx/tnl-9628
+[33mbb73bdb[m fix: post summaries disappear upon scroll to the bottom
+[33m4c09768[m fix: answered and endorsed indicator modification (#76)
+[33mf4f7c61[m style: action bar and radio button fixes
+[33mac54d25[m feat: replace cohort text with icon & overlay in posts (#69)
+[33m20cc3e9[m style: search bar and add post button fix
+[33md31c438[m feat: add support for new provider and new topic api (#54)
+[33m3723b73[m Merge pull request #75 from openedx/tnl-9635
+[33m1537653[m style: small class added to fix UI zoomed in behavior
+[33m04547ef[m feat: adds a badge to post links showing unread comments (#72)
+[33me4b5dea[m fix: count displaying in multiple lines
+[33m4f0956e[m Merge pull request #71 from openedx/tnl-9572
+[33m0036521[m Merge DEPR automation workflow
+[33mab601d3[m fix: removed legacy indicator of unread post
+[33mb56c420[m Merge pull request #67 from openedx/tnl-9570
+[33md996914[m fix: added check to display message icon
+[33mffcc255[m Merge pull request #68 from openedx/aasad/TNL-9568
+[33m06c9d96[m fix: display non-breaking space entity properly in post summary
+[33m35feb68[m build: add DEPR workflow automation
+[33m44e6d71[m feat: independent scrolling for posts list and posts (#64)
+[33mdf7457a[m fix: when making a comment on a response that doesn't have responses (#63)
+[33m789d468[m fix: Like count should not display is zero (#62)
+[33mbc610e5[m Revert "feat: integrate feedback google form (#60)" (#61)
+[33m54f0237[m feat: integrate feedback google form (#60)
+[33m5964b15[m chore: remove edx header and footer dependency (#59)
+[33mbf46e56[m fix: remove app header and footer (#58)
+[33m9105bf8[m Merge pull request #57 from openedx/revert-55-aansari/TNL-9509
+[33md02a5ef[m Revert "feat: integrate feeder package"
+[33mc462119[m Merge pull request #55 from openedx/aansari/TNL-9509
+[33mc0f2e30[m test: add postActionsBar test cases
+[33ma1b8c69[m refactor: remove FEEDER_PROJECT_ID key from env
+[33mbd4ecfd[m test: fix discussions home fail test cases
+[33m880c061[m feat: integrate feeder package
+[33m0a66e60[m chore: regenrated package-lock to fix gocd pipeline (#52)
+[33ma82427d[m chore: updated frontend-build package to fix gocd build (#51)
+[33m9ba9496[m feat: delete confirmation dialogs [BD-38] [TNL-9351] (#49)
+[33mf210379[m fix: selecting different post does not clear comments list (#45)
+[33m55c37db[m fix: remove discussions from the base path [BD-38] [TNL-9347] (#47)
+[33me4b34c2[m fix: Sort and deduplicate comments when loading the next page [BD-38] [TNL-8657] [BB-5007] (#44)
+[33mdf455b9[m Merge pull request #41 from edx/kshitij/fix-redirects
+[33m2ed5aee[m fix: fixes issues with redirects
+[33mea1031e[m Merge pull request #43 from edx/kshitij/fix-topic-search
+[33mf31d61b[m Merge pull request #42 from edx/kshitij/fix-thread-counts
+[33m9c7be06[m fix: topic counts were not included in normalised data.
+[33ma6f7187[m fix: starting a search redirects you to the all posts page
+[33ma318bfe[m Merge pull request #38 from edx/kshitij/fix-autosave
+[33m4763702[m fix: fix autosaving
+[33m0646d71[m Merge pull request #39 from edx/kshitij/cohort-support
+[33mb07b404[m test: tests
+[33mceea220[m feat: Fully implements support for cohorts
+[33macc466c[m Merge pull request #37 from edx/kshitij/mobile
+[33me7a0eba[m feat: Make UI more responsive to smaller screens and embeds
+[33m54131fa[m Merge pull request #36 from edx/kshitij/tnl-8519/breadcrumbs
+[33mc9cb8dd[m feat: Add new breadcrumb navigation Adds the new breadcrumb dropdown-based navigation UI. This allows browsing the category and topic structure using dropdowns.
+[33m95bb0de[m Merge pull request #32 from edx/kshitij/topic-link
+[33m7f26f3a[m feat: Add topic link to discussion post
+[33mcb09b8c[m Merge pull request #35 from edx/kshitij/anonymous-posting
+[33m18d1936[m feat: add support for anonymous posting
+[33m6bd7ce9[m Merge pull request #33 from edx/kshitij/post-ui-updates
+[33m8b188e0[m Merge pull request #31 from open-craft/maxim/bb-4842-add-tests-topics-view
+[33m681bc4d[m Merge pull request #27 from open-craft/felipetrz/bb-4961-tiny-mce-improvements
+[33mfc2c528[m test: add tests for TopicsView component
+[33m5564ef7[m Merge pull request #30 from open-craft/maxim/bb-4842-add-tests-dicussions-home
+[33mc1f9b45[m Merge pull request #26 from open-craft/maxim/bb-4926-add-cohort-selection
+[33mb03681c[m Merge pull request #29 from open-craft/maxim/bb-4842-add-tests-actions-dropdown
+[33m2138c12[m fix: remove the "powered by tiny" text
+[33m35c9dd5[m test: add tests for ActionsDropdown
+[33m2f7771e[m feat: add cohort information to post footer
+[33m5fafa44[m feat: add cohort selection
+[33mb8b91b9[m Merge pull request #28 from edx/kshitij/fixes
+[33mc8c3bb9[m feat: Improve UX to match new mockups
+[33m491f7cd[m test: add simple test for DiscussionsHome
+[33m1c6a9b2[m Merge pull request #25 from open-craft/felipetrz/bb-4993-add-post-pagination
+[33m3a71253[m fix: move the loading indicator and scroll threshold inside the posts list
+[33mb8e3b86[m fix: posts pagination is loaded by scrolling
+[33m1d3827e[m feat: add posts pagination [BD-38] [TNL-8810] [BB-4993]
+[33m12500dd[m Merge pull request #23 from open-craft/maxim/BB-4735-add-comments-within-comments-pagination
+[33m94e2c54[m build: use the organization commitlint check
+[33m93ae8bc[m feat: add pagination to comments responses
+[33mf993370[m Merge pull request #22 from edx/kshitij/tnl-8723/questions
+[33md237be7[m feat: add support for loading endorsed and un-endorsed comments separately for question type posts
+[33m0774631[m Merge pull request #20 from open-craft/maxim/BB-4735-add-comment-pagination
+[33m929c859[m feat: Add pagination to posts' comments
+[33m451495c[m Merge pull request #19 from edx/kshitij/TNL-8695/reply-editor
+[33m16e5901[m feat: Add a reply editor and hook to API
+[33m2247880[m Merge pull request #18 from edx/kshitij/tnl-8654/post-edit-bar
+[33m5db87f5[m feat: Add post actions dropdown menu
+[33m669aa22[m Merge pull request #12 from edx/kshitij/refactor-data
+[33m586cf3e[m Remove Object.assign Use arrays for pages instead of a map
+[33m582a5fd[m refactor: update normalisation code to work in thunks instead of reducers
+[33me458645[m Merge pull request #13 from edx/kshitij/bb-2900/post-editor
+[33ma114886[m feat: Update the post editor to include TinyMCE and connect to API
+[33m82d25c9[m Merge pull request #16 from edx/kshitij/update-structure
+[33m4cae34e[m chore: update dependencies, update node version and remove travis config
+[33ma00770a[m Merge pull request #14 from edx/kshitij/tnl-8429/url-paths
+[33m3395a1b[m refactor: update navigation paths for a more consistent experience
+[33mbd79e6b[m Merge pull request #11 from open-craft/kshitij/mark-as-read
+[33md72ba8b[m Merge pull request #15 from open-craft/tinumide/add_staff_moderator_markers
+[33m9a4fe0f[m feat: added author label markers to UI
+[33m818a49f[m feat: Mark posts as read after a delay of 2 seconds This commit adds support for automatically marking a post as read after it's been open for 2 seconds. The delay value is customisable.
+[33ma380ee3[m feat: make UI look closer to mock-up
+[33m9aa4fcf[m fix: add dangling commas to satisfy linter
+[33m68da554[m fix: use Form.Checkbox and StatefulButton
+[33mf509b98[m Update to match mockups better
+[33mb06832a[m feat: add post add interface
+[33m7138e63[m fix: Bring UI closer to mockups
+[33m80ad9f1[m Merge pull request #9 from open-craft/joaocabrita/bb4418-search_posts
+[33mc4244cf[m feat: Implement post search.
+[33m812248f[m Merge pull request #8 from open-craft/kshitij/ui
+[33m93d10f9[m feat: Add major UI components and functionality This adds a major chunk of UI code to the application covering topic listing, topic filtering, subtopic browsing, browsing posts by topic, filtering unread posts, filtering followed posts, sorting posts by recent activity, most activty and most votes, liking/unliking a post, following/unfollowing a post, listing comments and replis in a post.
+[33m322c6ed[m Merge pull request #3 from open-craft/kshitij/data-api
+[33m27b5f48[m Add code for interacting with Discussions API
+[33mb90e4f7[m Merge pull request #1 from open-craft/kshitij/forum-mfe-skeleton
+[33m491f7b7[m Basic discussions forum framework
+[33m56d68e7[m Initial template setup
+[33m15328a8[m Initial commit

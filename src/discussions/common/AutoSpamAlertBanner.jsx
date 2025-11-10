@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 import { useIntl } from '@edx/frontend-platform/i18n';
 import {
@@ -12,7 +13,6 @@ import {
   HelpOutline,
   Report,
 } from '@openedx/paragon/icons';
-import PropTypes from 'prop-types';
 
 import messages from '../messages';
 

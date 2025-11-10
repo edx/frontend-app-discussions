@@ -18,7 +18,12 @@ import { useIntl } from '@edx/frontend-platform/i18n';
 
 import HTMLLoader from '../../../../components/HTMLLoader';
 import { ContentActions, EndorsementStatus } from '../../../../data/constants';
-import { AlertBanner, AutoSpamAlertBanner, Confirmation, EndorsedAlertBanner } from '../../../common';
+import {
+  AlertBanner,
+  AutoSpamAlertBanner,
+  Confirmation,
+  EndorsedAlertBanner,
+} from '../../../common';
 import DiscussionContext from '../../../common/context';
 import HoverCard from '../../../common/HoverCard';
 import withPostingRestrictions from '../../../common/withPostingRestrictions';
