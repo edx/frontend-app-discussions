@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { useIntl } from '@edx/frontend-platform/i18n';
 import {
   ActionRow,
   Alert,
@@ -13,6 +12,8 @@ import {
   HelpOutline,
   Report,
 } from '@openedx/paragon/icons';
+
+import { useIntl } from '@edx/frontend-platform/i18n';
 
 import messages from '../messages';
 
