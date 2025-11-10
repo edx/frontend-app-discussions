@@ -41,7 +41,6 @@ const AutoSpamAlertBanner = ({ autoSpamFlagged }) => {
       </Alert>
 
       <ModalDialog
-        title={intl.formatMessage(messages.autoSpamModalTitle)}
         isOpen={isModalOpen}
         onClose={hideModal}
       >
