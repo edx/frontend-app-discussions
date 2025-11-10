@@ -243,7 +243,7 @@ const messages = defineMessages({
     defaultMessage: 'Faculty and staff will never invite you to join external groups or ask for personal or financial information in the discussions. Stay safe, and if you see suspicious activity, please report it.',
     description: 'Warning message about spam and impersonation in discussion forums',
   },
-    autoSpamFlaggedMessage: {
+  autoSpamFlaggedMessage: {
     id: 'discussions.autoSpamFlaggedMessage',
     defaultMessage: 'Content automatically reported as possible spam pending staff review.',
     description: 'Message shown when a post is automatically flagged as potential spam',

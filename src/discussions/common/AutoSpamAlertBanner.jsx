@@ -1,9 +1,18 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 
-import { ActionRow, Alert, Icon, ModalDialog, useToggle } from '@openedx/paragon';
-import { Report, HelpOutline } from '@openedx/paragon/icons';
 import { useIntl } from '@edx/frontend-platform/i18n';
+import {
+  ActionRow,
+  Alert,
+  Icon,
+  ModalDialog,
+  useToggle,
+} from '@openedx/paragon';
+import {
+  HelpOutline,
+  Report,
+} from '@openedx/paragon/icons';
+import PropTypes from 'prop-types';
 
 import messages from '../messages';
 
@@ -41,7 +50,7 @@ const AutoSpamAlertBanner = ({ autoSpamFlagged }) => {
           </ModalDialog.Title>
         </ModalDialog.Header>
         <ModalDialog.Body>
-           <p>
+          <p>
             {intl.formatMessage(messages.autoSpamModalBodyParagraph1)}
           </p>
           <p>

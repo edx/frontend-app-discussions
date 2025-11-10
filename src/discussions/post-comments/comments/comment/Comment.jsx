@@ -1,9 +1,16 @@
 import React, {
-  useCallback, useContext, useEffect, useMemo, useState,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
 } from 'react';
 import PropTypes from 'prop-types';
 
-import { Button, useToggle } from '@openedx/paragon';
+import {
+  Button,
+  useToggle,
+} from '@openedx/paragon';
 import classNames from 'classnames';
 import { useDispatch, useSelector } from 'react-redux';
 
