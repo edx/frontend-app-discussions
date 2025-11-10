@@ -46,7 +46,7 @@ const Comment = ({
   const {
     id, parentId, childCount, abuseFlagged, endorsed, threadId, endorsedAt, endorsedBy, endorsedByLabel, renderedBody,
     voted, following, voteCount, authorLabel, author, createdAt, lastEdit, rawBody, closed, closedBy, closeReason,
-    editByLabel, closedByLabel, users: postUsers, isSpam,
+    editByLabel, closedByLabel, users: postUsers, is_spam: isSpam,
   } = comment;
   const intl = useIntl();
   const hasChildren = childCount > 0;

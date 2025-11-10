@@ -34,7 +34,7 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
   const {
     topicId, abuseFlagged, closed, pinned, voted, hasEndorsed, following, closedBy, voteCount, groupId, groupName,
     closeReason, authorLabel, type: postType, author, title, createdAt, renderedBody, lastEdit, editByLabel,
-    closedByLabel, users: postUsers, isSpam
+    closedByLabel, users: postUsers, is_spam: isSpam,
   } = threadData;
   const intl = useIntl();
   const location = useLocation();
