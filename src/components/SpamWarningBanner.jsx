@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { PageBanner } from '@openedx/paragon';
+import { Icon, PageBanner } from '@openedx/paragon';
+import { Warning } from '@openedx/paragon/icons';
 
 import { useIntl } from '@edx/frontend-platform/i18n';
 
@@ -42,31 +43,30 @@ const SpamWarningBanner = ({ className = '' }) => {
       dismissible={false}
       className={`spam-warning-banner ${className}`}
     >
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          width: '100%',
-        }}
-      >
-        <span style={{ textAlign: 'left', display: 'block' }}>
-          <strong>{intl.formatMessage(messages.spamWarningHeading)}:</strong>{' '}
-          {(() => {
-            const msg = intl.formatMessage(messages.spamWarningMessage);
-            const boldText = 'never invite you to join external groups or ask for personal or financial information';
-            const idx = msg.indexOf(boldText);
-            if (idx === -1) {
-              return msg;
-            }
-            return (
-              <>
-                {msg.slice(0, idx)}
-                <strong>{boldText}</strong>
-                {msg.slice(idx + boldText.length)}
-              </>
-            );
-          })()}
+      <div className="spam-warning-content">
+        <span className="spam-warning-text">
+          <Icon
+            src={Warning}
+            className="spam-warning-icon"
+          />
+          <span className="spam-warning-message">
+            <strong>{intl.formatMessage(messages.spamWarningHeading)}:</strong>{' '}
+            {(() => {
+              const msg = intl.formatMessage(messages.spamWarningMessage);
+              const boldText = 'never invite you to join external groups or ask for personal or financial information';
+              const idx = msg.indexOf(boldText);
+              if (idx === -1) {
+                return msg;
+              }
+              return (
+                <>
+                  {msg.slice(0, idx)}
+                  <strong>{boldText}</strong>
+                  {msg.slice(idx + boldText.length)}
+                </>
+              );
+            })()}
+          </span>
         </span>
         <button
           type="button"

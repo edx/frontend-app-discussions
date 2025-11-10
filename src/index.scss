@@ -704,6 +704,81 @@ th, td {
 .spam-warning-banner {
   border-left: 4px solid var(--pgn-color-warning-500);
   margin-bottom: 0.5rem;
+  background-color: var(--pgn-color-warning-200);
+  color: var(--pgn-color-gray-900);
+  font-size: 15px; // Mobile default (bigger than body text)
+  
+  @media (min-width: 768px) {
+    font-size: 16px; // Desktop size
+  }
+  
+  // Target Paragon's internal classes with higher specificity
+  &.pgn__page-banner,
+  &.alert,
+  &.alert-warning {
+    background-color: var(--pgn-color-warning-200);
+    color: var(--pgn-color-gray-900);
+  }
+  
+  // Ensure nested Paragon components inherit our styling
+  .pgn__page-banner,
+  .alert,
+  .alert-warning {
+    background-color: inherit;
+    color: inherit;
+    font-size: inherit;
+  }
+  
+  // Target specific text elements instead of universal selector
+  p, span, strong, em, div {
+    background-color: inherit;
+    color: inherit;
+    font-size: inherit;
+  }
+  
+  // Content layout
+  .spam-warning-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+  
+  .spam-warning-text {
+    text-align: left;
+    display: flex;
+    align-items: center;
+    flex: 1;
+  }
+  
+  .spam-warning-message {
+    font-size: inherit;
+    color: inherit;
+  }
+  
+  // Warning icon styling
+  .spam-warning-icon {
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+    color: var(--pgn-color-warning-600);
+    fill: var(--pgn-color-warning-600);
+  }
+  
+  // Override Paragon icon defaults if needed
+  .pgn__icon svg {
+    color: var(--pgn-color-warning-600);
+    fill: var(--pgn-color-warning-600);
+  }
+  
+  // Ensure icon and "Reminder:" stay together on all screen sizes
+  .spam-warning-text {
+    word-break: break-word;
+    
+    // Ensure proper text wrapping on small screens
+    @media (max-width: 767.98px) {
+      line-height: 1.4;
+    }
+  }
   
   .spam-warning-close-btn {
     background: none;
@@ -744,12 +819,8 @@ th, td {
     }
   }
   
-  .alert-warning {
-    background-color: var(--pgn-color-warning-100);
-    color: var(--pgn-color-gray-900);
-  }
-  
-  @media (max-width: 768px) {
+  // Mobile responsive adjustments  
+  @media (max-width: 767.98px) {
     margin: 0 0.25rem 0.5rem 0.25rem;
     border-radius: 0.375rem;
     
