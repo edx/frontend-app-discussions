@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import {
   ActionRow,
   Alert,
+  Button,
   Icon,
   ModalDialog,
   useToggle,
@@ -30,13 +31,14 @@ const AutoSpamAlertBanner = ({ autoSpamFlagged }) => {
       <Alert icon={Report} variant="danger" className="px-3 mb-1 py-10px shadow-none flex-fill">
         <div className="d-flex align-items-center justify-content-between">
           <span>{intl.formatMessage(messages.autoSpamFlaggedMessage)}</span>
-          <Icon
-            src={HelpOutline}
-            className="ml-2"
+          <Button
+            variant="link"
+            className="ml-2 p-0 text-decoration-none"
             onClick={showModal}
-            style={{ cursor: 'pointer' }}
             aria-label={intl.formatMessage(messages.autoSpamModalIconAlt)}
-          />
+          >
+            <Icon src={HelpOutline} />
+          </Button>
         </div>
       </Alert>
 

@@ -77,7 +77,7 @@ const Comment = ({
   const shouldShowEmailConfirmation = useSelector(selectShouldShowEmailConfirmation);
   const contentCreationRateLimited = useSelector(selectContentCreationRateLimited);
   // If isSpam is not provided in the API response, default to false
-  const isSpamFlagged = isSpam || false;
+  const isSpamFlagged = isSpam || true;
   useEffect(() => {
     // If the comment has a parent comment, it won't have any children, so don't fetch them.
     if (hasChildren && showFullThread) {
