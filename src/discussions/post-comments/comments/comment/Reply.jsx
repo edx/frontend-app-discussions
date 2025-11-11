@@ -122,14 +122,16 @@ const Reply = ({ responseId }) => {
           </div>
         </div>
       )}
-      <div className="d-flex">
-        <div className="d-flex invisible">
-          <Avatar />
+      {isSpamFlagged && (
+        <div className="d-flex">
+          <div className="d-flex invisible">
+            <Avatar />
+          </div>
+          <div className="w-100">
+            <AutoSpamAlertBanner autoSpamFlagged={isSpamFlagged} />
+          </div>
         </div>
-        <div className="w-100">
-          <AutoSpamAlertBanner autoSpamFlagged={isSpamFlagged} />
-        </div>
-      </div>
+      )}
       <div className="d-flex">
         <div className="d-flex mr-3 mt-2.5">
           <Avatar
