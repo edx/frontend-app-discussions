@@ -4,6 +4,7 @@ import { Delete } from '@openedx/paragon/icons';
 
 import { useIntl } from '@edx/frontend-platform/i18n';
 
+import { ReactComponent as Undelete } from '../../assets/undelete.svg';
 import { ContentActions } from '../../data/constants';
 import messages from './messages';
 
@@ -19,6 +20,18 @@ export const LEARNER_ACTIONS_LIST = [
     action: ContentActions.DELETE_ORG_POSTS,
     icon: Delete,
     label: messages.deleteOrgPosts,
+  },
+  {
+    id: 'restore-course-posts',
+    action: ContentActions.RESTORE_COURSE_POSTS,
+    icon: Undelete,
+    label: messages.restoreCoursePosts,
+  },
+  {
+    id: 'restore-org-posts',
+    action: ContentActions.RESTORE_ORG_POSTS,
+    icon: Undelete,
+    label: messages.restoreOrgPosts,
   },
 ];
 

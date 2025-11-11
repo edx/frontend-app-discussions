@@ -14,6 +14,7 @@ import {
 
 import { getConfig } from '@edx/frontend-platform';
 
+import { ReactComponent as RestoreFromTrash } from '../assets/undelete.svg';
 import { DENIED, LOADED } from '../components/NavigationBar/data/slice';
 import {
   ContentActions, Routes, ThreadType,
@@ -66,6 +67,10 @@ export function checkPermissions(content, action) {
   // For delete action we check `content.canDelete`
   if (action === ContentActions.DELETE) {
     return true;
+  }
+  // For soft delete and restore actions we check `content.canDelete`
+  if (action === ContentActions.SOFT_DELETE || action === ContentActions.RESTORE) {
+    return content.canDelete;
   }
   return false;
 }
@@ -178,11 +183,18 @@ export const ACTIONS_LIST = [
     conditions: { abuseFlagged: true },
   },
   {
-    id: 'delete',
-    action: ContentActions.DELETE,
+    id: 'soft-delete',
+    action: ContentActions.SOFT_DELETE,
     icon: Delete,
-    label: messages.deleteAction,
-    conditions: { canDelete: true },
+    label: messages.softDeleteAction,
+    conditions: { canDelete: true, isDeleted: false },
+  },
+  {
+    id: 'restore',
+    action: ContentActions.RESTORE,
+    icon: RestoreFromTrash,
+    label: messages.restoreAction,
+    conditions: { canDelete: true, isDeleted: true },
   },
 ];
 
@@ -203,7 +215,11 @@ export function useActions(contentType, id) {
       action,
       conditions = null,
     }) => checkPermissions(content, action) && checkConditions(content, conditions),
-  ), [content]);
+  ).map(action => ({
+    ...action,
+    // For deleted items, disable all actions except 'copy-link' and 'restore'
+    disabled: content.isDeleted && action.id !== 'copy-link' && action.id !== 'restore',
+  })), [content]);
 
   return actions;
 }

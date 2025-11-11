@@ -20,7 +20,7 @@ const learnersSlice = createSlice({
     sortedBy: LearnersOrdering.BY_LAST_ACTIVITY,
     postFilter: {
       postType: ThreadType.ALL,
-      status: PostsStatusFilter.ALL,
+      status: PostsStatusFilter.ACTIVE,
       orderBy: ThreadOrdering.BY_LAST_ACTIVITY,
       cohort: '',
     },
@@ -107,6 +107,25 @@ const learnersSlice = createSlice({
         status: RequestStatus.FAILED,
       }
     ),
+    undeleteUserPostsRequest: (state) => (
+      {
+        ...state,
+        status: RequestStatus.IN_PROGRESS,
+      }
+    ),
+    undeleteUserPostsSuccess: (state, { payload }) => (
+      {
+        ...state,
+        status: RequestStatus.SUCCESSFUL,
+        bulkDeleteStats: payload,
+      }
+    ),
+    undeleteUserPostsFailed: (state) => (
+      {
+        ...state,
+        status: RequestStatus.FAILED,
+      }
+    ),
   },
 });
 
@@ -121,6 +140,9 @@ export const {
   deleteUserPostsRequest,
   deleteUserPostsSuccess,
   deleteUserPostsFailed,
+  undeleteUserPostsRequest,
+  undeleteUserPostsSuccess,
+  undeleteUserPostsFailed,
 } = learnersSlice.actions;
 
 export const learnersReducer = learnersSlice.reducer;

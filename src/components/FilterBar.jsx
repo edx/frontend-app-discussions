@@ -76,6 +76,16 @@ const FilterBar = ({
       value: PostsStatusFilter.UNRESPONDED,
     },
     {
+      id: 'status-active',
+      label: intl.formatMessage(messages.filterActive),
+      value: PostsStatusFilter.ACTIVE,
+    },
+    {
+      id: 'status-deleted',
+      label: intl.formatMessage(messages.filterDeleted),
+      value: PostsStatusFilter.DELETED,
+    },
+    {
       id: 'sort-activity',
       label: intl.formatMessage(messages.lastActivityAt),
       value: ThreadOrdering.BY_LAST_ACTIVITY,
@@ -124,7 +134,7 @@ const FilterBar = ({
       <Collapsible.Body className="collapsible-body px-4 pb-3 pt-0">
         <Form>
           <div className="d-flex flex-row py-2 justify-content-between">
-            {filters.map((value) => (
+            {filters.filter(f => !f.hasSeparator).map((value) => (
               <Form.RadioSet
                 key={value.name}
                 name={value.name}
@@ -150,6 +160,38 @@ const FilterBar = ({
               </Form.RadioSet>
             ))}
           </div>
+          {filters.some(f => f.hasSeparator) && (
+            <>
+              <div className="border-bottom my-2" />
+              <div className="d-flex flex-row py-2 justify-content-between">
+                {filters.filter(f => f.hasSeparator).map((value) => (
+                  <Form.RadioSet
+                    key={value.name}
+                    name={value.name}
+                    className="d-flex flex-column list-group list-group-flush"
+                    value={selectedFilters[value.name]}
+                    onChange={handleFilterToggle}
+                  >
+                    {value.filters.map(filterName => {
+                      const element = allFilters.find(obj => obj.id === filterName);
+                      if (element) {
+                        return (
+                          <ActionItem
+                            key={element.id}
+                            id={element.id}
+                            label={element.label}
+                            value={element.value}
+                            selected={selectedFilters[value.name]}
+                          />
+                        );
+                      }
+                      return false;
+                    })}
+                  </Form.RadioSet>
+                ))}
+              </div>
+            </>
+          )}
           {showCohortsFilter && (
             <>
               <div className="border-bottom my-2" />

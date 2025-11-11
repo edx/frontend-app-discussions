@@ -30,6 +30,7 @@ Factory.define('comment')
     parent_id: null,
     children: [],
     abuse_flagged_any_user: false,
+    is_deleted: false,
   });
 
 Factory.define('commentsResult')

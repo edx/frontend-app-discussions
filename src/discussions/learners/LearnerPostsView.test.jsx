@@ -128,11 +128,11 @@ describe('Learner Posts View', () => {
     },
   );
 
-  it('should display a post-filter bar and All posts sorted by recent activity text.', async () => {
+  it('should display a post-filter bar and All active posts sorted by recent activity text.', async () => {
     await renderComponent();
 
     const filterBar = container.querySelector('.filter-bar');
-    const recentActivity = screen.getByText('All posts sorted by recent activity');
+    const recentActivity = screen.getByText('All active posts sorted by recent activity');
 
     expect(filterBar).toBeInTheDocument();
     expect(recentActivity).toBeInTheDocument();

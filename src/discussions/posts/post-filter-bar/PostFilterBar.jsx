@@ -22,7 +22,7 @@ import {
 import selectCourseCohorts from '../../cohorts/data/selectors';
 import fetchCourseCohorts from '../../cohorts/data/thunks';
 import DiscussionContext from '../../common/context';
-import { selectUserHasModerationPrivileges, selectUserIsGroupTa } from '../../data/selectors';
+import { selectUserHasModerationPrivileges, selectUserIsGroupTa, selectUserIsStaff } from '../../data/selectors';
 import {
   setCohortFilter, setPostsTypeFilter, setSortedBy, setStatusFilter,
 } from '../data';
@@ -68,6 +68,7 @@ const PostFilterBar = () => {
   const { page } = useContext(DiscussionContext);
   const userHasModerationPrivileges = useSelector(selectUserHasModerationPrivileges);
   const userIsGroupTa = useSelector(selectUserIsGroupTa);
+  const userIsStaff = useSelector(selectUserIsStaff);
   const currentSorting = useSelector(selectThreadSorting());
   const currentFilters = useSelector(selectThreadFilters());
   const { status } = useSelector(state => state.cohorts);
@@ -257,7 +258,7 @@ const PostFilterBar = () => {
                   selected={currentFilters.status}
                 />
               )}
-              {(userHasModerationPrivileges || userIsGroupTa) && (
+              {(userHasModerationPrivileges || userIsGroupTa || userIsStaff) && (
                 <ActionItem
                   id="status-reported"
                   label={intl.formatMessage(messages.filterReported)}
