@@ -702,9 +702,10 @@ th, td {
 }
 
 .spam-warning-banner {
+  letter-spacing: -0.2px;
   border-left: 4px solid var(--pgn-color-warning-500);
   margin-bottom: 0.5rem;
-  background-color: var(--pgn-color-warning-200);
+  background-color: var(--pgn-color-warning-100);
   color: var(--pgn-color-gray-900);
   font-size: 15px; // Mobile default (bigger than body text)
   
@@ -716,7 +717,7 @@ th, td {
   &.pgn__page-banner,
   &.alert,
   &.alert-warning {
-    background-color: var(--pgn-color-warning-200);
+    background-color: var(--pgn-color-warning-100);
     color: var(--pgn-color-gray-900);
   }
   
