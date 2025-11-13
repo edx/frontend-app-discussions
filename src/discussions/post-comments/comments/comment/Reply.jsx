@@ -10,7 +10,7 @@ import { useIntl } from '@edx/frontend-platform/i18n';
 import HTMLLoader from '../../../../components/HTMLLoader';
 import { AvatarOutlineAndLabelColors, ContentActions } from '../../../../data/constants';
 import {
-  ActionsDropdown, AlertBanner, AuthorLabel, Confirmation,
+  ActionsDropdown, AlertBanner, AuthorLabel, AutoSpamAlertBanner, Confirmation,
 } from '../../../common';
 import timeLocale from '../../../common/time-locale';
 import { ContentTypes } from '../../../data/constants';
@@ -26,7 +26,7 @@ const Reply = ({ responseId }) => {
   const commentData = useSelector(selectCommentOrResponseById(responseId));
   const {
     id, abuseFlagged, author, authorLabel, endorsed, lastEdit, closed, closedBy,
-    closeReason, createdAt, threadId, parentId, rawBody, renderedBody, editByLabel, closedByLabel,
+    closeReason, createdAt, threadId, parentId, rawBody, renderedBody, editByLabel, closedByLabel, is_spam: isSpam,
   } = commentData;
   const intl = useIntl();
   const dispatch = useDispatch();
@@ -34,6 +34,8 @@ const Reply = ({ responseId }) => {
   const [isDeleting, showDeleteConfirmation, hideDeleteConfirmation] = useToggle(false);
   const [isReporting, showReportConfirmation, hideReportConfirmation] = useToggle(false);
   const colorClass = AvatarOutlineAndLabelColors[authorLabel];
+  // If isSpam is not provided in the API response, default to false
+  const isSpamFlagged = isSpam || false;
   const hasAnyAlert = useAlertBannerVisible({
     author,
     abuseFlagged,
@@ -117,6 +119,16 @@ const Reply = ({ responseId }) => {
               closedByLabel={closedByLabel}
               postData={commentData}
             />
+          </div>
+        </div>
+      )}
+      {isSpamFlagged && (
+        <div className="d-flex">
+          <div className="d-flex invisible">
+            <Avatar />
+          </div>
+          <div className="w-100">
+            <AutoSpamAlertBanner autoSpamFlagged={isSpamFlagged} />
           </div>
         </div>
       )}
