@@ -110,7 +110,7 @@ const LearnerPostFilterBar = () => {
       filters={filtersToShow}
       selectedFilters={postFilter}
       onFilterChange={handleFilterChange}
-      showCohortsFilter={userHasModerationPrivileges || userIsGroupTa || userIsStaff}
+      showCohortsFilter={userHasModerationPrivileges || userIsGroupTa}
     />
   );
 };

@@ -50,6 +50,7 @@ export async function getUserProfiles(usernames) {
  * @param {ThreadViewStatus} view Set to "unread" on "unanswered" to filter to only those statuses.
  * @param {boolean} countFlagged If true, abuseFlaggedCount will be available.
  * @param {number} cohort
+ * @param {boolean} showDeleted If true, only deleted posts will be returned.
  * @returns API Response object in the format
  *  {
  *    results: [array of posts],
@@ -66,7 +67,7 @@ export async function getUserPosts(courseId, {
   threadType,
   countFlagged,
   cohort,
-  isDeleted,
+  showDeleted,
 } = {}) {
   const params = snakeCaseObject({
     page,
@@ -79,7 +80,7 @@ export async function getUserPosts(courseId, {
     username: author,
     countFlagged,
     groupId: cohort,
-    isDeleted,
+    showDeleted,
   });
 
   const { data } = await getAuthenticatedHttpClient()
