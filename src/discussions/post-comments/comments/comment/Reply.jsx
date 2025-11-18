@@ -13,7 +13,7 @@ import { logError } from '@edx/frontend-platform/logging';
 import HTMLLoader from '../../../../components/HTMLLoader';
 import { AvatarOutlineAndLabelColors, ContentActions } from '../../../../data/constants';
 import {
-  ActionsDropdown, AlertBanner, AuthorLabel, Confirmation,
+  ActionsDropdown, AlertBanner, AuthorLabel, AutoSpamAlertBanner, Confirmation,
 } from '../../../common';
 import DiscussionContext from '../../../common/context';
 import timeLocale from '../../../common/time-locale';
@@ -31,7 +31,7 @@ const Reply = ({ responseId }) => {
   const commentData = useSelector(selectCommentOrResponseById(responseId));
   const {
     id, abuseFlagged, author, authorLabel, endorsed, lastEdit, closed, closedBy,
-    closeReason, createdAt, threadId, parentId, rawBody, renderedBody, editByLabel, closedByLabel, isDeleted,
+    closeReason, createdAt, threadId, parentId, rawBody, renderedBody, editByLabel, closedByLabel, isDeleted, is_spam: isSpam,
   } = useSelector(selectCommentOrResponseById(responseId));
   const intl = useIntl();
   const dispatch = useDispatch();
@@ -44,6 +44,8 @@ const Reply = ({ responseId }) => {
   const [isRestoring, showRestoreConfirmation, hideRestoreConfirmation] = useToggle(false);
   const [isReporting, showReportConfirmation, hideReportConfirmation] = useToggle(false);
   const colorClass = AvatarOutlineAndLabelColors[authorLabel];
+  // If isSpam is not provided in the API response, default to false
+  const isSpamFlagged = isSpam || false;
   const hasAnyAlert = useAlertBannerVisible({
     author,
     abuseFlagged,
@@ -165,6 +167,16 @@ const Reply = ({ responseId }) => {
               closedByLabel={closedByLabel}
               postData={commentData}
             />
+          </div>
+        </div>
+      )}
+      {isSpamFlagged && (
+        <div className="d-flex">
+          <div className="d-flex invisible">
+            <Avatar />
+          </div>
+          <div className="w-100">
+            <AutoSpamAlertBanner autoSpamFlagged={isSpamFlagged} />
           </div>
         </div>
       )}

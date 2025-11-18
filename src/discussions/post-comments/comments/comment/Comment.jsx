@@ -1,5 +1,9 @@
 import React, {
-  useCallback, useContext, useEffect, useMemo, useState,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
 } from 'react';
 import PropTypes from 'prop-types';
 
@@ -14,7 +18,7 @@ import { logError } from '@edx/frontend-platform/logging';
 import HTMLLoader from '../../../../components/HTMLLoader';
 import { AvatarOutlineAndLabelColors, ContentActions, EndorsementStatus } from '../../../../data/constants';
 import {
-  AlertBanner, AuthorLabel, Confirmation, EndorsedAlertBanner,
+  AlertBanner, AuthorLabel, AutoSpamAlertBanner, Confirmation, EndorsedAlertBanner,
 } from '../../../common';
 import DiscussionContext from '../../../common/context';
 import HoverCard from '../../../common/HoverCard';
@@ -51,7 +55,7 @@ const Comment = ({
   const {
     id, parentId, childCount, abuseFlagged, endorsed, threadId, endorsedAt, endorsedBy, endorsedByLabel, renderedBody,
     voted, following, voteCount, authorLabel, author, createdAt, lastEdit, rawBody, closed, closedBy, closeReason,
-    editByLabel, closedByLabel, users: postUsers, isDeleted, deletedByLabel,
+    editByLabel, closedByLabel, users: postUsers, isDeleted, deletedByLabel, is_spam: isSpam,
   } = comment;
   const intl = useIntl();
   const hasChildren = childCount > 0;
@@ -76,7 +80,8 @@ const Comment = ({
   const isUserPrivilegedInPostingRestriction = useUserPostingEnabled();
   const shouldShowEmailConfirmation = useSelector(selectShouldShowEmailConfirmation);
   const contentCreationRateLimited = useSelector(selectContentCreationRateLimited);
-
+  // If isSpam is not provided in the API response, default to false
+  const isSpamFlagged = isSpam || false;
   useEffect(() => {
     // If the comment has a parent comment, it won't have any children, so don't fetch them.
     if (hasChildren && showFullThread) {
@@ -275,6 +280,7 @@ const Comment = ({
             editByLabel={editByLabel}
             closedByLabel={closedByLabel}
           />
+          <AutoSpamAlertBanner autoSpamFlagged={isSpamFlagged} />
           <CommentHeader
             author={author}
             authorLabel={authorLabel}

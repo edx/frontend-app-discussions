@@ -16,7 +16,7 @@ import { logError } from '@edx/frontend-platform/logging';
 import HTMLLoader from '../../../components/HTMLLoader';
 import { AvatarOutlineAndLabelColors, ContentActions, getFullUrl } from '../../../data/constants';
 import { selectorForUnitSubsection, selectTopicContext } from '../../../data/selectors';
-import { AlertBanner, AuthorLabel, Confirmation } from '../../common';
+import { AlertBanner, AuthorLabel, AutoSpamAlertBanner, Confirmation } from '../../common';
 import DiscussionContext from '../../common/context';
 import HoverCard from '../../common/HoverCard';
 import withPostingRestrictions from '../../common/withPostingRestrictions';
@@ -39,7 +39,7 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
   const {
     topicId, abuseFlagged, closed, pinned, voted, hasEndorsed, following, closedBy, voteCount, groupId, groupName,
     closeReason, authorLabel, type: postType, author, title, createdAt, renderedBody, lastEdit, editByLabel,
-    closedByLabel, users: postUsers, isDeleted, deletedByLabel,
+    closedByLabel, users: postUsers, isDeleted, deletedByLabel, is_spam: isSpam,
   } = threadData;
 
   const intl = useIntl();
@@ -56,7 +56,8 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
   const userHasModerationPrivileges = useSelector(selectUserHasModerationPrivileges);
   const shouldShowEmailConfirmation = useSelector(selectShouldShowEmailConfirmation);
   const contentCreationRateLimited = useSelector(selectContentCreationRateLimited);
-
+  // If isSpam is not provided in the API response, default to false
+  const isSpamFlagged = isSpam || false;
   const displayPostFooter = following || voteCount || closed || (groupId && userHasModerationPrivileges);
 
   const handleDeleteConfirmation = useCallback(async () => {
@@ -239,6 +240,7 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
         closedByLabel={closedByLabel}
         postData={threadData}
       />
+      <AutoSpamAlertBanner autoSpamFlagged={isSpamFlagged} />
       <PostHeader
         abuseFlagged={abuseFlagged}
         author={author}
