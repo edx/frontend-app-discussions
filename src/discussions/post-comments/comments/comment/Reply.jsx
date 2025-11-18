@@ -31,7 +31,8 @@ const Reply = ({ responseId }) => {
   const commentData = useSelector(selectCommentOrResponseById(responseId));
   const {
     id, abuseFlagged, author, authorLabel, endorsed, lastEdit, closed, closedBy,
-    closeReason, createdAt, threadId, parentId, rawBody, renderedBody, editByLabel, closedByLabel, isDeleted, is_spam: isSpam,
+    closeReason, createdAt, threadId, parentId, rawBody, renderedBody, editByLabel,
+    closedByLabel, isDeleted, is_spam: isSpam,
   } = useSelector(selectCommentOrResponseById(responseId));
   const intl = useIntl();
   const dispatch = useDispatch();

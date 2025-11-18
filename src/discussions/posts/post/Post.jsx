@@ -16,12 +16,18 @@ import { logError } from '@edx/frontend-platform/logging';
 import HTMLLoader from '../../../components/HTMLLoader';
 import { AvatarOutlineAndLabelColors, ContentActions, getFullUrl } from '../../../data/constants';
 import { selectorForUnitSubsection, selectTopicContext } from '../../../data/selectors';
-import { AlertBanner, AuthorLabel, AutoSpamAlertBanner, Confirmation } from '../../common';
+import {
+  AlertBanner, AuthorLabel, AutoSpamAlertBanner, Confirmation,
+} from '../../common';
 import DiscussionContext from '../../common/context';
 import HoverCard from '../../common/HoverCard';
 import withPostingRestrictions from '../../common/withPostingRestrictions';
 import { ContentTypes } from '../../data/constants';
-import { selectContentCreationRateLimited, selectShouldShowEmailConfirmation, selectUserHasModerationPrivileges } from '../../data/selectors';
+import {
+  selectContentCreationRateLimited,
+  selectShouldShowEmailConfirmation,
+  selectUserHasModerationPrivileges,
+} from '../../data/selectors';
 import { selectTopic } from '../../topics/data/selectors';
 import { selectThread } from '../data/selectors';
 import {

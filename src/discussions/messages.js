@@ -297,6 +297,7 @@ const messages = defineMessages({
     id: 'discussions.threads.loading',
     defaultMessage: 'Loading threads...',
     description: 'Loading text when fetching threads',
+  },
   autoSpamFlaggedMessage: {
     id: 'discussions.autoSpamFlaggedMessage',
     defaultMessage: 'Content automatically reported as possible spam pending staff review.',
