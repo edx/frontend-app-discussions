@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { sendTrackEvent } from '@edx/frontend-platform/analytics';
 
-import { EndorsementStatus } from '../../../data/constants';
+import { EndorsementStatus, PostsStatusFilter } from '../../../data/constants';
 import useDispatchWithState from '../../../data/hooks';
 import DiscussionContext from '../../common/context';
 import { selectThread } from '../../posts/data/selectors';
@@ -42,6 +42,14 @@ export function usePost(postId) {
   return thread || {};
 }
 
+const useShowDeletedContent = () => {
+  const { learnerUsername } = useContext(DiscussionContext);
+  const postFilter = useSelector(state => state.learners?.postFilter);
+  
+  // Show deleted content if we're in learner view and the deleted filter is active
+  return learnerUsername && postFilter?.status === PostsStatusFilter.DELETED;
+};
+
 export function usePostComments(threadType) {
   const { enableInContextSidebar, postId } = useContext(DiscussionContext);
   const [isLoading, dispatch] = useDispatchWithState();
@@ -49,6 +57,7 @@ export function usePostComments(threadType) {
   const reverseOrder = useSelector(selectCommentSortOrder);
   const hasMorePages = useSelector(selectThreadHasMorePages(postId));
   const currentPage = useSelector(selectThreadCurrentPage(postId));
+  const showDeleted = useShowDeletedContent();
 
   const endorsedCommentsIds = useMemo(() => (
     [...filterPosts(comments, 'endorsed')].map(comment => comment.id)
@@ -63,10 +72,11 @@ export function usePostComments(threadType) {
       threadType,
       page: currentPage + 1,
       reverseOrder,
+      showDeleted,
     };
     await dispatch(fetchThreadComments(postId, params));
     trackLoadMoreEvent(postId, params);
-  }, [currentPage, threadType, postId, reverseOrder]);
+  }, [currentPage, threadType, postId, reverseOrder, showDeleted]);
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -76,13 +86,14 @@ export function usePostComments(threadType) {
       page: 1,
       reverseOrder,
       enableInContextSidebar,
+      showDeleted,
       signal: abortController.signal,
     }));
 
     return () => {
       abortController.abort();
     };
-  }, [postId, threadType, reverseOrder, enableInContextSidebar]);
+  }, [postId, threadType, reverseOrder, enableInContextSidebar, showDeleted]);
 
   return {
     endorsedCommentsIds,

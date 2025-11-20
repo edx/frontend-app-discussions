@@ -100,7 +100,7 @@ const Reply = ({ responseId }) => {
   const handleRestoreConfirmation = useCallback(async () => {
     try {
       const { performRestoreComment } = await import('../../data/thunks');
-      const result = await dispatch(performRestoreComment(id));
+      const result = await dispatch(performRestoreComment(id, courseId));
       if (result.success) {
         await dispatch(fetchThread(threadId, courseId));
       }
@@ -197,28 +197,20 @@ const Reply = ({ responseId }) => {
           className="bg-light-300 pl-4 pt-2.5 pr-2.5 pb-10px flex-fill"
           style={{ borderRadius: '0rem 0.375rem 0.375rem', maxWidth: 'calc(100% - 50px)' }}
         >
-          <div className="d-flex flex-row justify-content-between flex-wrap">
-            <div className="d-flex align-items-center flex-wrap">
-              <AuthorLabel
-                author={author}
-                authorLabel={authorLabel}
-                labelColor={colorClass && `text-${colorClass}`}
-                linkToProfile
-                postCreatedAt={createdAt}
-                postOrComment
-              />
-              {isDeleted && !postIsDeleted && (
+          {isDeleted && !postIsDeleted && (
+            <div className="d-flex flex-row justify-content-between flex-wrap mb-2">
+              <div className="d-flex align-items-center flex-wrap">
                 <Badge
                   variant="light"
                   data-testid="deleted-reply-badge"
-                  className="font-weight-500 ml-2 bg-light-400 text-dark"
+                  className="font-weight-500 bg-light-400 text-dark"
                 >
                   {intl.formatMessage(messages.deletedComment)}
                   <span className="sr-only">{' '}deleted comment</span>
                 </Badge>
-              )}
+              </div>
             </div>
-          </div>
+          )}
           <div className="d-flex flex-row justify-content-between">
             <AuthorLabel
               author={author}

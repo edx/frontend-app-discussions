@@ -16,7 +16,7 @@ import { useIntl } from '@edx/frontend-platform/i18n';
 import { logError } from '@edx/frontend-platform/logging';
 
 import HTMLLoader from '../../../../components/HTMLLoader';
-import { AvatarOutlineAndLabelColors, ContentActions, EndorsementStatus } from '../../../../data/constants';
+import { AvatarOutlineAndLabelColors, ContentActions, EndorsementStatus, PostsStatusFilter } from '../../../../data/constants';
 import {
   AlertBanner, AuthorLabel, AutoSpamAlertBanner, Confirmation, EndorsedAlertBanner,
 } from '../../../common';
@@ -61,7 +61,7 @@ const Comment = ({
   const hasChildren = childCount > 0;
   const isNested = Boolean(parentId);
   const dispatch = useDispatch();
-  const { courseId } = useContext(DiscussionContext);
+  const { courseId, learnerUsername } = useContext(DiscussionContext);
   const { isClosed } = useContext(PostCommentsContext);
   // Get the post's isDeleted state for priority rules
   const post = useSelector(selectThread(threadId));
@@ -80,6 +80,8 @@ const Comment = ({
   const isUserPrivilegedInPostingRestriction = useUserPostingEnabled();
   const shouldShowEmailConfirmation = useSelector(selectShouldShowEmailConfirmation);
   const contentCreationRateLimited = useSelector(selectContentCreationRateLimited);
+  const postFilter = useSelector(state => state.learners?.postFilter);
+  const showDeleted = Boolean(learnerUsername && postFilter?.status === PostsStatusFilter.DELETED);
   // If isSpam is not provided in the API response, default to false
   const isSpamFlagged = isSpam || false;
   useEffect(() => {
@@ -88,9 +90,10 @@ const Comment = ({
       dispatch(fetchCommentResponses(id, {
         page: 1,
         reverseOrder: sortedOrder,
+        showDeleted,
       }));
     }
-  }, [id, sortedOrder]);
+  }, [id, sortedOrder, showDeleted]);
 
   const endorseIcons = useMemo(() => (
     actions.find(({ action }) => action === EndorsementStatus.ENDORSED)
@@ -123,7 +126,8 @@ const Comment = ({
     } catch (error) {
       logError(error);
     }
-  }, [id, threadId, courseId, dispatch]);
+    hideDeleteConfirmation();
+  }, [id, threadId, courseId, dispatch, hideDeleteConfirmation]);
 
   const handleReportConfirmation = useCallback(() => {
     dispatch(editComment(id, { flagged: !abuseFlagged }));
@@ -145,7 +149,7 @@ const Comment = ({
   const handleRestoreConfirmation = useCallback(async () => {
     try {
       const { performRestoreComment } = await import('../../data/thunks');
-      const result = await dispatch(performRestoreComment(id));
+      const result = await dispatch(performRestoreComment(id, courseId));
       if (result.success) {
         // Refresh the thread to reflect the change
         await dispatch(fetchThread(threadId, courseId));
@@ -168,8 +172,9 @@ const Comment = ({
     dispatch(fetchCommentResponses(id, {
       page: currentPage + 1,
       reverseOrder: sortedOrder,
+      showDeleted,
     }))
-  ), [id, currentPage, sortedOrder]);
+  ), [id, currentPage, sortedOrder, showDeleted]);
 
   const handleAddCommentButton = useCallback(() => {
     if (isUserPrivilegedInPostingRestriction) {

@@ -25,6 +25,7 @@ export const getThreadComments = async (threadId, {
   pageSize,
   reverseOrder,
   enableInContextSidebar = false,
+  showDeleted = false,
   signal,
 } = {}) => {
   const params = snakeCaseObject({
@@ -35,6 +36,7 @@ export const getThreadComments = async (threadId, {
     requestedFields: 'profile_image',
     enableInContextSidebar,
     mergeQuestionTypeResponses: threadType === ThreadType.QUESTION ? true : null,
+    showDeleted,
   });
 
   const { data } = await getAuthenticatedHttpClient().get(getCommentsApiUrl(), { params: { ...params, signal } });
@@ -52,6 +54,7 @@ export const getCommentResponses = async (commentId, {
   page,
   pageSize,
   reverseOrder,
+  showDeleted = false,
 } = {}) => {
   const url = `${getCommentsApiUrl()}${commentId}/`;
   const params = snakeCaseObject({
@@ -59,6 +62,7 @@ export const getCommentResponses = async (commentId, {
     pageSize,
     requestedFields: 'profile_image',
     reverseOrder,
+    showDeleted,
   });
   const { data } = await getAuthenticatedHttpClient()
     .get(url, { params });
