@@ -189,8 +189,7 @@ export function removeComment(commentId, threadId) {
 export function performSoftDeleteComment(commentId) {
   return async () => {
     try {
-      const { softDeleteComment } = await import('../../data/services/softDeleteService');
-      await softDeleteComment(commentId);
+      await deleteComment(commentId);
       return { success: true };
     } catch (error) {
       logError(error);
@@ -199,11 +198,11 @@ export function performSoftDeleteComment(commentId) {
   };
 }
 
-export function performRestoreComment(commentId) {
+export function performRestoreComment(commentId, courseId) {
   return async () => {
     try {
-      const { restoreComment } = await import('../../data/services/softDeleteService');
-      await restoreComment(commentId);
+      const { restoreComment } = await import('./api');
+      await restoreComment(commentId, courseId);
       return { success: true };
     } catch (error) {
       logError(error);

@@ -220,50 +220,51 @@ export const sendEmailForAccountActivation = async () => {
 /**
  * Soft delete a thread.
  * @param {string} threadId
- * @param {string} userId
  * @returns {Promise<{}>}
  */
-export const softDeleteThread = async (threadId, userId) => {
-  const url = `${getThreadsApiUrl()}${threadId}/soft_delete/`;
-  const { data } = await getAuthenticatedHttpClient().post(url, { user_id: userId });
+export const softDeleteThread = async (threadId) => {
+  const url = `${getThreadsApiUrl()}${threadId}/`;
+  const { data } = await getAuthenticatedHttpClient().delete(url);
   return data;
 };
 
 /**
  * Restore a soft deleted thread.
  * @param {string} threadId
+ * @param {string} courseId
  * @returns {Promise<{}>}
  */
-export const restoreThread = async (threadId) => {
-  const url = `${getThreadsApiUrl()}${threadId}/restore/`;
-  const { data } = await getAuthenticatedHttpClient().post(url);
+export const restoreThread = async (threadId, courseId) => {
+  const url = `${getConfig().LMS_BASE_URL}/api/discussion/v1/restore_content`;
+  const { data } = await getAuthenticatedHttpClient().post(url, {
+    content_type: 'thread',
+    content_id: threadId,
+    course_id: courseId,
+  });
   return data;
 };
 
 /**
  * Bulk soft delete threads.
  * @param {string[]} threadIds
- * @param {string} userId
  * @returns {Promise<{}>}
  */
-export const bulkSoftDeleteThreads = async (threadIds, userId) => {
-  const url = `${getThreadsApiUrl()}bulk_soft_delete/`;
-  const { data } = await getAuthenticatedHttpClient().post(url, {
-    thread_ids: threadIds.join(','),
-    user_id: userId,
-  });
-  return data;
+export const bulkSoftDeleteThreads = async (threadIds) => {
+  // Delete threads one by one since there's no bulk delete endpoint in v1 API
+  const promises = threadIds.map(threadId => softDeleteThread(threadId));
+  const results = await Promise.all(promises);
+  return { success: true, results };
 };
 
 /**
  * Bulk restore soft deleted threads.
  * @param {string[]} threadIds
+ * @param {string} courseId
  * @returns {Promise<{}>}
  */
-export const bulkRestoreThreads = async (threadIds) => {
-  const url = `${getThreadsApiUrl()}bulk_restore/`;
-  const { data } = await getAuthenticatedHttpClient().post(url, {
-    thread_ids: threadIds.join(','),
-  });
-  return data;
+export const bulkRestoreThreads = async (threadIds, courseId) => {
+  // Restore threads one by one since RestoreContent handles individual items
+  const promises = threadIds.map(threadId => restoreThread(threadId, courseId));
+  const results = await Promise.all(promises);
+  return { success: true, results };
 };

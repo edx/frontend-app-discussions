@@ -127,3 +127,19 @@ export const deleteComment = async (commentId) => {
   await getAuthenticatedHttpClient()
     .delete(url);
 };
+
+/**
+ * Restores a soft deleted comment.
+ * @param {string} commentId ID of comment to restore
+ * @param {string} courseId Course ID
+ * @returns {Promise<{}>}
+ */
+export const restoreComment = async (commentId, courseId) => {
+  const url = `${getConfig().LMS_BASE_URL}/api/discussion/v1/restore_content`;
+  const { data } = await getAuthenticatedHttpClient().post(url, {
+    content_type: 'comment',
+    content_id: commentId,
+    course_id: courseId,
+  });
+  return data;
+};

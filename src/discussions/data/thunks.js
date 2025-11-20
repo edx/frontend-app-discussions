@@ -54,12 +54,12 @@ export default function fetchCourseConfig(courseId) {
 }
 
 // Soft delete thunks
-export function performBulkSoftDelete(threadIds, userId, courseId) {
+export function performBulkSoftDelete(threadIds) {
   return async (dispatch) => {
     try {
       dispatch(bulkActionRequest());
-      const { bulkSoftDeleteThreads } = await import('./services/softDeleteService');
-      await bulkSoftDeleteThreads(threadIds, userId, courseId);
+      const { bulkSoftDeleteThreads } = await import('../posts/data/api');
+      await bulkSoftDeleteThreads(threadIds);
       dispatch(bulkActionSuccess());
       return { success: true };
     } catch (error) {
@@ -74,7 +74,7 @@ export function performBulkRestore(threadIds, courseId) {
   return async (dispatch) => {
     try {
       dispatch(bulkActionRequest());
-      const { bulkRestoreThreads } = await import('./services/softDeleteService');
+      const { bulkRestoreThreads } = await import('../posts/data/api');
       await bulkRestoreThreads(threadIds, courseId);
       dispatch(bulkActionSuccess());
       return { success: true };
@@ -86,11 +86,11 @@ export function performBulkRestore(threadIds, courseId) {
   };
 }
 
-export function performSoftDeleteThread(threadId, userId, courseId) {
+export function performSoftDeleteThread(threadId) {
   return async () => {
     try {
-      const { softDeleteThread } = await import('./services/softDeleteService');
-      await softDeleteThread(threadId, userId, courseId);
+      const { softDeleteThread } = await import('../posts/data/api');
+      await softDeleteThread(threadId);
       return { success: true };
     } catch (error) {
       logError(error);
@@ -102,7 +102,7 @@ export function performSoftDeleteThread(threadId, userId, courseId) {
 export function performRestoreThread(threadId, courseId) {
   return async () => {
     try {
-      const { restoreThread } = await import('./services/softDeleteService');
+      const { restoreThread } = await import('../posts/data/api');
       await restoreThread(threadId, courseId);
       return { success: true };
     } catch (error) {

@@ -11,6 +11,7 @@ import {
   getThreads,
   postThread,
   sendEmailForAccountActivation,
+  softDeleteThread,
   updateThread,
 } from './api';
 import {
@@ -311,8 +312,6 @@ export function removeThread(threadId) {
   return async (dispatch) => {
     try {
       dispatch(deleteThreadRequest({ threadId }));
-      // Use soft delete instead of hard delete
-      const { softDeleteThread } = await import('../../data/services/softDeleteService');
       await softDeleteThread(threadId);
       dispatch(deleteThreadSuccess({ threadId }));
     } catch (error) {
