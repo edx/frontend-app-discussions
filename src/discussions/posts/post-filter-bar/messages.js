@@ -51,6 +51,16 @@ const messages = defineMessages({
     defaultMessage: 'Not responded',
     description: 'Option in dropdown to filter to unresponded posts',
   },
+  filterActive: {
+    id: 'discussions.posts.status.filter.active',
+    defaultMessage: 'Active content',
+    description: 'Option in dropdown to filter to active (non-deleted) posts',
+  },
+  filterDeleted: {
+    id: 'discussions.posts.status.filter.deleted',
+    defaultMessage: 'Deleted content',
+    description: 'Option in dropdown to filter to deleted posts',
+  },
   myPosts: {
     id: 'discussions.posts.filter.myPosts',
     defaultMessage: 'My posts',
@@ -99,6 +109,8 @@ const messages = defineMessages({
       statusReported {reported}
       statusUnanswered {unanswered}
       statusUnresponded {unresponded}
+      statusActive {active}
+      statusDeleted {deleted}
       other {{status}}
     } {type, select,
       discussion {discussions}

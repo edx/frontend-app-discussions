@@ -12,6 +12,7 @@ export const getUserProfileApiUrl = () => `${getConfig().LMS_BASE_URL}/api/user/
 export const learnerPostsApiUrl = (courseId) => `${getCoursesApiUrl()}${courseId}/learner/`;
 export const learnersApiUrl = (courseId) => `${getCoursesApiUrl()}${courseId}/activity_stats/`;
 export const deletePostsApiUrl = (courseId, username, courseOrOrg, execute) => `${getConfig().LMS_BASE_URL}/api/discussion/v1/bulk_delete_user_posts/${courseId}?username=${username}&course_or_org=${courseOrOrg}&execute=${execute}`;
+export const restorePostsApiUrl = (courseId, username, courseOrOrg, execute) => `${getConfig().LMS_BASE_URL}/api/discussion/v1/bulk_restore_user_posts/${courseId}?username=${username}&course_or_org=${courseOrOrg}&execute=${execute}`;
 
 /**
  * Fetches all the learners in the given course.
@@ -49,6 +50,7 @@ export async function getUserProfiles(usernames) {
  * @param {ThreadViewStatus} view Set to "unread" on "unanswered" to filter to only those statuses.
  * @param {boolean} countFlagged If true, abuseFlaggedCount will be available.
  * @param {number} cohort
+ * @param {boolean} showDeleted If true, only deleted posts will be returned.
  * @returns API Response object in the format
  *  {
  *    results: [array of posts],
@@ -65,6 +67,7 @@ export async function getUserPosts(courseId, {
   threadType,
   countFlagged,
   cohort,
+  showDeleted,
 } = {}) {
   const params = snakeCaseObject({
     page,
@@ -77,6 +80,7 @@ export async function getUserPosts(courseId, {
     username: author,
     countFlagged,
     groupId: cohort,
+    showDeleted,
   });
 
   const { data } = await getAuthenticatedHttpClient()
@@ -103,3 +107,28 @@ export async function deleteUserPostsApi(courseId, username, courseOrOrg, execut
   );
   return data;
 }
+
+/**
+ * Restores deleted posts by a specific user in a course or organization
+ * @param {string} courseId Course ID of the course
+ * @param {string} username Username of the user whose posts are to be restored
+ * @param {string} courseOrOrg Can be 'course' or 'org' to specify restoration scope
+ * @param {boolean} execute If true, restores posts; if false, returns count of threads and comments
+ * @returns API Response object in the format
+ *  {
+ *    thread_count: number,
+ *    comment_count: number
+ *  }
+ */
+export async function restoreUserPostsApi(courseId, username, courseOrOrg, execute) {
+  const { data } = await getAuthenticatedHttpClient().post(
+    restorePostsApiUrl(courseId, username, courseOrOrg, execute),
+    null,
+  );
+  return data;
+}
+
+/**
+ * Alias for restoreUserPostsApi for backwards compatibility
+ */
+export const undeleteUserPostsApi = restoreUserPostsApi;

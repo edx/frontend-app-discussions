@@ -37,7 +37,7 @@ const PostLink = ({
   const {
     topicId, hasEndorsed, type, author, authorLabel, abuseFlagged, abuseFlaggedCount, read, commentCount,
     unreadCommentCount, id, pinned, previewBody, title, voted, voteCount, following, groupId, groupName, createdAt,
-    users: postUsers,
+    users: postUsers, isDeleted,
   } = threadData;
   const { pathname } = discussionsPath(Routes.COMMENTS.PAGES[page], {
     0: enableInContextSidebar ? 'in-context' : undefined,
@@ -76,8 +76,10 @@ const PostLink = ({
               'd-flex flex-row pt-2 pb-2 px-4 border-primary-500 position-relative',
               { 'bg-light-300': isPostRead },
               { 'post-summary-card-selected': id === selectedPostId },
+              { 'bg-light-200': isDeleted }, // Gray background for deleted threads
             )
           }
+        style={isDeleted ? { opacity: 0.7 } : {}} // Slightly faded for deleted threads
       >
         <PostAvatar
           postType={type}
@@ -94,6 +96,7 @@ const PostLink = ({
                 <span className={classNames(
                   'font-weight-500 text-primary-500 font-style align-bottom mr-1',
                   { 'font-weight-bolder': !read },
+                  { 'text-decoration-line-through': isDeleted }, // Line-through for deleted threads
                 )}
                 >
                   {title}
@@ -121,12 +124,25 @@ const PostLink = ({
                   <span className="sr-only">{' '}reported</span>
                 </Badge>
               )}
+              {isDeleted && (
+                <Badge
+                  variant="light"
+                  data-testid="deleted-post"
+                  className={classNames('font-weight-500 badge-padding bg-light-400 text-dark', {
+                    'ml-2': canSeeReportedBadge || showAnsweredBadge,
+                    'ml-auto': !canSeeReportedBadge && !showAnsweredBadge,
+                  })}
+                >
+                  {intl.formatMessage(messages.deletedPost)}
+                  <span className="sr-only">{' '}deleted post</span>
+                </Badge>
+              )}
               {pinned && (
                 <Icon
                   src={PushPin}
                   className={classNames('post-summary-icons-dimensions text-gray-700', {
-                    'ml-2': canSeeReportedBadge || showAnsweredBadge,
-                    'ml-auto': !canSeeReportedBadge && !showAnsweredBadge,
+                    'ml-2': canSeeReportedBadge || showAnsweredBadge || isDeleted,
+                    'ml-auto': !canSeeReportedBadge && !showAnsweredBadge && !isDeleted,
                   })}
                 />
               )}

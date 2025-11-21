@@ -79,6 +79,7 @@ export function fetchThreadComments(
     reverseOrder,
     threadType,
     enableInContextSidebar,
+    showDeleted = false,
     signal,
   } = {},
 ) {
@@ -86,7 +87,7 @@ export function fetchThreadComments(
     try {
       dispatch(fetchCommentsRequest());
       const data = await getThreadComments(threadId, {
-        page, reverseOrder, threadType, enableInContextSidebar, signal,
+        page, reverseOrder, threadType, enableInContextSidebar, showDeleted, signal,
       });
       dispatch(fetchCommentsSuccess({
         ...normaliseComments(camelCaseObject(data)),
@@ -104,11 +105,11 @@ export function fetchThreadComments(
   };
 }
 
-export function fetchCommentResponses(commentId, { page = 1, reverseOrder = true } = {}) {
+export function fetchCommentResponses(commentId, { page = 1, reverseOrder = true, showDeleted = false } = {}) {
   return async (dispatch) => {
     try {
       dispatch(fetchCommentResponsesRequest({ commentId }));
-      const data = await getCommentResponses(commentId, { page, reverseOrder });
+      const data = await getCommentResponses(commentId, { page, reverseOrder, showDeleted });
       dispatch(fetchCommentResponsesSuccess({
         ...normaliseComments(camelCaseObject(data)),
         page,
@@ -182,6 +183,31 @@ export function removeComment(commentId, threadId) {
         dispatch(deleteCommentFailed());
       }
       logError(error);
+    }
+  };
+}
+
+export function performSoftDeleteComment(commentId) {
+  return async () => {
+    try {
+      await deleteComment(commentId);
+      return { success: true };
+    } catch (error) {
+      logError(error);
+      return { success: false, error: error.message };
+    }
+  };
+}
+
+export function performRestoreComment(commentId, courseId) {
+  return async () => {
+    try {
+      const { restoreComment } = await import('./api');
+      await restoreComment(commentId, courseId);
+      return { success: true };
+    } catch (error) {
+      logError(error);
+      return { success: false, error: error.message };
     }
   };
 }

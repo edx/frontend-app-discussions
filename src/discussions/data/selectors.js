@@ -66,9 +66,11 @@ export function selectAreThreadsFiltered(state) {
     return true;
   }
 
+  // Treat both ALL and ACTIVE as unfiltered since ACTIVE is now the default status
   return !(
-    filters.status === PostsStatusFilter.ALL
+    (filters.status === PostsStatusFilter.ALL || filters.status === PostsStatusFilter.ACTIVE)
     && filters.postType === ThreadType.ALL
+    && (filters.cohort === '' || !filters.cohort)
   );
 }
 
@@ -111,3 +113,14 @@ export const selectIsUserLearner = createSelector(
     ) || false
   ),
 );
+
+// Threads selectors for soft delete functionality
+export const selectThreadsFilter = state => state.threads?.filter || 'active';
+
+export const selectThreadsLoading = state => state.threads?.loading || false;
+
+export const selectSelectedThreadIds = state => state.threads?.selectedThreadIds || [];
+
+export const selectBulkActionStatus = state => state.threads?.bulkActionStatus;
+
+export const selectBulkActionError = state => state.threads?.bulkActionError;

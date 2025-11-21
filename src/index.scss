@@ -1,8 +1,8 @@
 @use "@openedx/paragon/styles/css/core/custom-media-breakpoints" as paragonCustomMediaBreakpoints;
 
 
-@import "~@edx/frontend-component-footer/dist/footer";
-@import "~@edx/frontend-component-header/dist/index";
+// @import "~@edx/frontend-component-footer/dist/footer";
+// @import "~@edx/frontend-component-header/dist/index";
 
 
 body,
@@ -26,6 +26,19 @@ body,
 
 .btn-plain {
     background-color: var(--pgn-color-card-bg-base) !important;
+}
+
+// New learner message styling
+.new-learner-message {
+  font-style: italic;
+  font-size: 12px;
+  margin-top: 0.25rem;
+  line-height: 1.2;
+  
+  @media (max-width: 767.98px) {
+    font-size: 11px;
+    margin-top: 0.1rem;
+  }
 }
 
 #post,
@@ -54,6 +67,22 @@ body,
 
 .outline-TA-color {
   outline: var(--pgn-color-success-700) solid 2px;
+}
+
+.text-learner-color {
+  color: var(--pgn-color-primary-500);
+}
+
+.outline-learner-color {
+  outline: var(--pgn-color-primary-500) solid 2px;
+}
+
+.text-new-learner-color {
+  color: var(--pgn-color-accent-500);
+}
+
+.outline-new-learner-color {
+  outline: var(--pgn-color-accent-500) solid 2px;
 }
 
 .outline-anonymous {
@@ -558,8 +587,36 @@ code {
 .actions-dropdown-item {
   padding: 12px 16px;
   height: 48px !important;
-  min-width: 195px !important
+  min-width: 195px !important;
+  border: none !important;
+  outline: none !important;
 }
+
+.actions-dropdown-item:hover,
+.actions-dropdown-item:focus,
+.actions-dropdown-item:active {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.learner-submenu-container {
+  min-width: 280px;
+  max-width: 320px;
+  z-index: 1051;
+  border: 1px solid var(--pgn-color-light-400) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  outline: none !important;
+}
+
+.learner-submenu-container .actions-dropdown-item {
+  min-width: 280px !important;
+  max-width: 320px !important;
+  white-space: normal;
+  text-align: left;
+  border: none !important;
+}
+
 
 .font-xl {
   font-size: 18px !important;

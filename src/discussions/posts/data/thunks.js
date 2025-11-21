@@ -7,7 +7,12 @@ import {
 import { setContentCreationRateLimited } from '../../data/slices';
 import { getHttpErrorStatus } from '../../utils';
 import {
-  deleteThread, getThread, getThreads, postThread, sendEmailForAccountActivation, updateThread,
+  getThread,
+  getThreads,
+  postThread,
+  sendEmailForAccountActivation,
+  softDeleteThread,
+  updateThread,
 } from './api';
 import {
   deleteThreadDenied,
@@ -140,6 +145,12 @@ export function fetchThreads(courseId, {
   }
   if (filters.cohort) {
     options.cohort = filters.cohort;
+  }
+  if (filters.status === PostsStatusFilter.ACTIVE) {
+    options.isDeleted = false;
+  }
+  if (filters.status === PostsStatusFilter.DELETED) {
+    options.isDeleted = true;
   }
   return async (dispatch) => {
     try {
@@ -301,7 +312,7 @@ export function removeThread(threadId) {
   return async (dispatch) => {
     try {
       dispatch(deleteThreadRequest({ threadId }));
-      await deleteThread(threadId);
+      await softDeleteThread(threadId);
       dispatch(deleteThreadSuccess({ threadId }));
     } catch (error) {
       if (getHttpErrorStatus(error) === 403) {
