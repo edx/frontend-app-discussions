@@ -94,6 +94,14 @@ export function fetchUserPosts(courseId, {
     author,
     countFlagged,
   };
+  // Main content status: Active/Deleted
+  if (filters.contentStatus === PostsStatusFilter.DELETED) {
+    options.showDeleted = true;
+  } else if (filters.contentStatus === PostsStatusFilter.ACTIVE) {
+    options.showDeleted = false;
+  }
+
+  // Secondary status filters (independent)
   if (filters.status === PostsStatusFilter.UNREAD) {
     options.status = 'unread';
   }
@@ -106,6 +114,7 @@ export function fetchUserPosts(courseId, {
   if (filters.status === PostsStatusFilter.UNRESPONDED) {
     options.status = 'unresponded';
   }
+
   if (filters.postType !== ThreadType.ALL) {
     options.threadType = filters.postType;
   }
@@ -114,9 +123,6 @@ export function fetchUserPosts(courseId, {
   }
   if (filters.cohort) {
     options.cohort = filters.cohort;
-  }
-  if (filters.status === PostsStatusFilter.DELETED) {
-    options.showDeleted = true;
   }
   return async (dispatch) => {
     try {

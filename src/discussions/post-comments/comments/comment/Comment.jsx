@@ -16,7 +16,9 @@ import { useIntl } from '@edx/frontend-platform/i18n';
 import { logError } from '@edx/frontend-platform/logging';
 
 import HTMLLoader from '../../../../components/HTMLLoader';
-import { AvatarOutlineAndLabelColors, ContentActions, EndorsementStatus, PostsStatusFilter } from '../../../../data/constants';
+import {
+  AvatarOutlineAndLabelColors, ContentActions, EndorsementStatus, PostsStatusFilter,
+} from '../../../../data/constants';
 import {
   AlertBanner, AuthorLabel, AutoSpamAlertBanner, Confirmation, EndorsedAlertBanner,
 } from '../../../common';

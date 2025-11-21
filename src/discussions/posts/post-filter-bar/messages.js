@@ -53,12 +53,12 @@ const messages = defineMessages({
   },
   filterActive: {
     id: 'discussions.posts.status.filter.active',
-    defaultMessage: 'Active',
+    defaultMessage: 'Active content',
     description: 'Option in dropdown to filter to active (non-deleted) posts',
   },
   filterDeleted: {
     id: 'discussions.posts.status.filter.deleted',
-    defaultMessage: 'Deleted',
+    defaultMessage: 'Deleted content',
     description: 'Option in dropdown to filter to deleted posts',
   },
   myPosts: {

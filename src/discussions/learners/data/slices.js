@@ -20,7 +20,8 @@ const learnersSlice = createSlice({
     sortedBy: LearnersOrdering.BY_LAST_ACTIVITY,
     postFilter: {
       postType: ThreadType.ALL,
-      status: PostsStatusFilter.ACTIVE,
+      status: PostsStatusFilter.ALL, // secondary status (Unread, etc.)
+      contentStatus: PostsStatusFilter.ACTIVE, // main content status (Active/Deleted)
       orderBy: ThreadOrdering.BY_LAST_ACTIVITY,
       cohort: '',
     },
@@ -85,7 +86,10 @@ const learnersSlice = createSlice({
       {
         ...state,
         pages: [],
-        postFilter: payload,
+        postFilter: {
+          ...state.postFilter,
+          ...payload,
+        },
       }
     ),
     deleteUserPostsRequest: (state) => (

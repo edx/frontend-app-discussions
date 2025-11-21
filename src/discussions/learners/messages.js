@@ -68,6 +68,26 @@ const messages = defineMessages({
     defaultMessage: 'Deleted activity',
     description: 'Tooltip text for deleted activity icon',
   },
+  deleteActivity: {
+    id: 'discussions.learner.actions.deleteActivity',
+    defaultMessage: 'Delete activity',
+    description: 'Main menu option for deleting user activity',
+  },
+  restoreActivity: {
+    id: 'discussions.learner.actions.restoreActivity',
+    defaultMessage: 'Restore activity',
+    description: 'Main menu option for restoring user activity',
+  },
+  withinCourse: {
+    id: 'discussions.learner.actions.withinCourse',
+    defaultMessage: 'Within course',
+    description: 'Submenu option for actions within the current course',
+  },
+  withinOrg: {
+    id: 'discussions.learner.actions.withinOrg',
+    defaultMessage: 'Within organization',
+    description: 'Submenu option for actions within the organization',
+  },
   deleteCoursePosts: {
     id: 'discussions.learner.actions.deleteCoursePosts',
     defaultMessage: 'Delete user posts within this course',
