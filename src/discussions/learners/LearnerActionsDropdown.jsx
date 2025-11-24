@@ -11,7 +11,7 @@ import { ChevronRight, MoreHoriz } from '@openedx/paragon/icons';
 
 import { useIntl } from '@edx/frontend-platform/i18n';
 
-import { useLearnerActions } from './utils';
+import { useLearnerActionsMenu } from './utils';
 
 const LearnerActionsDropdown = ({
   actionHandlers,
@@ -23,7 +23,7 @@ const LearnerActionsDropdown = ({
   const [isOpen, open, close] = useToggle(false);
   const [target, setTarget] = useState(null);
   const [activeSubmenu, setActiveSubmenu] = useState(null);
-  const menuItems = useLearnerActions(userHasBulkDeletePrivileges);
+  const menuItems = useLearnerActionsMenu(intl, userHasBulkDeletePrivileges);
 
   const handleActions = useCallback((action) => {
     const actionFunction = actionHandlers[action];
