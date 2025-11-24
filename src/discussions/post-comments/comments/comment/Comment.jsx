@@ -16,7 +16,9 @@ import { useIntl } from '@edx/frontend-platform/i18n';
 import { logError } from '@edx/frontend-platform/logging';
 
 import HTMLLoader from '../../../../components/HTMLLoader';
-import { AvatarOutlineAndLabelColors, ContentActions, EndorsementStatus, PostsStatusFilter } from '../../../../data/constants';
+import {
+  AvatarOutlineAndLabelColors, ContentActions, EndorsementStatus, PostsStatusFilter,
+} from '../../../../data/constants';
 import {
   AlertBanner, AuthorLabel, AutoSpamAlertBanner, Confirmation, EndorsedAlertBanner,
 } from '../../../common';
@@ -81,7 +83,10 @@ const Comment = ({
   const shouldShowEmailConfirmation = useSelector(selectShouldShowEmailConfirmation);
   const contentCreationRateLimited = useSelector(selectContentCreationRateLimited);
   const postFilter = useSelector(state => state.learners?.postFilter);
-  const showDeleted = Boolean(learnerUsername && postFilter?.status === PostsStatusFilter.DELETED);
+  // Use contentStatus for deleted section
+  const showDeleted = Boolean(
+    learnerUsername && postFilter?.contentStatus === PostsStatusFilter.DELETED
+  );
   // If isSpam is not provided in the API response, default to false
   const isSpamFlagged = isSpam || false;
   useEffect(() => {

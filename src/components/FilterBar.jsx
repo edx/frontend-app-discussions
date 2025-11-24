@@ -241,6 +241,7 @@ FilterBar.propTypes = {
   selectedFilters: PropTypes.shape({
     postType: ThreadType,
     status: PostsStatusFilter,
+    contentStatus: PostsStatusFilter,
     orderBy: ThreadOrdering,
     cohort: PropTypes.string,
   }).isRequired,

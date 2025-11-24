@@ -86,6 +86,8 @@ const LearnerPostsView = () => {
 
   const handleDeletePosts = useCallback(async (courseOrOrg) => {
     await dispatchDelete(deleteUserPosts(courseId, username, courseOrOrg, true));
+    dispatch(clearPostsPages());
+    loadMorePosts();
     hideDeleteConfirmation();
     // Navigate back to learners list after deletion
     navigate({ ...discussionsPath(Routes.LEARNERS.PATH, { courseId })(location) });
@@ -101,10 +103,9 @@ const LearnerPostsView = () => {
 
   const handleRestorePosts = useCallback(async (courseOrOrg) => {
     await dispatch(undeleteUserPosts(courseId, username, courseOrOrg, true));
-    hideRestoreConfirmation();
-    // Clear and reload the posts to reflect restored content
     dispatch(clearPostsPages());
     loadMorePosts();
+    hideRestoreConfirmation();
   }, [courseId, username, hideRestoreConfirmation, dispatch, loadMorePosts]);
 
   const actionHandlers = useMemo(() => ({
