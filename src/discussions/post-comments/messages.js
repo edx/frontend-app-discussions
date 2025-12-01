@@ -154,13 +154,13 @@ const messages = defineMessages({
   },
   undeleteResponseTitle: {
     id: 'discussions.editor.undelete.response.title',
-    defaultMessage: 'Undelete response',
-    description: 'Title of confirmation dialog shown when undeleting a response',
+    defaultMessage: 'Restore response',
+    description: 'Title of confirmation dialog shown when restoring a response',
   },
   undeleteResponseDescription: {
     id: 'discussions.editor.undelete.response.description',
-    defaultMessage: 'Are you sure you want to undelete this response?',
-    description: 'Text displayed in confirmation dialog when undeleting a response',
+    defaultMessage: 'Are you sure you want to restore this response?',
+    description: 'Text displayed in confirmation dialog when restoring a response',
   },
   deleteCommentTitle: {
     id: 'discussions.editor.delete.comment.title',
@@ -174,13 +174,13 @@ const messages = defineMessages({
   },
   undeleteCommentTitle: {
     id: 'discussions.editor.undelete.comment.title',
-    defaultMessage: 'Undelete comment',
-    description: 'Title of confirmation dialog shown when undeleting a comment',
+    defaultMessage: 'Restore comment',
+    description: 'Title of confirmation dialog shown when restoring a comment',
   },
   undeleteCommentDescription: {
     id: 'discussions.editor.undelete.comment.description',
-    defaultMessage: 'Are you sure you want to undelete this comment?',
-    description: 'Text displayed in confirmation dialog when undeleting a comment',
+    defaultMessage: 'Are you sure you want to restore this comment?',
+    description: 'Text displayed in confirmation dialog when restoring a comment',
   },
   deleteConfirmationDelete: {
     id: 'discussions.delete.confirmation.button.delete',

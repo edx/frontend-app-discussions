@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState, useContext } from 'react';
 import PropTypes from 'prop-types';
 
-import { Avatar, Badge, useToggle } from '@openedx/paragon';
+import { Avatar, useToggle } from '@openedx/paragon';
 import { DeleteOutline } from '@openedx/paragon/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import * as timeago from 'timeago.js';
@@ -168,6 +168,30 @@ const Reply = ({ responseId }) => {
           </div>
         </div>
       )}
+      {isDeleted && deletedBy && (
+        <div className="d-flex">
+          <div className="d-flex invisible">
+            <Avatar />
+          </div>
+          <div className="w-100">
+            <div className="alert alert-info px-3 shadow-none mb-1 py-10px bg-light-200 d-flex align-items-start">
+              <DeleteOutline className="mr-2 text-dark-500 flex-shrink-0" style={{ width: '1.5rem', height: '1.5rem' }} />
+              <div className="d-flex align-items-center flex-wrap text-gray-700 font-style">
+                {intl.formatMessage(messages.deletedBy)}
+                <span className="ml-1">
+                  <AuthorLabel
+                    author={deletedBy}
+                    authorLabel={deletedByLabel}
+                    labelColor={AvatarOutlineAndLabelColors[deletedByLabel] && `text-${AvatarOutlineAndLabelColors[deletedByLabel]}`}
+                    linkToProfile
+                    postOrComment
+                  />
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="d-flex">
         <div className="d-flex mr-3 mt-2.5">
           <Avatar
@@ -184,37 +208,6 @@ const Reply = ({ responseId }) => {
           className="bg-light-300 pl-4 pt-2.5 pr-2.5 pb-10px flex-fill"
           style={{ borderRadius: '0rem 0.375rem 0.375rem', maxWidth: 'calc(100% - 50px)' }}
         >
-          {isDeleted && !postIsDeleted && (
-            <div className="d-flex flex-row justify-content-between flex-wrap mb-2">
-              <div className="d-flex align-items-center flex-wrap">
-                <Badge
-                  variant="light"
-                  data-testid="deleted-reply-badge"
-                  className="font-weight-500 bg-light-400 text-dark"
-                >
-                  {intl.formatMessage(messages.deletedComment)}
-                  <span className="sr-only">{' '}deleted comment</span>
-                </Badge>
-              </div>
-            </div>
-          )}
-          {isDeleted && deletedBy && deletedByLabel && (
-            <div className="alert alert-info px-3 shadow-none mb-1 py-10px bg-light-200 d-flex align-items-start">
-              <DeleteOutline className="mr-2 text-dark-500 flex-shrink-0" style={{ width: '1.5rem', height: '1.5rem' }} />
-              <div className="d-flex align-items-center flex-wrap text-gray-700 font-style">
-                {intl.formatMessage(messages.deletedBy)}
-                <span className="ml-1">
-                  <AuthorLabel
-                    author={deletedBy}
-                    authorLabel={deletedByLabel}
-                    labelColor={AvatarOutlineAndLabelColors[deletedByLabel] && `text-${AvatarOutlineAndLabelColors[deletedByLabel]}`}
-                    linkToProfile
-                    postOrComment
-                  />
-                </span>
-              </div>
-            </div>
-          )}
           <div className="d-flex flex-row justify-content-between">
             <AuthorLabel
               author={author}

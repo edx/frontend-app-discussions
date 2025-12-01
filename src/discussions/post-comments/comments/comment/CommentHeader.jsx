@@ -1,18 +1,16 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { Avatar, Badge } from '@openedx/paragon';
+import { Avatar } from '@openedx/paragon';
 import classNames from 'classnames';
 import { useSelector } from 'react-redux';
 
 import { getConfig } from '@edx/frontend-platform';
-import { useIntl } from '@edx/frontend-platform/i18n';
 
 import { AvatarOutlineAndLabelColors } from '../../../../data/constants';
 import { AuthorLabel } from '../../../common';
 import { useAlertBannerVisible } from '../../../data/hooks';
 import { selectAuthorAvatar } from '../../../posts/data/selectors';
-import messages from '../../messages';
 
 const CommentHeader = ({
   author,
@@ -27,7 +25,6 @@ const CommentHeader = ({
   postIsDeleted,
   postData,
 }) => {
-  const intl = useIntl();
   const colorClass = AvatarOutlineAndLabelColors[authorLabel];
   const hasAnyAlert = useAlertBannerVisible({
     author,
@@ -40,14 +37,6 @@ const CommentHeader = ({
   const profileImage = getConfig()?.ENABLE_PROFILE_IMAGE === 'true'
     ? Object.values(postUsers ?? {})[0]?.profile?.image
     : null;
-
-  // Determine which deleted badge to show based on priority rules
-  // Priority: Deleted Post > Deleted Response > Deleted Comment
-  const shouldShowDeletedBadge = isDeleted && !postIsDeleted; // Don't show if post is already deleted
-  const isResponse = !parentId; // Response has no parentId, comment has parentId
-  const deletedBadgeMessage = isResponse
-    ? messages.deletedResponse
-    : messages.deletedComment;
 
   return (
     <div className={classNames('d-flex flex-row justify-content-between', {
@@ -73,16 +62,6 @@ const CommentHeader = ({
           postOrComment
           postData={postData}
         />
-        {shouldShowDeletedBadge && (
-          <Badge
-            variant="light"
-            data-testid="deleted-comment-badge"
-            className="font-weight-500 ml-2 bg-light-400 text-dark"
-          >
-            {intl.formatMessage(deletedBadgeMessage)}
-            <span className="sr-only">{' '}deleted {isResponse ? 'response' : 'comment'}</span>
-          </Badge>
-        )}
       </div>
     </div>
   );

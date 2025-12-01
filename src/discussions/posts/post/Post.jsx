@@ -203,7 +203,7 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
         following={following}
         isDeleted={isDeleted}
       />
-      {isDeleted && deletedBy && deletedByLabel && (
+      {isDeleted && deletedBy && (
         <div className="alert alert-info px-3 shadow-none mb-1 py-10px bg-light-200 d-flex align-items-start">
           <DeleteOutline className="mr-2 text-dark-500 flex-shrink-0" style={{ width: '1.5rem', height: '1.5rem' }} />
           <div className="d-flex align-items-center flex-wrap text-gray-700 font-style">

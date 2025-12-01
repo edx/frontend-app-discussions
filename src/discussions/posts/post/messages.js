@@ -30,17 +30,17 @@ const messages = defineMessages({
   },
   deletedPost: {
     id: 'discussions.post.deletedPost',
-    defaultMessage: 'Deleted Post',
+    defaultMessage: 'Deleted',
     description: 'Badge showing that the post has been deleted',
   },
   deletedResponse: {
     id: 'discussions.post.deletedResponse',
-    defaultMessage: 'Deleted Response',
+    defaultMessage: 'Deleted',
     description: 'Badge showing that the response has been deleted',
   },
   deletedComment: {
     id: 'discussions.post.deletedComment',
-    defaultMessage: 'Deleted Comment',
+    defaultMessage: 'Deleted',
     description: 'Badge showing that the comment has been deleted',
   },
   following: {
@@ -127,11 +127,11 @@ const messages = defineMessages({
   },
   undeletePostTitle: {
     id: 'discussions.editor.undelete.post.title',
-    defaultMessage: 'Undelete post',
+    defaultMessage: 'Restore post',
   },
   undeletePostDescription: {
     id: 'discussions.editor.undelete.post.description',
-    defaultMessage: 'Are you sure you want to undelete this post?',
+    defaultMessage: 'Are you sure you want to restore this post?',
   },
   reportPostTitle: {
     id: 'discussions.editor.report.post.title',

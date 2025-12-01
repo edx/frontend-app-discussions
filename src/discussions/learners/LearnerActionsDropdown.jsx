@@ -86,11 +86,7 @@ const LearnerActionsDropdown = ({
                     data-testid={item.id}
                   >
                     <div className="d-flex align-items-center">
-                      <Icon
-                        src={item.icon}
-                        className="icon-size-24"
-                      />
-                      <span className="font-weight-normal ml-2">
+                      <span className="font-weight-normal">
                         {item.label}
                       </span>
                     </div>

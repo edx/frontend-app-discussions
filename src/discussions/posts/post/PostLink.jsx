@@ -40,15 +40,15 @@ const PostLink = ({
     users: postUsers, isDeleted, threadTitle, commentThreadId,
   } = threadData;
   
-  // Determine the deleted badge text based on type
-  const getDeletedBadgeText = () => {
+  // Get the type label to display
+  const getTypeLabel = () => {
     if (type === 'response') {
-      return intl.formatMessage(messages.deletedResponse);
+      return 'Response';
     }
     if (type === 'comment') {
-      return intl.formatMessage(messages.deletedComment);
+      return 'Comment';
     }
-    return intl.formatMessage(messages.deletedPost);
+    return null;
   };
   
   // For comments/responses, show parent thread title with arrow
@@ -112,11 +112,16 @@ const PostLink = ({
             <div className="d-flex align-items-center pb-0 mb-0 flex-fill">
               <div className="text-truncate mr-1">
                 {(type === 'response' || type === 'comment') && threadTitle && (
-                  <Icon
-                    src={SubdirectoryArrowRight}
-                    className="text-gray-500"
-                    style={{ width: '16px', height: '16px', marginRight: '4px' }}
-                  />
+                  <>
+                    <Icon
+                      src={SubdirectoryArrowRight}
+                      className="text-gray-500 align-bottom"
+                      style={{ width: '16px', height: '16px', marginRight: '4px' }}
+                    />
+                    <span className="text-gray-700 font-weight-normal font-style align-bottom mr-1">
+                      {getTypeLabel()} in
+                    </span>
+                  </>
                 )}
                 <span className={classNames(
                   'font-weight-500 text-primary-500 font-style align-bottom mr-1',
@@ -158,7 +163,7 @@ const PostLink = ({
                     'ml-auto': !canSeeReportedBadge && !showAnsweredBadge,
                   })}
                 >
-                  {getDeletedBadgeText()}
+                  {intl.formatMessage(messages.deletedPost)}
                   <span className="sr-only">{' '}deleted</span>
                 </Badge>
               )}
