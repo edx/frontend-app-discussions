@@ -31,15 +31,10 @@ const messages = defineMessages({
     defaultMessage: 'Delete',
     description: 'Action to delete a post or comment',
   },
-  softDeleteAction: {
-    id: 'discussions.actions.softDelete',
-    defaultMessage: 'Delete',
-    description: 'Action to soft delete a post or comment',
-  },
   restoreAction: {
     id: 'discussions.actions.restore',
     defaultMessage: 'Restore',
-    description: 'Action to restore a soft deleted post or comment',
+    description: 'Action to restore a deleted post or comment',
   },
   confirmationConfirm: {
     id: 'discussions.confirmation.button.confirm',

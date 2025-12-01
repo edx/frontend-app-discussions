@@ -53,23 +53,6 @@ export default function fetchCourseConfig(courseId) {
   };
 }
 
-// Soft delete thunks
-export function performBulkSoftDelete(threadIds) {
-  return async (dispatch) => {
-    try {
-      dispatch(bulkActionRequest());
-      const { bulkSoftDeleteThreads } = await import('../posts/data/api');
-      await bulkSoftDeleteThreads(threadIds);
-      dispatch(bulkActionSuccess());
-      return { success: true };
-    } catch (error) {
-      dispatch(bulkActionFailed(error.message || 'Failed to delete threads'));
-      logError(error);
-      return { success: false, error: error.message };
-    }
-  };
-}
-
 export function performBulkRestore(threadIds, courseId) {
   return async (dispatch) => {
     try {
@@ -80,19 +63,6 @@ export function performBulkRestore(threadIds, courseId) {
       return { success: true };
     } catch (error) {
       dispatch(bulkActionFailed(error.message || 'Failed to restore threads'));
-      logError(error);
-      return { success: false, error: error.message };
-    }
-  };
-}
-
-export function performSoftDeleteThread(threadId) {
-  return async () => {
-    try {
-      const { softDeleteThread } = await import('../posts/data/api');
-      await softDeleteThread(threadId);
-      return { success: true };
-    } catch (error) {
       logError(error);
       return { success: false, error: error.message };
     }

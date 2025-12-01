@@ -40,7 +40,7 @@ import {
   selectCommentResponsesIds,
   selectCommentSortOrder,
 } from '../../data/selectors';
-import { editComment, fetchCommentResponses } from '../../data/thunks';
+import { editComment, fetchCommentResponses, removeComment } from '../../data/thunks';
 import messages from '../../messages';
 import PostCommentsContext from '../../postCommentsContext';
 import CommentEditor from './CommentEditor';
@@ -57,7 +57,7 @@ const Comment = ({
   const {
     id, parentId, childCount, abuseFlagged, endorsed, threadId, endorsedAt, endorsedBy, endorsedByLabel, renderedBody,
     voted, following, voteCount, authorLabel, author, createdAt, lastEdit, rawBody, closed, closedBy, closeReason,
-    editByLabel, closedByLabel, users: postUsers, isDeleted, deletedByLabel, is_spam: isSpam,
+    editByLabel, closedByLabel, users: postUsers, isDeleted, deletedBy, deletedByLabel, is_spam: isSpam,
   } = comment;
   const intl = useIntl();
   const hasChildren = childCount > 0;
@@ -111,7 +111,7 @@ const Comment = ({
   const handleCommentEndorse = useCallback(async () => {
     await dispatch(editComment(id, { endorsed: !endorsed }));
     await dispatch(fetchThread(threadId, courseId));
-  }, [id, endorsed, threadId, courseId, dispatch]);
+  }, [id, endorsed, threadId]);
 
   const handleAbusedFlag = useCallback(() => {
     if (abuseFlagged) {
@@ -121,18 +121,10 @@ const Comment = ({
     }
   }, [abuseFlagged, id, showReportConfirmation]);
 
-  const handleDeleteConfirmation = useCallback(async () => {
-    try {
-      const { performSoftDeleteComment } = await import('../../data/thunks');
-      const result = await dispatch(performSoftDeleteComment(id));
-      if (result.success) {
-        await dispatch(fetchThread(threadId, courseId));
-      }
-    } catch (error) {
-      logError(error);
-    }
+  const handleDeleteConfirmation = useCallback(() => {
+    dispatch(removeComment(id));
     hideDeleteConfirmation();
-  }, [id, threadId, courseId, dispatch, hideDeleteConfirmation]);
+  }, [id, hideDeleteConfirmation]);
 
   const handleReportConfirmation = useCallback(() => {
     dispatch(editComment(id, { flagged: !abuseFlagged }));
@@ -142,10 +134,6 @@ const Comment = ({
   const handleCommentLike = useCallback(async () => {
     await dispatch(editComment(id, { voted: !voted }));
   }, [id, voted]);
-
-  const handleSoftDelete = useCallback(() => {
-    showDeleteConfirmation();
-  }, [showDeleteConfirmation]);
 
   const handleRestore = useCallback(() => {
     showRestoreConfirmation();
@@ -168,10 +156,10 @@ const Comment = ({
   const actionHandlers = useMemo(() => ({
     [ContentActions.EDIT_CONTENT]: handleEditContent,
     [ContentActions.ENDORSE]: handleCommentEndorse,
-    [ContentActions.SOFT_DELETE]: handleSoftDelete,
+    [ContentActions.DELETE]: showDeleteConfirmation,
     [ContentActions.RESTORE]: handleRestore,
     [ContentActions.REPORT]: handleAbusedFlag,
-  }), [handleEditContent, handleCommentEndorse, handleSoftDelete, handleRestore, handleAbusedFlag]);
+  }), [handleEditContent, handleCommentEndorse, showDeleteConfirmation, handleRestore, handleAbusedFlag]);
 
   const handleLoadMoreComments = useCallback(() => (
     dispatch(fetchCommentResponses(id, {
@@ -210,12 +198,8 @@ const Comment = ({
       >
         <Confirmation
           isOpen={isDeleting}
-          title={intl.formatMessage(
-            isNested ? messages.deleteCommentTitle : messages.deleteResponseTitle,
-          )}
-          description={intl.formatMessage(
-            isNested ? messages.deleteCommentDescription : messages.deleteResponseDescription,
-          )}
+          title={intl.formatMessage(messages.deleteResponseTitle)}
+          description={intl.formatMessage(messages.deleteResponseDescription)}
           onClose={hideDeleteConfirmation}
           confirmAction={handleDeleteConfirmation}
           closeButtonVariant="tertiary"
@@ -263,14 +247,14 @@ const Comment = ({
             endorseIcons={endorseIcons}
             isDeleted={isDeleted}
           />
-          {isDeleted && deletedByLabel && (
+          {isDeleted && deletedBy && deletedByLabel && (
             <div className="alert alert-info px-3 shadow-none mb-1 py-10px bg-light-200 d-flex align-items-start">
               <DeleteOutline className="mr-2 text-dark-500 flex-shrink-0" style={{ width: '1.5rem', height: '1.5rem' }} />
               <div className="d-flex align-items-center flex-wrap text-gray-700 font-style">
                 {intl.formatMessage(messages.deletedBy)}
                 <span className="ml-1">
                   <AuthorLabel
-                    author={author}
+                    author={deletedBy}
                     authorLabel={deletedByLabel}
                     labelColor={AvatarOutlineAndLabelColors[deletedByLabel] && `text-${AvatarOutlineAndLabelColors[deletedByLabel]}`}
                     linkToProfile

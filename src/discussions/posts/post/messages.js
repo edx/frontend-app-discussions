@@ -33,6 +33,16 @@ const messages = defineMessages({
     defaultMessage: 'Deleted Post',
     description: 'Badge showing that the post has been deleted',
   },
+  deletedResponse: {
+    id: 'discussions.post.deletedResponse',
+    defaultMessage: 'Deleted Response',
+    description: 'Badge showing that the response has been deleted',
+  },
+  deletedComment: {
+    id: 'discussions.post.deletedComment',
+    defaultMessage: 'Deleted Comment',
+    description: 'Badge showing that the comment has been deleted',
+  },
   following: {
     id: 'discussions.post.following',
     defaultMessage: 'Following',

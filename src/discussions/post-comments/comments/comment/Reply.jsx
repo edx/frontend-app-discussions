@@ -1,9 +1,8 @@
-import React, {
-  useCallback, useContext, useMemo, useState,
-} from 'react';
+import React, { useCallback, useMemo, useState, useContext } from 'react';
 import PropTypes from 'prop-types';
 
 import { Avatar, Badge, useToggle } from '@openedx/paragon';
+import { DeleteOutline } from '@openedx/paragon/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import * as timeago from 'timeago.js';
 
@@ -22,7 +21,7 @@ import { useAlertBannerVisible } from '../../../data/hooks';
 import { selectAuthorAvatar, selectThread } from '../../../posts/data/selectors';
 import { fetchThread } from '../../../posts/data/thunks';
 import { selectCommentOrResponseById } from '../../data/selectors';
-import { editComment } from '../../data/thunks';
+import { editComment, removeComment } from '../../data/thunks';
 import messages from '../../messages';
 import CommentEditor from './CommentEditor';
 
@@ -32,7 +31,7 @@ const Reply = ({ responseId }) => {
   const {
     id, abuseFlagged, author, authorLabel, endorsed, lastEdit, closed, closedBy,
     closeReason, createdAt, threadId, parentId, rawBody, renderedBody, editByLabel,
-    closedByLabel, isDeleted, is_spam: isSpam,
+    closedByLabel, isDeleted, deletedBy, deletedByLabel, is_spam: isSpam,
   } = useSelector(selectCommentOrResponseById(responseId));
   const intl = useIntl();
   const dispatch = useDispatch();
@@ -55,18 +54,10 @@ const Reply = ({ responseId }) => {
   });
   const authorAvatar = useSelector(selectAuthorAvatar(author));
 
-  const handleDeleteConfirmation = useCallback(async () => {
-    try {
-      const { performSoftDeleteComment } = await import('../../data/thunks');
-      const result = await dispatch(performSoftDeleteComment(id));
-      if (result.success) {
-        await dispatch(fetchThread(threadId, courseId));
-      }
-    } catch (error) {
-      logError(error);
-    }
+  const handleDeleteConfirmation = useCallback(() => {
+    dispatch(removeComment(id));
     hideDeleteConfirmation();
-  }, [id, courseId, threadId, dispatch, hideDeleteConfirmation]);
+  }, [id, hideDeleteConfirmation]);
 
   const handleReportConfirmation = useCallback(() => {
     dispatch(editComment(id, { flagged: !abuseFlagged }));
@@ -88,10 +79,6 @@ const Reply = ({ responseId }) => {
       showReportConfirmation();
     }
   }, [abuseFlagged, id, showReportConfirmation]);
-
-  const handleSoftDelete = useCallback(() => {
-    showDeleteConfirmation();
-  }, [showDeleteConfirmation]);
 
   const handleRestore = useCallback(() => {
     showRestoreConfirmation();
@@ -117,10 +104,10 @@ const Reply = ({ responseId }) => {
   const actionHandlers = useMemo(() => ({
     [ContentActions.EDIT_CONTENT]: handleEditContent,
     [ContentActions.ENDORSE]: handleReplyEndorse,
-    [ContentActions.SOFT_DELETE]: handleSoftDelete,
+    [ContentActions.DELETE]: showDeleteConfirmation,
     [ContentActions.RESTORE]: handleRestore,
     [ContentActions.REPORT]: handleAbusedFlag,
-  }), [handleEditContent, handleReplyEndorse, handleSoftDelete, handleRestore, handleAbusedFlag]);
+  }), [handleEditContent, handleReplyEndorse, showDeleteConfirmation, handleRestore, handleAbusedFlag]);
 
   return (
     <div className="d-flex flex-column mt-2.5 " data-testid={`reply-${id}`} role="listitem">
@@ -208,6 +195,23 @@ const Reply = ({ responseId }) => {
                   {intl.formatMessage(messages.deletedComment)}
                   <span className="sr-only">{' '}deleted comment</span>
                 </Badge>
+              </div>
+            </div>
+          )}
+          {isDeleted && deletedBy && deletedByLabel && (
+            <div className="alert alert-info px-3 shadow-none mb-1 py-10px bg-light-200 d-flex align-items-start">
+              <DeleteOutline className="mr-2 text-dark-500 flex-shrink-0" style={{ width: '1.5rem', height: '1.5rem' }} />
+              <div className="d-flex align-items-center flex-wrap text-gray-700 font-style">
+                {intl.formatMessage(messages.deletedBy)}
+                <span className="ml-1">
+                  <AuthorLabel
+                    author={deletedBy}
+                    authorLabel={deletedByLabel}
+                    labelColor={AvatarOutlineAndLabelColors[deletedByLabel] && `text-${AvatarOutlineAndLabelColors[deletedByLabel]}`}
+                    linkToProfile
+                    postOrComment
+                  />
+                </span>
               </div>
             </div>
           )}

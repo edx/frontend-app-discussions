@@ -218,18 +218,7 @@ export const sendEmailForAccountActivation = async () => {
 };
 
 /**
- * Soft delete a thread.
- * @param {string} threadId
- * @returns {Promise<{}>}
- */
-export const softDeleteThread = async (threadId) => {
-  const url = `${getThreadsApiUrl()}${threadId}/`;
-  const { data } = await getAuthenticatedHttpClient().delete(url);
-  return data;
-};
-
-/**
- * Restore a soft deleted thread.
+ * Restore a deleted thread.
  * @param {string} threadId
  * @param {string} courseId
  * @returns {Promise<{}>}
@@ -245,19 +234,7 @@ export const restoreThread = async (threadId, courseId) => {
 };
 
 /**
- * Bulk soft delete threads.
- * @param {string[]} threadIds
- * @returns {Promise<{}>}
- */
-export const bulkSoftDeleteThreads = async (threadIds) => {
-  // Delete threads one by one since there's no bulk delete endpoint in v1 API
-  const promises = threadIds.map(threadId => softDeleteThread(threadId));
-  const results = await Promise.all(promises);
-  return { success: true, results };
-};
-
-/**
- * Bulk restore soft deleted threads.
+ * Bulk restore deleted threads.
  * @param {string[]} threadIds
  * @param {string} courseId
  * @returns {Promise<{}>}

@@ -7,12 +7,7 @@ import {
 import { setContentCreationRateLimited } from '../../data/slices';
 import { getHttpErrorStatus } from '../../utils';
 import {
-  getThread,
-  getThreads,
-  postThread,
-  sendEmailForAccountActivation,
-  softDeleteThread,
-  updateThread,
+  deleteThread, getThread, getThreads, postThread, sendEmailForAccountActivation, updateThread,
 } from './api';
 import {
   deleteThreadDenied,
@@ -312,7 +307,7 @@ export function removeThread(threadId) {
   return async (dispatch) => {
     try {
       dispatch(deleteThreadRequest({ threadId }));
-      await softDeleteThread(threadId);
+      await deleteThread(threadId);
       dispatch(deleteThreadSuccess({ threadId }));
     } catch (error) {
       if (getHttpErrorStatus(error) === 403) {

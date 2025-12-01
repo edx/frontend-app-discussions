@@ -133,7 +133,7 @@ export const deleteComment = async (commentId) => {
 };
 
 /**
- * Restores a soft deleted comment.
+ * Restores a deleted comment.
  * @param {string} commentId ID of comment to restore
  * @param {string} courseId Course ID
  * @returns {Promise<{}>}

@@ -88,47 +88,62 @@ export function fetchUserPosts(courseId, {
   author = null,
   countFlagged,
 } = {}) {
-  const options = {
-    orderBy,
-    page,
-    author,
-    countFlagged,
-  };
-  // Main content status: Active/Deleted
-  if (filters.contentStatus === PostsStatusFilter.DELETED) {
-    options.showDeleted = true;
-  } else if (filters.contentStatus === PostsStatusFilter.ACTIVE) {
-    options.showDeleted = false;
-  }
-
-  // Secondary status filters (independent)
-  if (filters.status === PostsStatusFilter.UNREAD) {
-    options.status = 'unread';
-  }
-  if (filters.status === PostsStatusFilter.UNANSWERED) {
-    options.status = 'unanswered';
-  }
-  if (filters.status === PostsStatusFilter.REPORTED) {
-    options.status = 'flagged';
-  }
-  if (filters.status === PostsStatusFilter.UNRESPONDED) {
-    options.status = 'unresponded';
-  }
-
-  if (filters.postType !== ThreadType.ALL) {
-    options.threadType = filters.postType;
-  }
-  if (filters.search) {
-    options.textSearch = filters.search;
-  }
-  if (filters.cohort) {
-    options.cohort = filters.cohort;
-  }
   return async (dispatch) => {
     try {
       dispatch(fetchLearnerThreadsRequest({ courseId, author }));
 
-      const data = await getUserPosts(courseId, options);
+      let data;
+      
+      // Use dedicated deleted content endpoint when viewing deleted posts
+      if (filters.contentStatus === PostsStatusFilter.DELETED) {
+        const { getDeletedContent } = await import('./api');
+        data = await getDeletedContent(courseId, {
+          author,
+          page,
+          pageSize: 10,
+        });
+      } else {
+        // Use regular learner posts endpoint for active content
+        const { getUserPosts } = await import('./api');
+        const options = {
+          orderBy,
+          page,
+          author,
+          countFlagged,
+        };
+        
+        // Only show active content (not deleted)
+        if (filters.contentStatus === PostsStatusFilter.ACTIVE) {
+          options.showDeleted = false;
+        }
+
+        // Secondary status filters (independent)
+        if (filters.status === PostsStatusFilter.UNREAD) {
+          options.status = 'unread';
+        }
+        if (filters.status === PostsStatusFilter.UNANSWERED) {
+          options.status = 'unanswered';
+        }
+        if (filters.status === PostsStatusFilter.REPORTED) {
+          options.status = 'flagged';
+        }
+        if (filters.status === PostsStatusFilter.UNRESPONDED) {
+          options.status = 'unresponded';
+        }
+
+        if (filters.postType !== ThreadType.ALL) {
+          options.threadType = filters.postType;
+        }
+        if (filters.search) {
+          options.textSearch = filters.search;
+        }
+        if (filters.cohort) {
+          options.cohort = filters.cohort;
+        }
+        
+        data = await getUserPosts(courseId, options);
+      }
+
       const normalisedData = normaliseThreads(camelCaseObject(data));
 
       dispatch(fetchThreadsSuccess({ ...normalisedData, page, author }));

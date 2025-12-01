@@ -61,15 +61,15 @@ export function useCommentsPagePath() {
  * @returns {boolean}
  */
 export function checkPermissions(content, action) {
-  if (content.editableFields.includes(action)) {
+  if (content.editableFields && content.editableFields.includes(action)) {
     return true;
   }
   // For delete action we check `content.canDelete`
   if (action === ContentActions.DELETE) {
     return true;
   }
-  // For soft delete and restore actions we check `content.canDelete`
-  if (action === ContentActions.SOFT_DELETE || action === ContentActions.RESTORE) {
+  // For restore action we check `content.canDelete`
+  if (action === ContentActions.RESTORE) {
     return content.canDelete;
   }
   return false;
@@ -183,10 +183,10 @@ export const ACTIONS_LIST = [
     conditions: { abuseFlagged: true },
   },
   {
-    id: 'soft-delete',
-    action: ContentActions.SOFT_DELETE,
+    id: 'delete',
+    action: ContentActions.DELETE,
     icon: Delete,
-    label: messages.softDeleteAction,
+    label: messages.deleteAction,
     conditions: { canDelete: true, isDeleted: false },
   },
   {

@@ -2,7 +2,7 @@ import React, { useContext, useMemo } from 'react';
 import PropTypes from 'prop-types';
 
 import { Badge, Icon } from '@openedx/paragon';
-import { CheckCircle, PushPin } from '@openedx/paragon/icons';
+import { CheckCircle, PushPin, SubdirectoryArrowRight } from '@openedx/paragon/icons';
 import classNames from 'classnames';
 import { useSelector } from 'react-redux';
 import { Link, useLocation } from 'react-router-dom';
@@ -37,13 +37,31 @@ const PostLink = ({
   const {
     topicId, hasEndorsed, type, author, authorLabel, abuseFlagged, abuseFlaggedCount, read, commentCount,
     unreadCommentCount, id, pinned, previewBody, title, voted, voteCount, following, groupId, groupName, createdAt,
-    users: postUsers, isDeleted,
+    users: postUsers, isDeleted, threadTitle, commentThreadId,
   } = threadData;
+  
+  // Determine the deleted badge text based on type
+  const getDeletedBadgeText = () => {
+    if (type === 'response') {
+      return intl.formatMessage(messages.deletedResponse);
+    }
+    if (type === 'comment') {
+      return intl.formatMessage(messages.deletedComment);
+    }
+    return intl.formatMessage(messages.deletedPost);
+  };
+  
+  // For comments/responses, show parent thread title with arrow
+  const displayTitle = (type === 'response' || type === 'comment') && threadTitle ? threadTitle : title;
+  
+  // For comments/responses, navigate to the parent thread instead of the comment itself
+  const navigationPostId = (type === 'response' || type === 'comment') && commentThreadId ? commentThreadId : postId;
+  
   const { pathname } = discussionsPath(Routes.COMMENTS.PAGES[page], {
     0: enableInContextSidebar ? 'in-context' : undefined,
     courseId,
     topicId,
-    postId,
+    postId: navigationPostId,
     category,
     learnerUsername,
   })();
@@ -93,13 +111,20 @@ const PostLink = ({
           <div className="d-flex flex-column justify-content-start mw-100 flex-fill" style={{ marginBottom: '-3px' }}>
             <div className="d-flex align-items-center pb-0 mb-0 flex-fill">
               <div className="text-truncate mr-1">
+                {(type === 'response' || type === 'comment') && threadTitle && (
+                  <Icon
+                    src={SubdirectoryArrowRight}
+                    className="text-gray-500"
+                    style={{ width: '16px', height: '16px', marginRight: '4px' }}
+                  />
+                )}
                 <span className={classNames(
                   'font-weight-500 text-primary-500 font-style align-bottom mr-1',
                   { 'font-weight-bolder': !read },
                   { 'text-decoration-line-through': isDeleted }, // Line-through for deleted threads
                 )}
                 >
-                  {title}
+                  {displayTitle}
                 </span>
                 <span className="text-gray-700 font-weight-normal  font-style align-bottom">
                   {isPostPreviewAvailable(previewBody) ? previewBody : intl.formatMessage(messages.postWithoutPreview)}
@@ -133,8 +158,8 @@ const PostLink = ({
                     'ml-auto': !canSeeReportedBadge && !showAnsweredBadge,
                   })}
                 >
-                  {intl.formatMessage(messages.deletedPost)}
-                  <span className="sr-only">{' '}deleted post</span>
+                  {getDeletedBadgeText()}
+                  <span className="sr-only">{' '}deleted</span>
                 </Badge>
               )}
               {pinned && (

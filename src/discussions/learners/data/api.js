@@ -11,6 +11,7 @@ export const getCoursesApiUrl = () => `${getConfig().LMS_BASE_URL}/api/discussio
 export const getUserProfileApiUrl = () => `${getConfig().LMS_BASE_URL}/api/user/v1/accounts`;
 export const learnerPostsApiUrl = (courseId) => `${getCoursesApiUrl()}${courseId}/learner/`;
 export const learnersApiUrl = (courseId) => `${getCoursesApiUrl()}${courseId}/activity_stats/`;
+export const deletedContentApiUrl = (courseId) => `${getConfig().LMS_BASE_URL}/api/discussion/v1/deleted_content/${courseId}`;
 export const deletePostsApiUrl = (courseId, username, courseOrOrg, execute) => `${getConfig().LMS_BASE_URL}/api/discussion/v1/bulk_delete_user_posts/${courseId}?username=${username}&course_or_org=${courseOrOrg}&execute=${execute}`;
 export const restorePostsApiUrl = (courseId, username, courseOrOrg, execute) => `${getConfig().LMS_BASE_URL}/api/discussion/v1/bulk_restore_user_posts/${courseId}?username=${username}&course_or_org=${courseOrOrg}&execute=${execute}`;
 
@@ -132,3 +133,35 @@ export async function restoreUserPostsApi(courseId, username, courseOrOrg, execu
  * Alias for restoreUserPostsApi for backwards compatibility
  */
 export const undeleteUserPostsApi = restoreUserPostsApi;
+
+/**
+ * Get deleted content for a course
+ *
+ * @param {string} courseId Course ID of the course
+ * @param {string} author Optional - filter by author username
+ * @param {number} page Page number for pagination
+ * @param {number} pageSize Number of items per page
+ * @param {string} contentType Optional - filter by 'thread' or 'comment'
+ * @returns API Response object in the format
+ *  {
+ *    results: [array of deleted posts],
+ *    pagination: {count, num_pages, next, previous}
+ *  }
+ */
+export async function getDeletedContent(courseId, {
+  author,
+  page,
+  pageSize,
+  contentType,
+} = {}) {
+  const params = snakeCaseObject({
+    authorId: author,  // The backend expects author_id
+    page,
+    perPage: pageSize,
+    contentType,
+  });
+
+  const { data } = await getAuthenticatedHttpClient()
+    .get(deletedContentApiUrl(courseId), { params });
+  return data;
+}

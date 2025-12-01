@@ -9,7 +9,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { getConfig } from '@edx/frontend-platform';
-import { getAuthenticatedUser } from '@edx/frontend-platform/auth';
 import { useIntl } from '@edx/frontend-platform/i18n';
 import { logError } from '@edx/frontend-platform/logging';
 
@@ -23,16 +22,11 @@ import DiscussionContext from '../../common/context';
 import HoverCard from '../../common/HoverCard';
 import withPostingRestrictions from '../../common/withPostingRestrictions';
 import { ContentTypes } from '../../data/constants';
-import {
-  selectContentCreationRateLimited,
-  selectShouldShowEmailConfirmation,
-  selectUserHasModerationPrivileges,
-} from '../../data/selectors';
+import { selectContentCreationRateLimited, selectShouldShowEmailConfirmation, selectUserHasModerationPrivileges } from '../../data/selectors';
 import { selectTopic } from '../../topics/data/selectors';
+import { truncatePath } from '../../utils';
 import { selectThread } from '../data/selectors';
-import {
-  updateExistingThread,
-} from '../data/thunks';
+import { removeThread, updateExistingThread } from '../data/thunks';
 import ClosePostReasonModal from './ClosePostReasonModal';
 import messages from './messages';
 import PostFooter from './PostFooter';
@@ -45,7 +39,7 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
   const {
     topicId, abuseFlagged, closed, pinned, voted, hasEndorsed, following, closedBy, voteCount, groupId, groupName,
     closeReason, authorLabel, type: postType, author, title, createdAt, renderedBody, lastEdit, editByLabel,
-    closedByLabel, users: postUsers, isDeleted, deletedByLabel, is_spam: isSpam,
+    closedByLabel, users: postUsers, isDeleted, deletedBy, deletedByLabel, is_spam: isSpam,
   } = threadData;
 
   const intl = useIntl();
@@ -67,30 +61,25 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
   const displayPostFooter = following || voteCount || closed || (groupId && userHasModerationPrivileges);
 
   const handleDeleteConfirmation = useCallback(async () => {
-    try {
-      const authenticatedUser = getAuthenticatedUser();
-      const { performSoftDeleteThread } = await import('../../data/thunks');
-      const result = await dispatch(
-        performSoftDeleteThread(postId, authenticatedUser.userId || authenticatedUser.id, courseId),
-      );
-      if (result.success) {
-        window.location.reload();
-      }
-    } catch (error) {
-      logError(error);
-    }
+    const basePath = truncatePath(location.pathname);
+
+    await dispatch(removeThread(postId));
+    navigate({
+      pathname: basePath,
+      search: enableInContextSidebar && '?inContextSidebar',
+    });
     hideDeleteConfirmation();
-  }, [postId, courseId, dispatch, hideDeleteConfirmation]);
+  }, [enableInContextSidebar, postId, hideDeleteConfirmation]);
 
   const handleReportConfirmation = useCallback(() => {
     dispatch(updateExistingThread(postId, { flagged: !abuseFlagged }));
     hideReportConfirmation();
-  }, [abuseFlagged, postId, dispatch, hideReportConfirmation]);
+  }, [abuseFlagged, postId, hideReportConfirmation]);
 
   const handlePostContentEdit = useCallback(() => navigate({
     ...location,
     pathname: `${location.pathname}/edit`,
-  }), [navigate, location]);
+  }), [location.pathname]);
 
   const handlePostClose = useCallback(() => {
     if (closed) {
@@ -98,19 +87,19 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
     } else {
       showClosePostModal();
     }
-  }, [closed, postId, dispatch, showClosePostModal]);
+  }, [closed, postId, showClosePostModal]);
 
   const handlePostCopyLink = useCallback(() => {
     navigator.clipboard.writeText(getFullUrl(`${courseId}/posts/${postId}`));
-  }, [courseId, postId]);
+  }, [window.location.origin, postId, courseId]);
 
   const handlePostPin = useCallback(() => dispatch(
     updateExistingThread(postId, { pinned: !pinned }),
-  ), [postId, pinned, dispatch]);
+  ), [postId, pinned]);
 
   const handlePostLike = useCallback(() => {
     dispatch(updateExistingThread(postId, { voted: !voted }));
-  }, [postId, voted, dispatch]);
+  }, [postId, voted]);
 
   const handlePostReport = useCallback(() => {
     if (abuseFlagged) {
@@ -118,11 +107,7 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
     } else {
       showReportConfirmation();
     }
-  }, [abuseFlagged, postId, dispatch, showReportConfirmation]);
-
-  const handleSoftDelete = useCallback(() => {
-    showDeleteConfirmation();
-  }, [showDeleteConfirmation]);
+  }, [abuseFlagged, postId, showReportConfirmation]);
 
   const handleRestore = useCallback(() => {
     showRestoreConfirmation();
@@ -143,25 +128,25 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
 
   const actionHandlers = useMemo(() => ({
     [ContentActions.EDIT_CONTENT]: handlePostContentEdit,
-    [ContentActions.SOFT_DELETE]: handleSoftDelete,
+    [ContentActions.DELETE]: showDeleteConfirmation,
     [ContentActions.RESTORE]: handleRestore,
     [ContentActions.CLOSE]: handlePostClose,
     [ContentActions.COPY_LINK]: handlePostCopyLink,
     [ContentActions.PIN]: handlePostPin,
     [ContentActions.REPORT]: handlePostReport,
   }), [
-    handlePostClose, handlePostContentEdit, handlePostCopyLink, handlePostPin, handlePostReport,
-    handleSoftDelete, handleRestore,
+        handlePostClose, handlePostContentEdit, handlePostCopyLink, handlePostPin, handlePostReport, showDeleteConfirmation,
+        handleRestore,
   ]);
 
   const handleClosePostConfirmation = useCallback((closeReasonCode) => {
     dispatch(updateExistingThread(postId, { closed: true, closeReasonCode }));
     hideClosePostModal();
-  }, [postId, dispatch, hideClosePostModal]);
+  }, [postId, hideClosePostModal]);
 
   const handlePostFollow = useCallback(() => {
     dispatch(updateExistingThread(postId, { following: !following }));
-  }, [postId, following, dispatch]);
+  }, [postId, following]);
 
   const getTopicCategoryName = useCallback(topicData => (
     topicData.usageKey ? getTopicSubsection(topicData.usageKey)?.displayName : topicData.categoryId
@@ -218,14 +203,14 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
         following={following}
         isDeleted={isDeleted}
       />
-      {isDeleted && deletedByLabel && (
+      {isDeleted && deletedBy && deletedByLabel && (
         <div className="alert alert-info px-3 shadow-none mb-1 py-10px bg-light-200 d-flex align-items-start">
           <DeleteOutline className="mr-2 text-dark-500 flex-shrink-0" style={{ width: '1.5rem', height: '1.5rem' }} />
           <div className="d-flex align-items-center flex-wrap text-gray-700 font-style">
             {intl.formatMessage(messages.deletedBy)}
             <span className="ml-1">
               <AuthorLabel
-                author={author}
+                author={deletedBy}
                 authorLabel={deletedByLabel}
                 labelColor={AvatarOutlineAndLabelColors[deletedByLabel] && `text-${AvatarOutlineAndLabelColors[deletedByLabel]}`}
                 linkToProfile

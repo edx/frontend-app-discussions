@@ -187,18 +187,6 @@ export function removeComment(commentId, threadId) {
   };
 }
 
-export function performSoftDeleteComment(commentId) {
-  return async () => {
-    try {
-      await deleteComment(commentId);
-      return { success: true };
-    } catch (error) {
-      logError(error);
-      return { success: false, error: error.message };
-    }
-  };
-}
-
 export function performRestoreComment(commentId, courseId) {
   return async () => {
     try {
