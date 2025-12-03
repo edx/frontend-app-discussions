@@ -135,8 +135,8 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
     [ContentActions.PIN]: handlePostPin,
     [ContentActions.REPORT]: handlePostReport,
   }), [
-        handlePostClose, handlePostContentEdit, handlePostCopyLink, handlePostPin, handlePostReport, showDeleteConfirmation,
-        handleRestore,
+    handlePostClose, handlePostContentEdit, handlePostCopyLink, handlePostPin, handlePostReport, showDeleteConfirmation,
+    handleRestore,
   ]);
 
   const handleClosePostConfirmation = useCallback((closeReasonCode) => {

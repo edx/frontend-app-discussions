@@ -39,7 +39,7 @@ const PostLink = ({
     unreadCommentCount, id, pinned, previewBody, title, voted, voteCount, following, groupId, groupName, createdAt,
     users: postUsers, isDeleted, threadTitle, commentThreadId,
   } = threadData;
-  
+
   // Get the type label to display
   const getTypeLabel = () => {
     if (type === 'response') {
@@ -50,13 +50,13 @@ const PostLink = ({
     }
     return null;
   };
-  
+
   // For comments/responses, show parent thread title with arrow
   const displayTitle = (type === 'response' || type === 'comment') && threadTitle ? threadTitle : title;
-  
+
   // For comments/responses, navigate to the parent thread instead of the comment itself
   const navigationPostId = (type === 'response' || type === 'comment') && commentThreadId ? commentThreadId : postId;
-  
+
   const { pathname } = discussionsPath(Routes.COMMENTS.PAGES[page], {
     0: enableInContextSidebar ? 'in-context' : undefined,
     courseId,

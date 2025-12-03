@@ -20,9 +20,6 @@ const CommentHeader = ({
   createdAt,
   lastEdit,
   postUsers,
-  isDeleted,
-  parentId,
-  postIsDeleted,
   postData,
 }) => {
   const colorClass = AvatarOutlineAndLabelColors[authorLabel];
@@ -78,9 +75,6 @@ CommentHeader.propTypes = {
     reason: PropTypes.string,
   }),
   postUsers: PropTypes.shape({}).isRequired,
-  isDeleted: PropTypes.bool,
-  parentId: PropTypes.string,
-  postIsDeleted: PropTypes.bool,
   postData: PropTypes.shape({}),
 };
 
@@ -88,9 +82,6 @@ CommentHeader.defaultProps = {
   authorLabel: null,
   closed: undefined,
   lastEdit: null,
-  isDeleted: false,
-  parentId: null,
-  postIsDeleted: false,
   postData: null,
 };
 

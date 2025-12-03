@@ -155,7 +155,7 @@ export async function getDeletedContent(courseId, {
   contentType,
 } = {}) {
   const params = snakeCaseObject({
-    authorId: author,  // The backend expects author_id
+    authorId: author, // The backend expects author_id
     page,
     perPage: pageSize,
     contentType,

@@ -15,7 +15,6 @@ import { getHttpErrorStatus } from '../../utils';
 import {
   deleteUserPostsApi,
   getLearners,
-  getUserPosts,
   getUserProfiles,
   undeleteUserPostsApi,
 } from './api';
@@ -93,7 +92,7 @@ export function fetchUserPosts(courseId, {
       dispatch(fetchLearnerThreadsRequest({ courseId, author }));
 
       let data;
-      
+
       // Use dedicated deleted content endpoint when viewing deleted posts
       if (filters.contentStatus === PostsStatusFilter.DELETED) {
         const { getDeletedContent } = await import('./api');
@@ -111,7 +110,7 @@ export function fetchUserPosts(courseId, {
           author,
           countFlagged,
         };
-        
+
         // Only show active content (not deleted)
         if (filters.contentStatus === PostsStatusFilter.ACTIVE) {
           options.showDeleted = false;
@@ -140,7 +139,7 @@ export function fetchUserPosts(courseId, {
         if (filters.cohort) {
           options.cohort = filters.cohort;
         }
-        
+
         data = await getUserPosts(courseId, options);
       }
 
@@ -187,5 +186,3 @@ export function undeleteUserPosts(courseId, username, courseOrOrg, execute) {
     }
   };
 }
-
-

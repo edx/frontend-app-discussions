@@ -10,7 +10,7 @@ import FilterBar from '../../../components/FilterBar';
 // import { PostsStatusFilter, ThreadType } from '../../../data/constants';
 import selectCourseCohorts from '../../cohorts/data/selectors';
 import fetchCourseCohorts from '../../cohorts/data/thunks';
-import { selectUserHasModerationPrivileges, selectUserIsGroupTa } from '../../data/selectors';
+import { selectUserHasModerationPrivileges, selectUserIsGroupTa, selectUserIsStaff } from '../../data/selectors';
 import { setPostFilter } from '../data/slices';
 
 const LearnerPostFilterBar = () => {
@@ -18,7 +18,7 @@ const LearnerPostFilterBar = () => {
   const { courseId } = useParams();
   const userHasModerationPrivileges = useSelector(selectUserHasModerationPrivileges);
   const userIsGroupTa = useSelector(selectUserIsGroupTa);
-  // const userIsStaff = useSelector(selectUserIsStaff);
+  const userIsStaff = useSelector(selectUserIsStaff);
   const cohorts = useSelector(selectCourseCohorts);
   const postFilter = useSelector(state => state.learners.postFilter);
 
@@ -35,12 +35,16 @@ const LearnerPostFilterBar = () => {
       name: 'orderBy',
       filters: ['sort-activity', 'sort-comments', 'sort-votes'],
     },
-    {
+  ];
+
+  // Add content status filter only for staff, moderators, and TAs
+  if (userHasModerationPrivileges || userIsGroupTa || userIsStaff) {
+    filtersToShow.push({
       name: 'contentStatus', // main content status
       filters: ['status-active', 'status-deleted'],
       hasSeparator: true,
-    },
-  ];
+    });
+  }
 
   if (userHasModerationPrivileges || userIsGroupTa) {
     // Add reported filter only for group TA and moderators

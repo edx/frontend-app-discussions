@@ -1,4 +1,6 @@
-import React, { useCallback, useMemo, useState, useContext } from 'react';
+import React, {
+  useCallback, useContext, useMemo, useState,
+} from 'react';
 import PropTypes from 'prop-types';
 
 import { Avatar, useToggle } from '@openedx/paragon';
@@ -36,9 +38,6 @@ const Reply = ({ responseId }) => {
   const intl = useIntl();
   const dispatch = useDispatch();
   const { courseId } = useContext(DiscussionContext);
-  // Get the post's isDeleted state for priority rules
-  const post = useSelector(selectThread(threadId));
-  const postIsDeleted = post?.isDeleted || false;
   const [isEditing, setEditing] = useState(false);
   const [isDeleting, showDeleteConfirmation, hideDeleteConfirmation] = useToggle(false);
   const [isRestoring, showRestoreConfirmation, hideRestoreConfirmation] = useToggle(false);

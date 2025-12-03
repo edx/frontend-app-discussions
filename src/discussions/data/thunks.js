@@ -10,8 +10,7 @@ import { setStatusFilter } from '../posts/data';
 import { getHttpErrorStatus } from '../utils';
 import { getDiscussionsConfig, getDiscussionsSettings } from './api';
 import {
-  bulkActionFailed,
-  bulkActionRequest, bulkActionSuccess, fetchConfigDenied, fetchConfigFailed, fetchConfigRequest, fetchConfigSuccess,
+  fetchConfigDenied, fetchConfigFailed, fetchConfigRequest, fetchConfigSuccess,
 } from './slices';
 
 /**
@@ -49,35 +48,6 @@ export default function fetchCourseConfig(courseId) {
         dispatch(fetchConfigFailed());
       }
       logError(error);
-    }
-  };
-}
-
-export function performBulkRestore(threadIds, courseId) {
-  return async (dispatch) => {
-    try {
-      dispatch(bulkActionRequest());
-      const { bulkRestoreThreads } = await import('../posts/data/api');
-      await bulkRestoreThreads(threadIds, courseId);
-      dispatch(bulkActionSuccess());
-      return { success: true };
-    } catch (error) {
-      dispatch(bulkActionFailed(error.message || 'Failed to restore threads'));
-      logError(error);
-      return { success: false, error: error.message };
-    }
-  };
-}
-
-export function performRestoreThread(threadId, courseId) {
-  return async () => {
-    try {
-      const { restoreThread } = await import('../posts/data/api');
-      await restoreThread(threadId, courseId);
-      return { success: true };
-    } catch (error) {
-      logError(error);
-      return { success: false, error: error.message };
     }
   };
 }

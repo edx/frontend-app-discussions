@@ -85,7 +85,7 @@ const Comment = ({
   const postFilter = useSelector(state => state.learners?.postFilter);
   // Use contentStatus for deleted section
   const showDeleted = Boolean(
-    learnerUsername && postFilter?.contentStatus === PostsStatusFilter.DELETED
+    learnerUsername && postFilter?.contentStatus === PostsStatusFilter.DELETED,
   );
   // If isSpam is not provided in the API response, default to false
   const isSpamFlagged = isSpam || false;
