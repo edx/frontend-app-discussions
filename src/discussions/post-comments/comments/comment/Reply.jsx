@@ -20,7 +20,7 @@ import DiscussionContext from '../../../common/context';
 import timeLocale from '../../../common/time-locale';
 import { ContentTypes } from '../../../data/constants';
 import { useAlertBannerVisible } from '../../../data/hooks';
-import { selectAuthorAvatar, selectThread } from '../../../posts/data/selectors';
+import { selectAuthorAvatar } from '../../../posts/data/selectors';
 import { fetchThread } from '../../../posts/data/thunks';
 import { selectCommentOrResponseById } from '../../data/selectors';
 import { editComment, removeComment } from '../../data/thunks';

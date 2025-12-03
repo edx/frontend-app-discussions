@@ -232,16 +232,3 @@ export const restoreThread = async (threadId, courseId) => {
   });
   return data;
 };
-
-/**
- * Bulk restore deleted threads.
- * @param {string[]} threadIds
- * @param {string} courseId
- * @returns {Promise<{}>}
- */
-export const bulkRestoreThreads = async (threadIds, courseId) => {
-  // Restore threads one by one since RestoreContent handles individual items
-  const promises = threadIds.map(threadId => restoreThread(threadId, courseId));
-  const results = await Promise.all(promises);
-  return { success: true, results };
-};
