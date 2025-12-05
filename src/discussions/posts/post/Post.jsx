@@ -115,7 +115,7 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
 
   const handleRestoreConfirmation = useCallback(async () => {
     try {
-      const { performRestoreThread } = await import('../../data/thunks');
+      const { performRestoreThread } = await import('../data/thunks');
       const result = await dispatch(performRestoreThread(postId, courseId));
       if (result.success) {
         window.location.reload();

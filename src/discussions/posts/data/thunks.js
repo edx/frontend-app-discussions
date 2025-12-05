@@ -320,6 +320,19 @@ export function removeThread(threadId) {
   };
 }
 
+export function performRestoreThread(threadId, courseId) {
+  return async () => {
+    try {
+      const { restoreThread } = await import('./api');
+      await restoreThread(threadId, courseId);
+      return { success: true };
+    } catch (error) {
+      logError(error);
+      return { success: false, error: error.message };
+    }
+  };
+}
+
 export function sendAccountActivationEmail() {
   return async (dispatch) => {
     try {
