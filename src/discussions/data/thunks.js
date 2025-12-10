@@ -51,3 +51,15 @@ export default function fetchCourseConfig(courseId) {
     }
   };
 }
+export function performRestoreThread(threadId, courseId) {
+  return async () => {
+    try {
+      const { restoreThread } = await import('../posts/data/api');
+      await restoreThread(threadId, courseId);
+      return { success: true };
+    } catch (error) {
+      logError(error);
+      return { success: false, error: error.message };
+    }
+  };
+}

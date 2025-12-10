@@ -175,11 +175,7 @@ export function undeleteUserPosts(courseId, username, courseOrOrg, execute) {
     try {
       dispatch(undeleteUserPostsRequest({ courseId, username }));
       const response = await undeleteUserPostsApi(courseId, username, courseOrOrg, execute);
-
-      // Only dispatch success for actual execution, not preview
-      if (execute) {
-        dispatch(undeleteUserPostsSuccess(camelCaseObject(response)));
-      }
+      dispatch(undeleteUserPostsSuccess(camelCaseObject(response)));
     } catch (error) {
       dispatch(undeleteUserPostsFailed());
       logError(error);

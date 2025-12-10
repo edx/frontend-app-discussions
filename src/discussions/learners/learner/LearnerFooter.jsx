@@ -23,11 +23,8 @@ const LearnerFooter = ({
   const canSeeLearnerReportedStats = (activeFlags || inactiveFlags) && (userHasModerationPrivileges || userIsGroupTa);
   const canSeeDeletedStats = userHasModerationPrivileges || userIsGroupTa || userIsStaff;
 
-  // Calculate active counts (total - deleted)
-  const activeThreads = (threads || 0) - (deletedThreads || 0);
-  const activeResponses = (responses || 0) - (deletedResponses || 0);
-  const activeReplies = (replies || 0) - (deletedReplies || 0);
-  const totalActive = activeThreads + activeResponses + activeReplies;
+  // Calculate deleted count (sum of all deleted content)
+  const totalDeletedCount = (deletedThreads || 0) + (deletedResponses || 0) + (deletedReplies || 0);
 
   return (
     <div className="d-flex align-items-center pt-1 mt-2.5" style={{ marginBottom: '2px' }}>
@@ -44,7 +41,7 @@ const LearnerFooter = ({
       >
         <div className="d-flex align-items-center">
           <Icon src={QuestionAnswerOutline} className="icon-size mr-2" />
-          {totalActive}
+          {threads + responses + replies}
         </div>
       </OverlayTrigger>
       <OverlayTrigger
@@ -60,7 +57,7 @@ const LearnerFooter = ({
       >
         <div className="d-flex align-items-center">
           <Icon src={Edit} className="icon-size mr-2 ml-4" />
-          {activeThreads}
+          {threads}
         </div>
       </OverlayTrigger>
       {Boolean(canSeeDeletedStats) && (
@@ -77,7 +74,7 @@ const LearnerFooter = ({
         >
           <div className="d-flex align-items-center">
             <Icon src={DeleteOutline} className="icon-size mr-2 ml-4" />
-            {deletedCount || 0}
+            {totalDeletedCount}
           </div>
         </OverlayTrigger>
       )}
