@@ -1,17 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
 import {
   ActionRow,
+  Form,
   ModalDialog,
-  Spinner, StatefulButton,
+  Spinner,
+  StatefulButton,
 } from '@openedx/paragon';
 
 import { useIntl } from '@edx/frontend-platform/i18n';
 
-import messages from '../messages';
+import messages from '../../messages';
 
-const Confirmation = ({
+const DeleteWithBanConfirmation = ({
   isOpen,
   title,
   description,
@@ -26,11 +28,23 @@ const Confirmation = ({
   isConfirmButtonPending,
   pendingConfirmButtonText,
   closeButtonText,
+  showBanCheckbox,
+  banCheckboxLabel,
 }) => {
   const intl = useIntl();
+  const [banUser, setBanUser] = useState(false);
+
+  const handleConfirm = () => {
+    confirmAction(banUser);
+  };
+
+  const handleClose = () => {
+    setBanUser(false);
+    onClose();
+  };
 
   return (
-    <ModalDialog title={title} isOpen={isOpen} hasCloseButton={false} onClose={onClose} zIndex={5000}>
+    <ModalDialog title={title} isOpen={isOpen} hasCloseButton={false} onClose={handleClose} zIndex={5000}>
       {isDataLoading && !isConfirmButtonPending ? (
         <ModalDialog.Body>
           <div className="d-flex justify-content-center p-4">
@@ -44,26 +58,38 @@ const Confirmation = ({
               {title}
             </ModalDialog.Title>
           </ModalDialog.Header>
-          <ModalDialog.Body style={{ whiteSpace: 'pre-line' }}>
-            {description}
-            {boldDescription && <><br /><p className="font-weight-bold pt-2">{boldDescription}</p></>}
+          <ModalDialog.Body>
+            <div style={{ whiteSpace: 'pre-line' }}>
+              {description}
+            </div>
+            {boldDescription && <p className="font-weight-bold pt-2 mb-0">{boldDescription}</p>}
+            {showBanCheckbox && (
+              <div className="mt-3">
+                <Form.Checkbox
+                  checked={banUser}
+                  onChange={(e) => setBanUser(e.target.checked)}
+                >
+                  {banCheckboxLabel || intl.formatMessage(messages.banUserCheckbox)}
+                </Form.Checkbox>
+              </div>
+            )}
           </ModalDialog.Body>
           <ModalDialog.Footer>
             <ActionRow>
-              <ModalDialog.CloseButton variant={closeButtonVariant}>
+              <ModalDialog.CloseButton variant={closeButtonVariant} onClick={handleClose}>
                 {closeButtonText || intl.formatMessage(messages.confirmationCancel)}
               </ModalDialog.CloseButton>
               {confirmAction && (
-              <StatefulButton
-                labels={{
-                  default: confirmButtonText || intl.formatMessage(messages.confirmationConfirm),
-                  pending: pendingConfirmButtonText || confirmButtonText
+                <StatefulButton
+                  labels={{
+                    default: confirmButtonText || intl.formatMessage(messages.confirmationConfirm),
+                    pending: pendingConfirmButtonText || confirmButtonText
                       || intl.formatMessage(messages.confirmationConfirm),
-                }}
-                state={isConfirmButtonPending ? 'pending' : confirmButtonState}
-                variant={confirmButtonVariant}
-                onClick={() => confirmAction()}
-              />
+                  }}
+                  state={isConfirmButtonPending ? 'pending' : confirmButtonState}
+                  variant={confirmButtonVariant}
+                  onClick={handleConfirm}
+                />
               )}
             </ActionRow>
           </ModalDialog.Footer>
@@ -73,7 +99,7 @@ const Confirmation = ({
   );
 };
 
-Confirmation.propTypes = {
+DeleteWithBanConfirmation.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   confirmAction: PropTypes.func.isRequired,
@@ -88,9 +114,11 @@ Confirmation.propTypes = {
   pendingConfirmButtonText: PropTypes.string,
   closeButtonText: PropTypes.string,
   confirmButtonState: PropTypes.string,
+  showBanCheckbox: PropTypes.bool,
+  banCheckboxLabel: PropTypes.string,
 };
 
-Confirmation.defaultProps = {
+DeleteWithBanConfirmation.defaultProps = {
   closeButtonVariant: 'default',
   confirmButtonVariant: 'primary',
   confirmButtonText: '',
@@ -100,6 +128,8 @@ Confirmation.defaultProps = {
   pendingConfirmButtonText: '',
   closeButtonText: '',
   confirmButtonState: 'default',
+  showBanCheckbox: false,
+  banCheckboxLabel: '',
 };
 
-export default React.memo(Confirmation);
+export default React.memo(DeleteWithBanConfirmation);

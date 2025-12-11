@@ -2,6 +2,7 @@ import React, { useCallback, useContext, useMemo } from 'react';
 import PropTypes from 'prop-types';
 
 import { Icon, OverlayTrigger, Tooltip } from '@openedx/paragon';
+import { Block } from '@openedx/paragon/icons';
 import classNames from 'classnames';
 import { generatePath, Link } from 'react-router-dom';
 import * as timeago from 'timeago.js';
@@ -31,7 +32,7 @@ const AuthorLabel = ({
   const { courseId, enableInContextSidebar } = useContext(DiscussionContext);
   const { icon, authorLabelMessage } = useMemo(
     () => getAuthorLabel(intl, authorLabel),
-    [authorLabel],
+    [authorLabel, intl],
   );
   const { isNewLearner, isRegularLearner } = useLearnerStatus(
     postData,
@@ -47,12 +48,22 @@ const AuthorLabel = ({
     labelColor,
   );
 
+  // Check if user is banned from postData
+  const isAuthorBanned = postData?.is_author_banned || postData?.isAuthorBanned || false;
+
   const showUserNameAsLink = (
     linkToProfile
     && author
     && author !== intl.formatMessage(messages.anonymous)
     && !enableInContextSidebar
   );
+  const canDisplayLearnerRole = Boolean(
+    author
+    && !isRetiredUser
+    && author !== intl.formatMessage(messages.anonymous),
+  );
+
+  const hasRecognizedAuthorRole = Boolean(authorLabelMessage && icon);
 
   const authorName = useMemo(
     () => (
@@ -92,38 +103,60 @@ const AuthorLabel = ({
     return null;
   }, [isNewLearner, isRegularLearner, createLearnerMessage]);
 
-  const labelContents = useMemo(
-    () => (
-      <>
-        <OverlayTrigger
-          placement={authorToolTip ? 'top' : 'right'}
-          overlay={(
-            <Tooltip
-              id={
-                authorToolTip
-                  ? `endorsed-by-${author}-tooltip`
-                  : `${authorLabel}-label-tooltip`
-              }
-            >
-              <>
-                {authorToolTip ? author : authorLabel}
-                <br />
-                {intl.formatMessage(messages.authorAdminDescription)}
-              </>
-            </Tooltip>
-          )}
-          trigger={['hover', 'focus']}
-        >
-          <div className={classNames('d-flex flex-row align-items-center')}>
-            <Icon
-              style={{
-                width: '1rem',
-                height: '1rem',
-              }}
-              src={icon}
-              data-testid="author-icon"
-            />
-            {authorLabelMessage && (
+  // Banned indicator - shown for all users (learners and staff)
+  const bannedIndicator = useMemo(
+    () => isAuthorBanned && (
+      <span
+        className="d-flex align-items-center ml-1 text-danger-500"
+        style={{ fontSize: '12px', fontWeight: '500' }}
+        data-testid="banned-label"
+      >
+        <Icon
+          src={Block}
+          style={{
+            width: '0.75rem',
+            height: '0.75rem',
+            marginRight: '4px',
+          }}
+        />
+        {intl.formatMessage(messages.authorLabelBanned)}
+      </span>
+    ),
+    [isAuthorBanned, intl],
+  );
+
+  const roleContents = useMemo(
+    () => {
+      if (hasRecognizedAuthorRole) {
+        return (
+          <OverlayTrigger
+            placement={authorToolTip ? 'top' : 'right'}
+            overlay={(
+              <Tooltip
+                id={
+                  authorToolTip
+                    ? `endorsed-by-${author}-tooltip`
+                    : `${authorLabel}-label-tooltip`
+                }
+              >
+                <>
+                  {authorToolTip ? author : authorLabel}
+                  <br />
+                  {intl.formatMessage(messages.authorAdminDescription)}
+                </>
+              </Tooltip>
+            )}
+            trigger={['hover', 'focus']}
+          >
+            <div className={classNames('d-flex flex-row align-items-center')}>
+              <Icon
+                style={{
+                  width: '1rem',
+                  height: '1rem',
+                }}
+                src={icon}
+                data-testid="author-icon"
+              />
               <span
                 className={classNames('mr-1.5 font-style font-weight-500', {
                   'text-primary-500': showTextPrimary,
@@ -133,34 +166,56 @@ const AuthorLabel = ({
               >
                 {authorLabelMessage}
               </span>
-            )}
-          </div>
-        </OverlayTrigger>
-        {postCreatedAt && (
+            </div>
+          </OverlayTrigger>
+        );
+      }
+
+      if (canDisplayLearnerRole) {
+        return (
           <span
-            title={postCreatedAt}
-            className={classNames('align-content-center post-summary-timestamp', {
+            className={classNames('font-style font-weight-400', {
               'text-white': alert,
-              'text-gray-500': !alert,
+              'text-gray-600': !alert,
             })}
-            style={{ lineHeight: '20px', fontSize: '12px', marginBottom: '-2.3px' }}
+            style={{ fontSize: '12px', lineHeight: '16px' }}
           >
-            {timeago.format(postCreatedAt, 'time-locale')}
+            {intl.formatMessage(messages.learnerMessage)}
           </span>
-        )}
-      </>
-    ),
+        );
+      }
+
+      return null;
+    },
     [
       author,
+      authorLabel,
       authorLabelMessage,
       authorToolTip,
+      canDisplayLearnerRole,
+      hasRecognizedAuthorRole,
       icon,
+      intl,
       isRetiredUser,
-      postCreatedAt,
       showTextPrimary,
       alert,
     ],
   );
+
+  const timestamp = useMemo(() => (
+    postCreatedAt ? (
+      <span
+        title={postCreatedAt}
+        className={classNames('align-content-center post-summary-timestamp ml-1', {
+          'text-white': alert,
+          'text-gray-500': !alert,
+        })}
+        style={{ lineHeight: '20px', fontSize: '12px' }}
+      >
+        {timeago.format(postCreatedAt, 'time-locale')}
+      </span>
+    ) : null
+  ), [postCreatedAt, alert]);
 
   const learnerPostsLink = author ? (
     <Link
@@ -182,32 +237,12 @@ const AuthorLabel = ({
     <div className={`${className} flex-wrap`}>
       <div className="d-flex flex-column w-100">
         <div className={classNames('d-flex align-items-center', labelColor)}>
-          {!authorLabel ? (
-            <OverlayTrigger
-              placement={authorToolTip ? 'top' : 'right'}
-              overlay={(
-                <Tooltip
-                  id={
-                    authorToolTip
-                      ? `endorsed-by-${author}-tooltip`
-                      : `${authorLabel}-label-tooltip`
-                  }
-                >
-                  <>
-                    {intl.formatMessage(messages.authorLearnerTitle)}
-                    <br />
-                    {intl.formatMessage(messages.authorLearnerDescription)}
-                  </>
-                </Tooltip>
-              )}
-              trigger={['hover', 'focus']}
-            >
-              {learnerPostsLink}
-            </OverlayTrigger>
-          ) : (
-            learnerPostsLink
-          )}
-          {labelContents}
+          {learnerPostsLink}
+          {timestamp}
+        </div>
+        <div className={classNames('d-flex align-items-center', labelColor)}>
+          {roleContents}
+          {bannedIndicator}
         </div>
         {postOrComment && learnerMessageComponent}
       </div>
@@ -217,7 +252,11 @@ const AuthorLabel = ({
       <div className="d-flex flex-column w-100">
         <div className={classNames('d-flex align-items-center', labelColor)}>
           {authorName}
-          {labelContents}
+          {timestamp}
+        </div>
+        <div className={classNames('d-flex align-items-center', labelColor)}>
+          {roleContents}
+          {bannedIndicator}
         </div>
         {postOrComment && learnerMessageComponent}
       </div>

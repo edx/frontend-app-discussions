@@ -18,7 +18,13 @@ import ContentUnavailable from '../content-unavailable/ContentUnavailable';
 import {
   useCourseBlockData, useCourseDiscussionData, useIsOnTablet, useRedirectToThread, useSidebarVisible,
 } from '../data/hooks';
-import { selectDiscussionProvider, selectEnableInContext, selectIsUserLearner } from '../data/selectors';
+import {
+  selectDiscussionProvider,
+  selectEnableDiscussionBan,
+  selectEnableInContext,
+  selectIsUserBanned,
+  selectIsUserLearner,
+} from '../data/selectors';
 import { EmptyLearners, EmptyTopics } from '../empty-posts';
 import EmptyPosts from '../empty-posts/EmptyPosts';
 import { EmptyTopic as InContextEmptyTopics } from '../in-context-topics/components';
@@ -37,6 +43,7 @@ const DiscussionsRestrictionBanner = lazy(() => import('./DiscussionsRestriction
 const DiscussionContent = lazy(() => import('./DiscussionContent'));
 const DiscussionSidebar = lazy(() => import('./DiscussionSidebar'));
 const DiscussionsConfirmEmailBanner = lazy(() => import('./DiscussionsConfirmEmailBanner'));
+const BannedUserBanner = lazy(() => import('./BannedUserBanner'));
 
 const DiscussionsHome = () => {
   const location = useLocation();
@@ -48,6 +55,8 @@ const DiscussionsHome = () => {
     courseNumber, courseTitle, org, courseStatus, isEnrolled,
   } = useSelector(selectCourseTabs);
   const isUserLearner = useSelector(selectIsUserLearner);
+  const isUserBanned = useSelector(selectIsUserBanned);
+  const enableDiscussionBan = useSelector(selectEnableDiscussionBan);
   const pageParams = useMatch(ROUTES.COMMENTS.PAGE)?.params;
   const page = pageParams?.page || null;
   const matchPattern = ALL_ROUTES.find((route) => matchPath({ path: route }, location.pathname));
@@ -77,7 +86,8 @@ const DiscussionsHome = () => {
     enableInContextSidebar,
     category,
     learnerUsername,
-  }));
+    enableDiscussionBan,
+  }), [page, courseId, postId, topicId, enableInContextSidebar, category, learnerUsername, enableDiscussionBan]);
 
   return (
     <Suspense fallback={(<Spinner />)}>
@@ -88,8 +98,9 @@ const DiscussionsHome = () => {
           <Header courseOrg={org} courseNumber={courseNumber} courseTitle={courseTitle} />
         </>
         )}
-        <main className="container-fluid d-flex flex-column p-0 w-100 font-size" id="main" tabIndex="-1">
+        <main className={classNames('container-fluid d-flex flex-column p-0 w-100 font-size', { 'banned-user-disabled': isUserBanned })} id="main" tabIndex="-1">
           {!enableInContextSidebar && <CourseTabsNavigation />}
+          {isUserBanned && (<BannedUserBanner />)}
           <SpamWarningBanner />
           {(isEnrolled || !isUserLearner) && (
             <div

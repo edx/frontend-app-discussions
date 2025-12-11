@@ -1,19 +1,19 @@
 import React, {
-  useCallback, useMemo, useRef, useState,
+  useCallback, useEffect, useMemo, useRef, useState,
 } from 'react';
 import PropTypes from 'prop-types';
 
 import {
   Button, Dropdown, Icon, IconButton, ModalPopup, useToggle,
 } from '@openedx/paragon';
-import { MoreHoriz } from '@openedx/paragon/icons';
+import { ChevronLeft, ChevronRight, MoreHoriz } from '@openedx/paragon/icons';
 import { useSelector } from 'react-redux';
 
 import { useIntl } from '@edx/frontend-platform/i18n';
 import { logError } from '@edx/frontend-platform/logging';
 
 import { ContentActions } from '../../data/constants';
-import { selectIsPostingEnabled } from '../data/selectors';
+import { selectIsPostingEnabled, selectUserHasModerationPrivileges } from '../data/selectors';
 import messages from '../messages';
 import { useActions } from '../utils';
 
@@ -29,8 +29,10 @@ const ActionsDropdown = ({
   const intl = useIntl();
   const [isOpen, open, close] = useToggle(false);
   const [target, setTarget] = useState(null);
+  const [activeSubmenu, setActiveSubmenu] = useState(null);
   const isPostingEnabled = useSelector(selectIsPostingEnabled);
-  const actions = useActions(contentType, id);
+  const hasModerationPrivileges = useSelector(selectUserHasModerationPrivileges);
+  const actions = useActions(contentType, id, hasModerationPrivileges);
 
   // Check if we're in in-context sidebar mode
   const isInContextSidebar = useMemo(() => (
@@ -62,40 +64,133 @@ const ActionsDropdown = ({
   const onCloseModal = useCallback(() => {
     close();
     setTarget(null);
+    setActiveSubmenu(null);
   }, [close]);
+
+  const renderMenuItem = useCallback((action) => (
+    <Dropdown.Item
+      key={action.id}
+      as={Button}
+      variant="tertiary"
+      size="inline"
+      onClick={() => {
+        if (action.hasSubmenu) {
+          setActiveSubmenu(action.id);
+        } else {
+          close();
+          handleActions(action.action);
+        }
+      }}
+      className="d-flex justify-content-start actions-dropdown-item"
+      data-testid={action.id}
+    >
+      <div className="d-flex align-items-center">
+        <Icon
+          src={action.icon}
+          className="icon-size-24"
+        />
+        <span className="font-weight-normal ml-2">
+          {intl.formatMessage(action.label)}
+        </span>
+      </div>
+      {action.hasSubmenu && (
+        <Icon src={ChevronRight} className="icon-size-20 ml-2" />
+      )}
+    </Dropdown.Item>
+  ), [close, handleActions, intl]);
+
+  const renderSubmenu = useCallback((parentAction) => (
+    <>
+      <Dropdown.Item
+        as={Button}
+        variant="tertiary"
+        size="inline"
+        onClick={() => setActiveSubmenu(null)}
+        className="d-flex align-items-center actions-dropdown-item"
+        data-testid="submenu-back"
+      >
+        <Icon src={ChevronLeft} className="icon-size-20" />
+        <span className="font-weight-normal ml-2">
+          {intl.formatMessage(messages.backToMenu)}
+        </span>
+      </Dropdown.Item>
+      <Dropdown.Divider />
+      {parentAction.submenu.map(subAction => (
+        <React.Fragment key={subAction.id}>
+          <Dropdown.Item
+            as={Button}
+            variant="tertiary"
+            size="inline"
+            disabled={subAction.disabled}
+            onClick={() => {
+              if (!subAction.disabled) {
+                close();
+                setActiveSubmenu(null);
+                handleActions(subAction.action);
+              }
+            }}
+            className="d-flex justify-content-start actions-dropdown-item pl-4"
+            data-testid={subAction.id}
+          >
+            <span className="font-weight-normal">
+              {intl.formatMessage(subAction.label)}
+            </span>
+          </Dropdown.Item>
+        </React.Fragment>
+      ))}
+    </>
+  ), [close, handleActions, intl]);
+
+  const activeParentAction = useMemo(() => (
+    activeSubmenu ? actions.find(action => action.id === activeSubmenu) : null
+  ), [actions, activeSubmenu]);
+
+  useEffect(() => {
+    if (activeSubmenu && !activeParentAction) {
+      setActiveSubmenu(null);
+    }
+  }, [activeSubmenu, activeParentAction]);
 
   const dropdownContent = (
     <div
       className="bg-white shadow d-flex flex-column mt-1"
       data-testid="actions-dropdown-modal-popup"
     >
-      {actions.map(action => (
-        <React.Fragment key={action.id}>
-          {(action.action === ContentActions.DELETE) && <Dropdown.Divider />}
-          <Dropdown.Item
-            as={Button}
-            variant="tertiary"
-            size="inline"
-            onClick={() => {
-              close();
-              if (!action.disabled) {
-                handleActions(action.action);
-              }
-            }}
-            className="d-flex justify-content-start actions-dropdown-item"
-            data-testId={action.id}
-            disabled={action.disabled}
-          >
-            <Icon
-              src={action.icon}
-              className="icon-size-24"
-            />
-            <span className="font-weight-normal ml-2">
-              {intl.formatMessage(action.label)}
-            </span>
-          </Dropdown.Item>
-        </React.Fragment>
-      ))}
+      {activeSubmenu && activeParentAction ? (
+        renderSubmenu(activeParentAction)
+      ) : (
+        actions.map(action => (
+          <React.Fragment key={action.id}>
+            {(action.id === 'ban' || action.action === ContentActions.DELETE) && <Dropdown.Divider />}
+            {action.hasSubmenu ? (
+              renderMenuItem(action)
+            ) : (
+              <Dropdown.Item
+                as={Button}
+                variant="tertiary"
+                size="inline"
+                onClick={() => {
+                  close();
+                  if (!action.disabled) {
+                    handleActions(action.action);
+                  }
+                }}
+                className="d-flex justify-content-start actions-dropdown-item"
+                data-testid={action.id}
+                disabled={action.disabled}
+              >
+                <Icon
+                  src={action.icon}
+                  className="icon-size-24"
+                />
+                <span className="font-weight-normal ml-2">
+                  {intl.formatMessage(action.label)}
+                </span>
+              </Dropdown.Item>
+            )}
+          </React.Fragment>
+        ))
+      )}
     </div>
   );
 

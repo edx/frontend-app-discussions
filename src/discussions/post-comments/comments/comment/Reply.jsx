@@ -1,10 +1,7 @@
-import React, {
-  useCallback, useContext, useMemo, useState,
-} from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import { Avatar, useToggle } from '@openedx/paragon';
-import { DeleteOutline } from '@openedx/paragon/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import * as timeago from 'timeago.js';
 
@@ -12,6 +9,9 @@ import { useIntl } from '@edx/frontend-platform/i18n';
 import { logError } from '@edx/frontend-platform/logging';
 
 import HTMLLoader from '../../../../components/HTMLLoader';
+import {
+  banUser, bulkDeleteUserPosts, unbanUser,
+} from '../../../../data/api/moderation';
 import { AvatarOutlineAndLabelColors, ContentActions } from '../../../../data/constants';
 import {
   ActionsDropdown, AlertBanner, AuthorLabel, AutoSpamAlertBanner, Confirmation,
@@ -20,9 +20,13 @@ import DiscussionContext from '../../../common/context';
 import timeLocale from '../../../common/time-locale';
 import { ContentTypes } from '../../../data/constants';
 import { useAlertBannerVisible } from '../../../data/hooks';
+import { selectIsUserBanned } from '../../../data/selectors';
+import discussionMessages from '../../../messages';
 import { selectAuthorAvatar } from '../../../posts/data/selectors';
+import { fetchThread } from '../../../posts/data/thunks';
+import DeleteWithBanConfirmation from '../../../posts/post/DeleteWithBanConfirmation';
 import { selectCommentOrResponseById } from '../../data/selectors';
-import { editComment, removeComment } from '../../data/thunks';
+import { editComment, performRestoreComment, removeComment } from '../../data/thunks';
 import messages from '../../messages';
 import CommentEditor from './CommentEditor';
 
@@ -31,16 +35,22 @@ const Reply = ({ responseId }) => {
   const commentData = useSelector(selectCommentOrResponseById(responseId));
   const {
     id, abuseFlagged, author, authorLabel, endorsed, lastEdit, closed, closedBy,
-    closeReason, createdAt, threadId, parentId, rawBody, renderedBody, editByLabel,
-    closedByLabel, isDeleted, deletedBy, deletedByLabel, is_spam: isSpam,
+    closeReason, createdAt, threadId, parentId, rawBody, renderedBody, editByLabel, closedByLabel, is_spam: isSpam,
   } = commentData;
   const intl = useIntl();
   const dispatch = useDispatch();
-  const { courseId } = useContext(DiscussionContext);
+  const { courseId, enableDiscussionBan } = React.useContext(DiscussionContext);
   const [isEditing, setEditing] = useState(false);
   const [isDeleting, showDeleteConfirmation, hideDeleteConfirmation] = useToggle(false);
   const [isRestoring, showRestoreConfirmation, hideRestoreConfirmation] = useToggle(false);
+  const [isDeletingUserCourse, showDeleteUserCourseConfirmation, hideDeleteUserCourseConfirmation] = useToggle(false);
+  const [isDeletingUserOrg, showDeleteUserOrgConfirmation, hideDeleteUserOrgConfirmation] = useToggle(false);
+  const [isBanningCourse, showBanCourseConfirmation, hideBanCourseConfirmation] = useToggle(false);
+  const [isBanningOrg, showBanOrgConfirmation, hideBanOrgConfirmation] = useToggle(false);
+  const [isUnbanningCourse, showUnbanCourseConfirmation, hideUnbanCourseConfirmation] = useToggle(false);
+  const [isUnbanningOrg, showUnbanOrgConfirmation, hideUnbanOrgConfirmation] = useToggle(false);
   const [isReporting, showReportConfirmation, hideReportConfirmation] = useToggle(false);
+  const isUserBanned = useSelector(selectIsUserBanned);
   const colorClass = AvatarOutlineAndLabelColors[authorLabel];
   // If isSpam is not provided in the API response, default to false
   const isSpamFlagged = isSpam || false;
@@ -70,6 +80,18 @@ const Reply = ({ responseId }) => {
     dispatch(editComment(id, { endorsed: !endorsed }));
   }, [endorsed, id]);
 
+  const handleRestore = useCallback(() => {
+    showRestoreConfirmation();
+  }, [showRestoreConfirmation]);
+
+  const handleRestoreConfirmation = useCallback(async () => {
+    const result = await dispatch(performRestoreComment(id, courseId));
+    if (result && !result.success) {
+      logError(`Failed to restore comment: ${result.error || 'Unknown error'}`);
+    }
+    hideRestoreConfirmation();
+  }, [dispatch, id, courseId, hideRestoreConfirmation]);
+
   const handleAbusedFlag = useCallback(() => {
     if (abuseFlagged) {
       dispatch(editComment(id, { flagged: !abuseFlagged }));
@@ -78,35 +100,98 @@ const Reply = ({ responseId }) => {
     }
   }, [abuseFlagged, id, showReportConfirmation]);
 
-  const handleRestore = useCallback(() => {
-    showRestoreConfirmation();
-  }, [showRestoreConfirmation]);
-
-  const handleRestoreConfirmation = useCallback(async () => {
-    try {
-      const { performRestoreComment } = await import('../../data/thunks');
-      const result = await dispatch(performRestoreComment(id, courseId));
-      // Check if restore failed and log the error
-      if (result && !result.success) {
-        logError(`Failed to restore comment: ${result.error || 'Unknown error'}`);
-      }
-    } catch (error) {
-      logError(error);
-    }
-    hideRestoreConfirmation();
-  }, [id, courseId, threadId, dispatch, hideRestoreConfirmation]);
-
   const handleCloseEditor = useCallback(() => {
     setEditing(false);
   }, []);
+
+  const handleDeleteUserCourseConfirmation = useCallback(async (shouldBan) => {
+    try {
+      // Only ban if flag is enabled (defensive check)
+      await bulkDeleteUserPosts(courseId, author, 'course', shouldBan && enableDiscussionBan);
+      hideDeleteUserCourseConfirmation();
+      dispatch(fetchThread(threadId, courseId));
+    } catch (error) {
+      logError(error);
+    }
+  }, [author, courseId, threadId, hideDeleteUserCourseConfirmation, enableDiscussionBan]);
+
+  const handleDeleteUserOrgConfirmation = useCallback(async (shouldBan) => {
+    try {
+      // Only ban if flag is enabled (defensive check)
+      await bulkDeleteUserPosts(courseId, author, 'organization', shouldBan && enableDiscussionBan);
+      hideDeleteUserOrgConfirmation();
+      dispatch(fetchThread(threadId, courseId));
+    } catch (error) {
+      logError(error);
+    }
+  }, [author, courseId, threadId, hideDeleteUserOrgConfirmation, enableDiscussionBan]);
+
+  const handleBanCourseConfirmation = useCallback(async (reason) => {
+    try {
+      await banUser(courseId, author, 'course', reason || 'Banned from course discussions');
+      hideBanCourseConfirmation();
+      dispatch(fetchThread(threadId, courseId));
+    } catch (error) {
+      logError(error);
+    }
+  }, [author, courseId, threadId, dispatch, hideBanCourseConfirmation]);
+
+  const handleBanOrgConfirmation = useCallback(async (reason) => {
+    try {
+      await banUser(courseId, author, 'organization', reason || 'Banned from organization discussions');
+      hideBanOrgConfirmation();
+      dispatch(fetchThread(threadId, courseId));
+    } catch (error) {
+      logError(error);
+    }
+  }, [author, courseId, threadId, dispatch, hideBanOrgConfirmation]);
+
+  const handleUnbanCourseConfirmation = useCallback(async (reason) => {
+    try {
+      await unbanUser(courseId, author, 'course', reason || 'Unbanned from course discussions');
+      hideUnbanCourseConfirmation();
+      dispatch(fetchThread(threadId, courseId));
+    } catch (error) {
+      logError(error);
+    }
+  }, [author, courseId, threadId, dispatch, hideUnbanCourseConfirmation]);
+
+  const handleUnbanOrgConfirmation = useCallback(async (reason) => {
+    try {
+      await unbanUser(courseId, author, 'organization', reason || 'Unbanned from organization discussions');
+      hideUnbanOrgConfirmation();
+      dispatch(fetchThread(threadId, courseId));
+    } catch (error) {
+      logError(error);
+    }
+  }, [author, courseId, threadId, dispatch, hideUnbanOrgConfirmation]);
 
   const actionHandlers = useMemo(() => ({
     [ContentActions.EDIT_CONTENT]: handleEditContent,
     [ContentActions.ENDORSE]: handleReplyEndorse,
     [ContentActions.DELETE]: showDeleteConfirmation,
     [ContentActions.RESTORE]: handleRestore,
+    [ContentActions.DELETE_POST]: showDeleteConfirmation,
+    [ContentActions.DELETE_USER_COURSE]: showDeleteUserCourseConfirmation,
+    [ContentActions.DELETE_USER_ORG]: showDeleteUserOrgConfirmation,
+    [ContentActions.BAN_COURSE]: showBanCourseConfirmation,
+    [ContentActions.BAN_ORG]: showBanOrgConfirmation,
+    [ContentActions.UNBAN_COURSE]: showUnbanCourseConfirmation,
+    [ContentActions.UNBAN_ORG]: showUnbanOrgConfirmation,
     [ContentActions.REPORT]: handleAbusedFlag,
-  }), [handleEditContent, handleReplyEndorse, showDeleteConfirmation, handleRestore, handleAbusedFlag]);
+  }), [
+    handleEditContent,
+    handleReplyEndorse,
+    showDeleteConfirmation,
+    handleRestore,
+    showDeleteUserCourseConfirmation,
+    showDeleteUserOrgConfirmation,
+    showBanCourseConfirmation,
+    showBanOrgConfirmation,
+    showUnbanCourseConfirmation,
+    showUnbanOrgConfirmation,
+    handleAbusedFlag,
+  ]);
 
   return (
     <div className="d-flex flex-column mt-2.5 " data-testid={`reply-${id}`} role="listitem">
@@ -137,6 +222,60 @@ const Reply = ({ responseId }) => {
           confirmButtonVariant="danger"
         />
       )}
+      <DeleteWithBanConfirmation
+        isOpen={isDeletingUserCourse}
+        title={intl.formatMessage(discussionMessages.deleteUserCourseTitle)}
+        description={intl.formatMessage(discussionMessages.deleteUserCourseDescription, { username: author })}
+        onClose={hideDeleteUserCourseConfirmation}
+        confirmAction={handleDeleteUserCourseConfirmation}
+        showBanCheckbox={enableDiscussionBan}
+        banCheckboxLabel={intl.formatMessage(discussionMessages.banUserCheckbox)}
+      />
+      <DeleteWithBanConfirmation
+        isOpen={isDeletingUserOrg}
+        title={intl.formatMessage(discussionMessages.deleteUserOrgTitle)}
+        description={intl.formatMessage(discussionMessages.deleteUserOrgDescription, { username: author })}
+        onClose={hideDeleteUserOrgConfirmation}
+        confirmAction={handleDeleteUserOrgConfirmation}
+        showBanCheckbox={enableDiscussionBan}
+        banCheckboxLabel={intl.formatMessage(discussionMessages.banUserOrgCheckbox)}
+      />
+      <Confirmation
+        isOpen={isBanningCourse}
+        title={intl.formatMessage(discussionMessages.banUserCourseTitle)}
+        description={intl.formatMessage(discussionMessages.banUserCourseDescription, { username: author })}
+        onClose={hideBanCourseConfirmation}
+        confirmAction={() => handleBanCourseConfirmation()}
+        confirmButtonVariant="danger"
+        confirmButtonText={intl.formatMessage(discussionMessages.banButtonText)}
+      />
+      <Confirmation
+        isOpen={isBanningOrg}
+        title={intl.formatMessage(discussionMessages.banUserOrgTitle)}
+        description={intl.formatMessage(discussionMessages.banUserOrgDescription, { username: author })}
+        onClose={hideBanOrgConfirmation}
+        confirmAction={() => handleBanOrgConfirmation()}
+        confirmButtonVariant="danger"
+        confirmButtonText={intl.formatMessage(discussionMessages.banButtonText)}
+      />
+      <Confirmation
+        isOpen={isUnbanningCourse}
+        title={intl.formatMessage(discussionMessages.unbanUserCourseTitle)}
+        description={intl.formatMessage(discussionMessages.unbanUserCourseDescription, { username: author })}
+        onClose={hideUnbanCourseConfirmation}
+        confirmAction={() => handleUnbanCourseConfirmation()}
+        confirmButtonVariant="primary"
+        confirmButtonText={intl.formatMessage(discussionMessages.unbanButtonText)}
+      />
+      <Confirmation
+        isOpen={isUnbanningOrg}
+        title={intl.formatMessage(discussionMessages.unbanUserOrgTitle)}
+        description={intl.formatMessage(discussionMessages.unbanUserOrgDescription, { username: author })}
+        onClose={hideUnbanOrgConfirmation}
+        confirmAction={() => handleUnbanOrgConfirmation()}
+        confirmButtonVariant="primary"
+        confirmButtonText={intl.formatMessage(discussionMessages.unbanButtonText)}
+      />
       {hasAnyAlert && (
         <div className="d-flex">
           <div className="d-flex invisible">
@@ -164,30 +303,6 @@ const Reply = ({ responseId }) => {
           </div>
           <div className="w-100">
             <AutoSpamAlertBanner autoSpamFlagged={isSpamFlagged} />
-          </div>
-        </div>
-      )}
-      {isDeleted && deletedBy && (
-        <div className="d-flex">
-          <div className="d-flex invisible">
-            <Avatar />
-          </div>
-          <div className="w-100">
-            <div className="alert alert-info px-3 shadow-none mb-1 py-10px bg-light-200 d-flex align-items-start">
-              <DeleteOutline className="mr-2 text-dark-500 flex-shrink-0 deleted-content-icon" />
-              <div className="d-flex align-items-center flex-wrap text-gray-700 font-style">
-                {intl.formatMessage(messages.deletedBy)}
-                <span className="ml-1">
-                  <AuthorLabel
-                    author={deletedBy}
-                    authorLabel={deletedByLabel}
-                    labelColor={AvatarOutlineAndLabelColors[deletedByLabel] && `text-${AvatarOutlineAndLabelColors[deletedByLabel]}`}
-                    linkToProfile
-                    postOrComment
-                  />
-                </span>
-              </div>
-            </div>
           </div>
         </div>
       )}
@@ -223,6 +338,7 @@ const Reply = ({ responseId }) => {
                 contentType={ContentTypes.COMMENT}
                 iconSize="inline"
                 id={id}
+                disabled={isUserBanned}
               />
             </div>
           </div>

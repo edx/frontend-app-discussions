@@ -156,6 +156,147 @@ const messages = defineMessages({
     defaultMessage: 'Restoring',
     description: 'Pending state of confirm button text for restore posts',
   },
+  bannedUsers: {
+    id: 'discussions.learner.bannedUsers',
+    defaultMessage: 'Banned',
+    description: 'Section title for banned users',
+  },
+  bannedUsersTooltip: {
+    id: 'discussions.learner.bannedUsersTooltip',
+    defaultMessage: 'Discussion activity is disabled for these learners',
+    description: 'Tooltip text for banned users info icon',
+  },
+  bannedUsersOrgWide: {
+    id: 'discussions.learner.bannedUsersOrgWide',
+    defaultMessage: 'Banned (Org-wide)',
+    description: 'Section title for organization-wide banned users',
+  },
+  mutedCourseWide: {
+    id: 'discussions.learner.mutedCourseWide',
+    defaultMessage: 'Muted course-wide',
+    description: 'Section title for course-wide muted users',
+  },
+  mutedForMe: {
+    id: 'discussions.learner.mutedForMe',
+    defaultMessage: 'Muted (for me)',
+    description: 'Section title for personally muted users',
+  },
+  allOtherLearners: {
+    id: 'discussions.learner.allOtherLearners',
+    defaultMessage: 'All other learners',
+    description: 'Section title for all other learners not in special categories',
+  },
+  // Action menu items
+  muteUser: {
+    id: 'discussions.learner.actions.mute',
+    defaultMessage: 'Mute',
+    description: 'Action to mute a user',
+  },
+  unmuteUser: {
+    id: 'discussions.learner.actions.unmute',
+    defaultMessage: 'Unmute',
+    description: 'Action to unmute a user',
+  },
+  banUser: {
+    id: 'discussions.learner.actions.ban',
+    defaultMessage: 'Ban',
+    description: 'Action to ban a user',
+  },
+  unbanUser: {
+    id: 'discussions.learner.actions.unban',
+    defaultMessage: 'Unban',
+    description: 'Action to unban a user',
+  },
+  undeleteActivity: {
+    id: 'discussions.learner.actions.undeleteActivity',
+    defaultMessage: 'Undelete activity',
+    description: 'Action to undelete user activity',
+  },
+  banUserCourse: {
+    id: 'discussions.learner.actions.banCourse',
+    defaultMessage: 'Ban user from discussions in this course',
+    description: 'Action to ban user from course discussions',
+  },
+  banUserOrg: {
+    id: 'discussions.learner.actions.banOrg',
+    defaultMessage: 'Ban user from discussions in this organization',
+    description: 'Action to ban user from organization discussions',
+  },
+  unbanUserCourse: {
+    id: 'discussions.learner.actions.unbanCourse',
+    defaultMessage: 'Unban user from discussions in this course',
+    description: 'Action to unban user from course discussions',
+  },
+  unbanUserOrg: {
+    id: 'discussions.learner.actions.unbanOrg',
+    defaultMessage: 'Unban user from discussions in this organization',
+    description: 'Action to unban user from organization discussions',
+  },
+  deleteUserCourse: {
+    id: 'discussions.learner.actions.deleteUserCourse',
+    defaultMessage: 'Delete all user discussion activity in this course',
+    description: 'Action to delete user activity in course',
+  },
+  deleteUserOrg: {
+    id: 'discussions.learner.actions.deleteUserOrg',
+    defaultMessage: 'Delete all user discussion activity in this organization',
+    description: 'Action to delete user activity in organization',
+  },
+  undeleteUserCourse: {
+    id: 'discussions.learner.actions.undeleteUserCourse',
+    defaultMessage: 'Undelete all user discussion activity in this course',
+    description: 'Action to undelete user activity in course',
+  },
+  undeleteUserOrg: {
+    id: 'discussions.learner.actions.undeleteUserOrg',
+    defaultMessage: 'Undelete all user discussion activity in this organization',
+    description: 'Action to undelete user activity in organization',
+  },
+  deleteConfirmationDelete: {
+    id: 'discussions.learner.delete.confirmation.button.delete',
+    defaultMessage: 'Delete',
+    description: 'Delete button shown on delete confirmation dialog',
+  },
+  auditTrailInfoTitle: {
+    id: 'discussions.learner.auditTrail.title',
+    defaultMessage: 'Audit trail info',
+    description: 'Title for audit trail information section',
+  },
+  auditTrailBannedBy: {
+    id: 'discussions.learner.auditTrail.bannedBy',
+    defaultMessage: 'Banned by {moderator}',
+    description: 'Shows who banned the user',
+  },
+  auditTrailBannedAt: {
+    id: 'discussions.learner.auditTrail.bannedAt',
+    defaultMessage: 'on {date} at {time}',
+    description: 'Shows when the user was banned',
+  },
+  auditTrailBanScope: {
+    id: 'discussions.learner.auditTrail.banScope',
+    defaultMessage: '{scope, select, course {course-wide} organization {org-wide} other {}}',
+    description: 'Shows the scope of the ban (course-wide or org-wide)',
+  },
+  learnerBanBannerBanned: {
+    id: 'discussions.learner.banner.banned',
+    defaultMessage: 'Banned',
+    description: 'Label shown in learner ban status banner',
+  },
+  learnerBanBannerBy: {
+    id: 'discussions.learner.banner.by',
+    defaultMessage: 'by',
+    description: 'Text before moderator username in learner ban status banner',
+  },
+  learnerBanBannerStaff: {
+    id: 'discussions.learner.banner.staff',
+    defaultMessage: 'Staff',
+    description: 'Role label shown in learner ban status banner',
+  },
+  auditTrailStaffOnly: {
+    id: 'discussions.learner.auditTrail.staffOnly',
+    defaultMessage: 'Visible to staff only',
+    description: 'Note that audit trail is only visible to staff',
+  },
 });
 
 export default messages;

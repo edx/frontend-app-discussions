@@ -30,6 +30,10 @@ const learnersSlice = createSlice({
       commentCount: 0,
       threadCount: 0,
     },
+    bannedUsers: {
+      status: RequestStatus.IDLE,
+      list: [],
+    },
   },
   reducers: {
     fetchLearnersSuccess: (state, { payload }) => (
@@ -133,6 +137,85 @@ const learnersSlice = createSlice({
         status: RequestStatus.FAILED,
       }
     ),
+    fetchBannedUsersRequest: (state) => (
+      {
+        ...state,
+        bannedUsers: {
+          ...state.bannedUsers,
+          status: RequestStatus.IN_PROGRESS,
+        },
+      }
+    ),
+    fetchBannedUsersSuccess: (state, { payload }) => (
+      {
+        ...state,
+        bannedUsers: {
+          status: RequestStatus.SUCCESSFUL,
+          list: payload,
+        },
+      }
+    ),
+    fetchBannedUsersFailed: (state) => (
+      {
+        ...state,
+        bannedUsers: {
+          ...state.bannedUsers,
+          status: RequestStatus.FAILED,
+        },
+      }
+    ),
+    banUserRequest: (state) => ({
+      ...state,
+      status: RequestStatus.IN_PROGRESS,
+    }),
+    banUserSuccess: (state) => ({
+      ...state,
+      status: RequestStatus.SUCCESSFUL,
+    }),
+    banUserFailed: (state) => ({
+      ...state,
+      status: RequestStatus.FAILED,
+    }),
+    unbanUserRequest: (state) => ({
+      ...state,
+      status: RequestStatus.IN_PROGRESS,
+    }),
+    unbanUserSuccess: (state) => ({
+      ...state,
+      status: RequestStatus.SUCCESSFUL,
+    }),
+    unbanUserFailed: (state) => ({
+      ...state,
+      status: RequestStatus.FAILED,
+    }),
+    deleteUserActivityRequest: (state) => ({
+      ...state,
+      status: RequestStatus.IN_PROGRESS,
+    }),
+    deleteUserActivitySuccess: (state, { payload }) => ({
+      ...state,
+      status: RequestStatus.SUCCESSFUL,
+      bulkDeleteStats: payload,
+      pages: [], // Clear pages to force refetch with updated stats
+    }),
+    deleteUserActivityFailed: (state) => ({
+      ...state,
+      status: RequestStatus.FAILED,
+    }),
+    undeleteUserActivityRequest: (state) => ({
+      ...state,
+      status: RequestStatus.IN_PROGRESS,
+    }),
+    undeleteUserActivitySuccess: (state, { payload }) => ({
+      ...state,
+      status: RequestStatus.SUCCESSFUL,
+      bulkDeleteStats: payload,
+      pages: [], // Clear pages to force refetch with updated stats
+    }),
+    undeleteUserActivityFailed: (state) => ({
+      ...state,
+      status: RequestStatus.FAILED,
+    }),
   },
 });
 
@@ -150,6 +233,21 @@ export const {
   undeleteUserPostsRequest,
   undeleteUserPostsSuccess,
   undeleteUserPostsFailed,
+  fetchBannedUsersRequest,
+  fetchBannedUsersSuccess,
+  fetchBannedUsersFailed,
+  banUserRequest,
+  banUserSuccess,
+  banUserFailed,
+  unbanUserRequest,
+  unbanUserSuccess,
+  unbanUserFailed,
+  deleteUserActivityRequest,
+  deleteUserActivitySuccess,
+  deleteUserActivityFailed,
+  undeleteUserActivityRequest,
+  undeleteUserActivitySuccess,
+  undeleteUserActivityFailed,
 } = learnersSlice.actions;
 
 export const learnersReducer = learnersSlice.reducer;

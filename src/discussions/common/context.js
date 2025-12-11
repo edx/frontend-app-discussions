@@ -8,6 +8,7 @@ const DiscussionContext = React.createContext({
   enableInContextSidebar: false,
   category: null,
   learnerUsername: null,
+  enableDiscussionBan: false,
 });
 
 export default DiscussionContext;

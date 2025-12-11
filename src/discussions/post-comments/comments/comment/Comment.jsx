@@ -8,7 +8,6 @@ import React, {
 import PropTypes from 'prop-types';
 
 import { Button, useToggle } from '@openedx/paragon';
-import { DeleteOutline } from '@openedx/paragon/icons';
 import classNames from 'classnames';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -17,18 +16,27 @@ import { logError } from '@edx/frontend-platform/logging';
 
 import HTMLLoader from '../../../../components/HTMLLoader';
 import {
-  AvatarOutlineAndLabelColors, ContentActions, EndorsementStatus, PostsStatusFilter,
-} from '../../../../data/constants';
+  banUser, bulkDeleteUserPosts, unbanUser,
+} from '../../../../data/api/moderation';
+import { ContentActions, EndorsementStatus } from '../../../../data/constants';
 import {
-  AlertBanner, AuthorLabel, AutoSpamAlertBanner, Confirmation, EndorsedAlertBanner,
+  AlertBanner,
+  AutoSpamAlertBanner,
+  BanModerationModals,
+  Confirmation,
+  EndorsedAlertBanner,
 } from '../../../common';
 import DiscussionContext from '../../../common/context';
 import HoverCard from '../../../common/HoverCard';
 import withPostingRestrictions from '../../../common/withPostingRestrictions';
 import { ContentTypes } from '../../../data/constants';
 import { useUserPostingEnabled } from '../../../data/hooks';
-import { selectContentCreationRateLimited, selectShouldShowEmailConfirmation } from '../../../data/selectors';
-import { selectThread } from '../../../posts/data/selectors';
+import {
+  selectContentCreationRateLimited,
+  selectIsUserBanned,
+  selectShouldShowEmailConfirmation,
+  selectUserHasModerationPrivileges,
+} from '../../../data/selectors';
 import { fetchThread } from '../../../posts/data/thunks';
 import LikeButton from '../../../posts/post/LikeButton';
 import { useActions } from '../../../utils';
@@ -40,7 +48,12 @@ import {
   selectCommentResponsesIds,
   selectCommentSortOrder,
 } from '../../data/selectors';
-import { editComment, fetchCommentResponses, removeComment } from '../../data/thunks';
+import {
+  editComment,
+  fetchCommentResponses,
+  performRestoreComment,
+  removeComment,
+} from '../../data/thunks';
 import messages from '../../messages';
 import PostCommentsContext from '../../postCommentsContext';
 import CommentEditor from './CommentEditor';
@@ -57,36 +70,74 @@ const Comment = ({
   const {
     id, parentId, childCount, abuseFlagged, endorsed, threadId, endorsedAt, endorsedBy, endorsedByLabel, renderedBody,
     voted, following, voteCount, authorLabel, author, createdAt, lastEdit, rawBody, closed, closedBy, closeReason,
-    editByLabel, closedByLabel, users: postUsers, isDeleted, deletedBy, deletedByLabel, is_spam: isSpam,
+    editByLabel, closedByLabel, users: postUsers, is_spam: isSpam,
   } = comment;
   const intl = useIntl();
   const hasChildren = childCount > 0;
   const isNested = Boolean(parentId);
   const dispatch = useDispatch();
-  const { courseId, learnerUsername } = useContext(DiscussionContext);
+  const { courseId, enableDiscussionBan } = useContext(DiscussionContext);
   const { isClosed } = useContext(PostCommentsContext);
-  // Get the post's isDeleted state for priority rules
-  const post = useSelector(selectThread(threadId));
-  const postIsDeleted = post?.isDeleted || false;
   const [isEditing, setEditing] = useState(false);
   const [isReplying, setReplying] = useState(false);
+
+  // Modal type constants
+  const MODAL_TYPES = {
+    DELETE: 'delete',
+    DELETE_USER: 'deleteUser',
+    BAN: 'ban',
+    UNBAN: 'unban',
+    REPORT: 'report',
+  };
+
+  // Scope constants
+  const SCOPES = {
+    COURSE: 'course',
+    ORGANIZATION: 'organization',
+  };
+
+  // Consolidated modal state management
+  const [activeModal, setActiveModal] = useState({ type: null, scope: null });
+
+  // Unified modal control functions
+  const showModal = useCallback((type, scope = null) => {
+    setActiveModal({ type, scope });
+  }, []);
+
+  const hideModal = useCallback(() => {
+    setActiveModal({ type: null, scope: null });
+  }, []);
+
+  // Keep separate toggles for delete/report modals (not handled by BanModerationModals)
   const [isDeleting, showDeleteConfirmation, hideDeleteConfirmation] = useToggle(false);
   const [isRestoring, showRestoreConfirmation, hideRestoreConfirmation] = useToggle(false);
   const [isReporting, showReportConfirmation, hideReportConfirmation] = useToggle(false);
+
+  // Compute modal state string for BanModerationModals component
+  const getActiveModalString = () => {
+    if (activeModal.type === MODAL_TYPES.DELETE_USER) {
+      return activeModal.scope === SCOPES.COURSE ? 'deleteUserCourse' : 'deleteUserOrg';
+    }
+    if (activeModal.type === MODAL_TYPES.BAN) {
+      return activeModal.scope === SCOPES.COURSE ? 'banCourse' : 'banOrg';
+    }
+    if (activeModal.type === MODAL_TYPES.UNBAN) {
+      return activeModal.scope === SCOPES.COURSE ? 'unbanCourse' : 'unbanOrg';
+    }
+    return null;
+  };
+
   const inlineReplies = useSelector(selectCommentResponses(id));
   const inlineRepliesIds = useSelector(selectCommentResponsesIds(id));
   const hasMorePages = useSelector(selectCommentHasMorePages(id));
   const currentPage = useSelector(selectCommentCurrentPage(id));
   const sortedOrder = useSelector(selectCommentSortOrder);
-  const actions = useActions(ContentTypes.COMMENT, id);
+  const hasModerationPrivileges = useSelector(selectUserHasModerationPrivileges);
+  const actions = useActions(ContentTypes.COMMENT, id, hasModerationPrivileges);
   const isUserPrivilegedInPostingRestriction = useUserPostingEnabled();
   const shouldShowEmailConfirmation = useSelector(selectShouldShowEmailConfirmation);
   const contentCreationRateLimited = useSelector(selectContentCreationRateLimited);
-  const postFilter = useSelector(state => state.learners?.postFilter);
-  // Use contentStatus for deleted section
-  const showDeleted = Boolean(
-    learnerUsername && postFilter?.contentStatus === PostsStatusFilter.DELETED,
-  );
+  const isUserBanned = useSelector(selectIsUserBanned);
   // If isSpam is not provided in the API response, default to false
   const isSpamFlagged = isSpam || false;
   useEffect(() => {
@@ -95,10 +146,9 @@ const Comment = ({
       dispatch(fetchCommentResponses(id, {
         page: 1,
         reverseOrder: sortedOrder,
-        showDeleted,
       }));
     }
-  }, [id, sortedOrder, showDeleted]);
+  }, [id, sortedOrder]);
 
   const endorseIcons = useMemo(() => (
     actions.find(({ action }) => action === EndorsementStatus.ENDORSED)
@@ -109,9 +159,9 @@ const Comment = ({
   }, []);
 
   const handleCommentEndorse = useCallback(async () => {
+    // Optimistic update - instant UI feedback
     await dispatch(editComment(id, { endorsed: !endorsed }));
-    await dispatch(fetchThread(threadId, courseId));
-  }, [id, endorsed, threadId]);
+  }, [id, endorsed]);
 
   const handleAbusedFlag = useCallback(() => {
     if (abuseFlagged) {
@@ -140,34 +190,170 @@ const Comment = ({
   }, [showRestoreConfirmation]);
 
   const handleRestoreConfirmation = useCallback(async () => {
-    try {
-      const { performRestoreComment } = await import('../../data/thunks');
-      const result = await dispatch(performRestoreComment(id, courseId));
-      // Check if restore failed and log the error
-      if (result && !result.success) {
-        logError(`Failed to restore comment: ${result.error || 'Unknown error'}`);
-      }
-    } catch (error) {
-      logError(error);
+    const result = await dispatch(performRestoreComment(id, courseId));
+    if (result && !result.success) {
+      logError(`Failed to restore comment: ${result.error || 'Unknown error'}`);
     }
     hideRestoreConfirmation();
-  }, [id, courseId, threadId, dispatch, hideRestoreConfirmation]);
+  }, [id, courseId, dispatch, hideRestoreConfirmation]);
+
+  // Bulk delete/ban handlers
+  const handleDeleteUserCourseConfirmation = useCallback(async (shouldBan) => {
+    // Defensive check - author must be defined
+    if (!author) {
+      logError('Bulk delete operation attempted without author');
+      hideModal();
+      return;
+    }
+    try {
+      // Only ban if flag is enabled (defensive check)
+      await bulkDeleteUserPosts(courseId, author, 'course', shouldBan && enableDiscussionBan);
+      hideModal();
+      dispatch(fetchThread(threadId, courseId));
+    } catch (error) {
+      const errorMsg = error?.message || String(error) || 'Unknown error';
+      logError(`Error during bulk delete (course): ${errorMsg}`);
+    }
+  }, [author, courseId, threadId, dispatch, hideModal, enableDiscussionBan]);
+
+  const handleDeleteUserOrgConfirmation = useCallback(async (shouldBan) => {
+    // Defensive check - author must be defined
+    if (!author) {
+      logError('Bulk delete operation attempted without author');
+      hideModal();
+      return;
+    }
+    try {
+      // Only ban if flag is enabled (defensive check)
+      await bulkDeleteUserPosts(courseId, author, 'organization', shouldBan && enableDiscussionBan);
+      hideModal();
+      dispatch(fetchThread(threadId, courseId));
+    } catch (error) {
+      const errorMsg = error?.message || String(error) || 'Unknown error';
+      logError(`Error during bulk delete (org): ${errorMsg}`);
+    }
+  }, [author, courseId, threadId, dispatch, hideModal, enableDiscussionBan]);
+
+  const handleBanCourseConfirmation = useCallback(async () => {
+    // Defensive check - feature must be enabled
+    if (!enableDiscussionBan) {
+      logError('Ban operation attempted with feature disabled');
+      hideModal();
+      return;
+    }
+    // Defensive check - author must be defined
+    if (!author) {
+      logError('Ban operation attempted without author');
+      hideModal();
+      return;
+    }
+    try {
+      await banUser(courseId, author, 'course', 'Banned from course discussions');
+      hideModal();
+      dispatch(fetchThread(threadId, courseId));
+    } catch (error) {
+      const errorMsg = error?.message || String(error) || 'Unknown error';
+      logError(`Error banning user (course): ${errorMsg}`);
+    }
+  }, [author, courseId, threadId, dispatch, hideModal, enableDiscussionBan]);
+
+  const handleBanOrgConfirmation = useCallback(async () => {
+    // Defensive check - feature must be enabled
+    if (!enableDiscussionBan) {
+      logError('Ban operation attempted with feature disabled');
+      hideModal();
+      return;
+    }
+    // Defensive check - author must be defined
+    if (!author) {
+      logError('Ban operation attempted without author');
+      hideModal();
+      return;
+    }
+    try {
+      await banUser(courseId, author, 'organization', 'Banned from organization discussions');
+      hideModal();
+      dispatch(fetchThread(threadId, courseId));
+    } catch (error) {
+      const errorMsg = error?.message || String(error) || 'Unknown error';
+      logError(`Error banning user (org): ${errorMsg}`);
+    }
+  }, [author, courseId, threadId, dispatch, hideModal, enableDiscussionBan]);
+
+  const handleUnbanCourseConfirmation = useCallback(async () => {
+    // Defensive check - feature must be enabled
+    if (!enableDiscussionBan) {
+      logError('Unban operation attempted with feature disabled');
+      hideModal();
+      return;
+    }
+    // Defensive check - author must be defined
+    if (!author) {
+      logError('Unban operation attempted without author');
+      hideModal();
+      return;
+    }
+    try {
+      await unbanUser(courseId, author, 'course', 'Unbanned from course discussions');
+      hideModal();
+      dispatch(fetchThread(threadId, courseId));
+    } catch (error) {
+      const errorMsg = error?.message || String(error) || 'Unknown error';
+      logError(`Error unbanning user (course): ${errorMsg}`);
+    }
+  }, [author, courseId, threadId, dispatch, hideModal, enableDiscussionBan]);
+
+  const handleUnbanOrgConfirmation = useCallback(async () => {
+    // Defensive check - feature must be enabled
+    if (!enableDiscussionBan) {
+      logError('Unban operation attempted with feature disabled');
+      hideModal();
+      return;
+    }
+    // Defensive check - author must be defined
+    if (!author) {
+      logError('Unban operation attempted without author');
+      hideModal();
+      return;
+    }
+    try {
+      await unbanUser(courseId, author, 'organization', 'Unbanned from organization discussions');
+      hideModal();
+      dispatch(fetchThread(threadId, courseId));
+    } catch (error) {
+      const errorMsg = error?.message || String(error) || 'Unknown error';
+      logError(`Error unbanning user (org): ${errorMsg}`);
+    }
+  }, [author, courseId, threadId, dispatch, hideModal, enableDiscussionBan]);
 
   const actionHandlers = useMemo(() => ({
     [ContentActions.EDIT_CONTENT]: handleEditContent,
     [ContentActions.ENDORSE]: handleCommentEndorse,
     [ContentActions.DELETE]: showDeleteConfirmation,
     [ContentActions.RESTORE]: handleRestore,
+    [ContentActions.DELETE_POST]: showDeleteConfirmation,
+    [ContentActions.DELETE_USER_COURSE]: () => showModal(MODAL_TYPES.DELETE_USER, SCOPES.COURSE),
+    [ContentActions.DELETE_USER_ORG]: () => showModal(MODAL_TYPES.DELETE_USER, SCOPES.ORGANIZATION),
+    [ContentActions.BAN_COURSE]: () => showModal(MODAL_TYPES.BAN, SCOPES.COURSE),
+    [ContentActions.BAN_ORG]: () => showModal(MODAL_TYPES.BAN, SCOPES.ORGANIZATION),
+    [ContentActions.UNBAN_COURSE]: () => showModal(MODAL_TYPES.UNBAN, SCOPES.COURSE),
+    [ContentActions.UNBAN_ORG]: () => showModal(MODAL_TYPES.UNBAN, SCOPES.ORGANIZATION),
     [ContentActions.REPORT]: handleAbusedFlag,
-  }), [handleEditContent, handleCommentEndorse, showDeleteConfirmation, handleRestore, handleAbusedFlag]);
+  }), [
+    handleEditContent,
+    handleCommentEndorse,
+    showDeleteConfirmation,
+    handleRestore,
+    showModal,
+    handleAbusedFlag,
+  ]);
 
   const handleLoadMoreComments = useCallback(() => (
     dispatch(fetchCommentResponses(id, {
       page: currentPage + 1,
       reverseOrder: sortedOrder,
-      showDeleted,
     }))
-  ), [id, currentPage, sortedOrder, showDeleted]);
+  ), [id, currentPage, sortedOrder]);
 
   const handleAddCommentButton = useCallback(() => {
     if (isUserPrivilegedInPostingRestriction) {
@@ -227,6 +413,19 @@ const Comment = ({
             confirmButtonVariant="danger"
           />
         )}
+        <BanModerationModals
+          author={author}
+          activeModal={getActiveModalString()}
+          onClose={hideModal}
+          onDeleteUserCourse={handleDeleteUserCourseConfirmation}
+          onDeleteUserOrg={handleDeleteUserOrgConfirmation}
+          onBanCourse={handleBanCourseConfirmation}
+          onBanOrg={handleBanOrgConfirmation}
+          onUnbanCourse={handleUnbanCourseConfirmation}
+          onUnbanOrg={handleUnbanOrgConfirmation}
+          enableDiscussionBan={enableDiscussionBan}
+          showBanCheckboxOnDelete={false}
+        />
         <EndorsedAlertBanner
           endorsed={endorsed}
           endorsedAt={endorsedAt}
@@ -238,32 +437,15 @@ const Comment = ({
             id={id}
             contentType={ContentTypes.COMMENT}
             actionHandlers={actionHandlers}
-            handleResponseCommentButton={shouldShowEmailConfirmation || contentCreationRateLimited
+            handleResponseCommentButton={shouldShowEmailConfirmation || contentCreationRateLimited || isUserBanned
               ? openRestrictionDialogue : handleAddCommentButton}
             addResponseCommentButtonMessage={intl.formatMessage(messages.addComment)}
             onLike={handleCommentLike}
             voted={voted}
             following={following}
             endorseIcons={endorseIcons}
-            isDeleted={isDeleted}
+            isUserBanned={isUserBanned}
           />
-          {isDeleted && deletedBy && (
-            <div className="alert alert-info px-3 shadow-none mb-1 py-10px bg-light-200 d-flex align-items-start">
-              <DeleteOutline className="mr-2 text-dark-500 flex-shrink-0 deleted-content-icon" />
-              <div className="d-flex align-items-center flex-wrap text-gray-700 font-style">
-                {intl.formatMessage(messages.deletedBy)}
-                <span className="ml-1">
-                  <AuthorLabel
-                    author={deletedBy}
-                    authorLabel={deletedByLabel}
-                    labelColor={AvatarOutlineAndLabelColors[deletedByLabel] && `text-${AvatarOutlineAndLabelColors[deletedByLabel]}`}
-                    linkToProfile
-                    postOrComment
-                  />
-                </span>
-              </div>
-            </div>
-          )}
           <AlertBanner
             author={author}
             abuseFlagged={abuseFlagged}
@@ -283,9 +465,6 @@ const Comment = ({
             createdAt={createdAt}
             lastEdit={lastEdit}
             postUsers={postUsers}
-            isDeleted={isDeleted}
-            parentId={parentId}
-            postIsDeleted={postIsDeleted}
             postData={comment}
           />
           {isEditing ? (
@@ -315,6 +494,7 @@ const Comment = ({
                 count={voteCount}
                 onClick={handleCommentLike}
                 voted={voted}
+                disabled={isUserBanned}
               />
             </div>
           )}
@@ -349,7 +529,7 @@ const Comment = ({
                 />
               </div>
             ) : (
-              !isClosed && isUserPrivilegedInPostingRestriction && (inlineReplies.length >= 5) && (
+              !isClosed && isUserPrivilegedInPostingRestriction && !isUserBanned && (inlineReplies.length >= 5) && (
                 <Button
                   className="d-flex flex-grow mt-2 font-style font-weight-500 text-primary-500 add-comment-btn rounded-0"
                   variant="plain"

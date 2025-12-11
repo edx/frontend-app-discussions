@@ -24,6 +24,7 @@ const PostFooter = ({
   userHasModerationPrivileges,
   voted,
   voteCount,
+  isUserBanned,
 }) => {
   const dispatch = useDispatch();
   const intl = useIntl();
@@ -39,6 +40,7 @@ const PostFooter = ({
           count={voteCount}
           onClick={handlePostLike}
           voted={voted}
+          disabled={isUserBanned}
         />
       )}
       {following && (
@@ -60,6 +62,7 @@ const PostFooter = ({
             iconClassNames="follow-icon-dimensions"
             className="post-footer-icon-dimensions"
             alt="Follow"
+            disabled={isUserBanned}
           />
         </OverlayTrigger>
       )}
@@ -114,11 +117,13 @@ PostFooter.propTypes = {
   groupName: PropTypes.string,
   closed: PropTypes.bool.isRequired,
   userHasModerationPrivileges: PropTypes.bool.isRequired,
+  isUserBanned: PropTypes.bool,
 };
 
 PostFooter.defaultProps = {
   groupId: null,
   groupName: null,
+  isUserBanned: false,
 };
 
 export default React.memo(PostFooter);

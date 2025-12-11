@@ -19,6 +19,7 @@ import {
   selectConfigLoadingStatus,
   selectContentCreationRateLimited,
   selectEnableInContext,
+  selectIsUserBanned,
   selectShouldShowEmailConfirmation,
 } from '../../data/selectors';
 import { TopicSearchBar as IncontextSearch } from '../../in-context-topics/topic-search';
@@ -36,6 +37,7 @@ const PostActionsBar = ({ openRestrictionDialogue }) => {
   const shouldShowEmailConfirmation = useSelector(selectShouldShowEmailConfirmation);
   const contentCreationRateLimited = useSelector(selectContentCreationRateLimited);
   const isUserPrivilegedInPostingRestriction = useUserPostingEnabled();
+  const isUserBanned = useSelector(selectIsUserBanned);
   const { enableInContextSidebar, page } = useContext(DiscussionContext);
 
   const handleCloseInContext = useCallback(() => {
@@ -62,7 +64,7 @@ const PostActionsBar = ({ openRestrictionDialogue }) => {
           {intl.formatMessage(messages.title)}
         </h4>
       )}
-      {loadingStatus === RequestStatus.SUCCESSFUL && isUserPrivilegedInPostingRestriction && (
+      {loadingStatus === RequestStatus.SUCCESSFUL && isUserPrivilegedInPostingRestriction && !isUserBanned && (
         <>
           {!enableInContextSidebar && <div className="border-right border-light-400 mx-3" />}
           <Button

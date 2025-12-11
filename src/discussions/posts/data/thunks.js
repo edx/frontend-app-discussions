@@ -4,6 +4,7 @@ import { logError } from '@edx/frontend-platform/logging';
 import {
   PostsStatusFilter, ThreadType,
 } from '../../../data/constants';
+import { selectEnableDiscussionBan } from '../../data/selectors';
 import { setContentCreationRateLimited } from '../../data/slices';
 import { getHttpErrorStatus } from '../../utils';
 import {
@@ -151,10 +152,11 @@ export function fetchThreads(courseId, {
   if (filters.status === PostsStatusFilter.DELETED) {
     options.isDeleted = true;
   }
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
     try {
       dispatch(fetchThreadsRequest({ courseId }));
-      const data = await getThreads(courseId, options);
+      const enableDiscussionBan = selectEnableDiscussionBan(getState());
+      const data = await getThreads(courseId, { ...options, enableDiscussionBan });
       const normalisedData = normaliseThreads(camelCaseObject(data), topicIds);
       dispatch(fetchThreadsSuccess({
         ...normalisedData, page, author, textSearchRewrite: data.text_search_rewrite, isFilterChanged,
@@ -171,10 +173,11 @@ export function fetchThreads(courseId, {
 }
 
 export function fetchThread(threadId, courseId, isDirectLinkPost = false) {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
     try {
       dispatch(fetchThreadRequest({ threadId }));
-      const data = await getThread(threadId, courseId);
+      const enableDiscussionBan = selectEnableDiscussionBan(getState());
+      const data = await getThread(threadId, courseId, enableDiscussionBan);
       if (isDirectLinkPost) {
         dispatch(fetchThreadByDirectLinkSuccess({ ...normaliseThreads(camelCaseObject(data)), page: 1 }));
       } else {

@@ -1,7 +1,7 @@
 import { useCallback, useContext, useMemo } from 'react';
 
 import {
-  CheckCircle, CheckCircleOutline, Delete, Edit, InsertLink,
+  Block, CheckCircle, CheckCircleOutline, Delete, Edit, InsertLink,
   Institution, Lock, LockOpen, Pin, Report, School,
   Verified, VerifiedOutline,
 } from '@openedx/paragon/icons';
@@ -13,6 +13,7 @@ import {
 } from 'react-router-dom';
 
 import { getConfig } from '@edx/frontend-platform';
+import { getAuthenticatedUser } from '@edx/frontend-platform/auth';
 
 import { ReactComponent as RestoreFromTrash } from '../assets/undelete.svg';
 import { DENIED, LOADED } from '../components/NavigationBar/data/slice';
@@ -21,6 +22,7 @@ import {
 } from '../data/constants';
 import { ContentSelectors } from './data/constants';
 import PostCommentsContext from './post-comments/postCommentsContext';
+import { checkBanActionDisabled } from './utils/banUtils';
 import messages from './messages';
 
 /**
@@ -58,15 +60,43 @@ export function useCommentsPagePath() {
  * Check if the provided comment or post supports the provided option.
  * @param {{editableFields:[string]}} content
  * @param {ContentActions} action
+ * @param {boolean} hasModerationPrivileges - Whether user has moderation privileges
  * @returns {boolean}
  */
-export function checkPermissions(content, action) {
-  if (content.editableFields.includes(action)) {
+export function checkPermissions(content, action, hasModerationPrivileges = false) {
+  // Handle both camelCase and snake_case from API
+  const editableFields = content.editableFields || content.editable_fields || [];
+  const canDelete = content.canDelete ?? content.can_delete ?? false;
+  const { author } = content;
+
+  if (editableFields.includes(action)) {
     return true;
   }
   // Both delete and restore actions check `content.canDelete`
   if (action === ContentActions.DELETE || action === ContentActions.RESTORE) {
-    return content.canDelete;
+    return canDelete;
+  }
+  // Regular delete post - own content OR moderator can delete any content
+  if (action === ContentActions.DELETE_POST) {
+    return hasModerationPrivileges || canDelete;
+  }
+  // Ban/unban actions: require moderation privileges AND prevent self-banning
+  if (action === ContentActions.BAN_COURSE
+      || action === ContentActions.BAN_ORG
+      || action === ContentActions.UNBAN_COURSE
+      || action === ContentActions.UNBAN_ORG) {
+    const currentUser = getAuthenticatedUser()?.username;
+    const isSelf = currentUser && author && currentUser === author;
+    return hasModerationPrivileges && !isSelf;
+  }
+  // Bulk delete actions require moderation privileges AND prevent self-targeting
+  if (action === ContentActions.DELETE_USER_COURSE
+      || action === ContentActions.DELETE_USER_ORG
+      || action === ContentActions.UNDELETE_USER_COURSE
+      || action === ContentActions.UNDELETE_USER_ORG) {
+    const currentUser = getAuthenticatedUser()?.username;
+    const isSelf = currentUser && author && currentUser === author;
+    return hasModerationPrivileges && !isSelf;
   }
   return false;
 }
@@ -179,11 +209,59 @@ export const ACTIONS_LIST = [
     conditions: { abuseFlagged: true },
   },
   {
+    id: 'ban',
+    icon: Block,
+    label: messages.banAction,
+    hasSubmenu: true,
+    submenu: [
+      {
+        id: 'ban-course',
+        action: ContentActions.BAN_COURSE,
+        label: messages.banUserCourse,
+        disabledConditions: { isAuthorBanned: true, $scope: 'course' },
+      },
+      {
+        id: 'ban-org',
+        action: ContentActions.BAN_ORG,
+        label: messages.banUserOrg,
+        disabledConditions: { isAuthorBanned: true, $scope: 'organization' },
+      },
+      {
+        id: 'unban-course',
+        action: ContentActions.UNBAN_COURSE,
+        label: messages.unbanUserCourse,
+        disabledConditions: { isAuthorBanned: false, $scope: 'course' },
+      },
+      {
+        id: 'unban-org',
+        action: ContentActions.UNBAN_ORG,
+        label: messages.unbanUserOrg,
+        disabledConditions: { isAuthorBanned: false, $scope: 'organization' },
+      },
+    ],
+  },
+  {
     id: 'delete',
-    action: ContentActions.DELETE,
     icon: Delete,
     label: messages.deleteAction,
-    conditions: { canDelete: true, isDeleted: false },
+    hasSubmenu: true,
+    submenu: [
+      {
+        id: 'delete-post',
+        action: ContentActions.DELETE_POST,
+        label: messages.deletePost,
+      },
+      {
+        id: 'delete-user-course',
+        action: ContentActions.DELETE_USER_COURSE,
+        label: messages.deleteUserCourse,
+      },
+      {
+        id: 'delete-user-org',
+        action: ContentActions.DELETE_USER_ORG,
+        label: messages.deleteUserOrg,
+      },
+    ],
   },
   {
     id: 'restore',
@@ -194,9 +272,10 @@ export const ACTIONS_LIST = [
   },
 ];
 
-export function useActions(contentType, id) {
+export function useActions(contentType, id, hasModerationPrivileges) {
   const { postType } = useContext(PostCommentsContext);
   const content = { ...useSelector(ContentSelectors[contentType](id)), postType };
+  const enableDiscussionBan = useSelector(state => state.config.enableDiscussionBan);
 
   const checkConditions = useCallback((item, conditions) => (
     conditions
@@ -211,15 +290,100 @@ export function useActions(contentType, id) {
     isDeleted && actionId !== 'copy-link' && actionId !== 'restore'
   ), []);
 
-  const actions = useMemo(() => ACTIONS_LIST.filter(
-    ({
-      action,
-      conditions = null,
-    }) => checkPermissions(content, action) && checkConditions(content, conditions),
-  ).map(action => ({
-    ...action,
-    disabled: isActionDisabled(action.id, content.isDeleted),
-  })), [content, checkConditions, isActionDisabled]);
+  const checkDisabled = useCallback((item, disabledConditions) => {
+    if (!disabledConditions) {
+      return false;
+    }
+
+    // Handle ban status with scope awareness using dedicated utility
+    if ('isAuthorBanned' in disabledConditions) {
+      return checkBanActionDisabled(item, disabledConditions);
+    }
+
+    // For other conditions, use standard equality check
+    return Object.keys(disabledConditions)
+      .map(key => item[key] === disabledConditions[key])
+      .every(condition => condition === true);
+  }, []);
+
+  const actions = useMemo(() => {
+    const filteredActions = ACTIONS_LIST.filter(
+      ({
+        action,
+        conditions = null,
+        hasSubmenu = false,
+        id: actionId,
+      }) => {
+        // Hide ban menu if feature flag is disabled
+        if (actionId === 'ban' && !enableDiscussionBan) {
+          return false;
+        }
+        // For items with submenus, skip permission check on parent item
+        const hasPermission = hasSubmenu ? true : checkPermissions(content, action, hasModerationPrivileges);
+        const meetsConditions = checkConditions(content, conditions);
+
+        return hasPermission && meetsConditions;
+      },
+    ).map(action => {
+      // For actions with submenus, filter submenu items and check permissions
+      if (action.submenu) {
+        const filteredSubmenu = action.submenu
+          .filter(subAction => {
+            // Filter ban-related actions if feature flag is disabled
+            if (!enableDiscussionBan && (
+              subAction.action === ContentActions.BAN_COURSE
+              || subAction.action === ContentActions.BAN_ORG
+              || subAction.action === ContentActions.UNBAN_COURSE
+              || subAction.action === ContentActions.UNBAN_ORG
+            )) {
+              return false;
+            }
+            return checkPermissions(content, subAction.action, hasModerationPrivileges);
+          })
+          .map(subAction => ({
+            ...subAction,
+            disabled: checkDisabled(content, subAction.disabledConditions),
+          }));
+
+        // If only one submenu item remains, convert to direct action (no submenu)
+        if (filteredSubmenu.length === 1) {
+          return {
+            id: filteredSubmenu[0].id,
+            action: filteredSubmenu[0].action,
+            icon: action.icon,
+            label: filteredSubmenu[0].label,
+            disabled: filteredSubmenu[0].disabled,
+          };
+        }
+
+        // If multiple items, keep as submenu
+        if (filteredSubmenu.length > 1) {
+          return {
+            ...action,
+            submenu: filteredSubmenu,
+          };
+        }
+
+        // If no items remain, filter out this action
+        return null;
+      }
+      // Apply isActionDisabled for non-submenu actions (e.g., restore)
+      return {
+        ...action,
+        disabled: isActionDisabled(action.id, content.isDeleted),
+      };
+    }).filter(Boolean); // Remove null entries
+
+    return filteredActions;
+  }, [
+    content,
+    hasModerationPrivileges,
+    enableDiscussionBan,
+    checkConditions,
+    checkDisabled,
+    checkPermissions,
+    isActionDisabled,
+  ]);
 
   return actions;
 }

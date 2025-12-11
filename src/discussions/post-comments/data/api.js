@@ -10,6 +10,19 @@ ensureConfig([
 export const getCommentsApiUrl = () => `${getConfig().LMS_BASE_URL}/api/discussion/v1/comments/`;
 
 /**
+ * Builds the requested_fields parameter conditionally including ban fields.
+ * @param {boolean} enableDiscussionBan - Whether to include ban-related fields
+ * @returns {string} Comma-separated list of fields
+ */
+const buildRequestedFields = (enableDiscussionBan = false) => {
+  const fields = ['profile_image'];
+  if (enableDiscussionBan) {
+    fields.push('is_author_banned', 'author_ban_scope');
+  }
+  return fields.join(',');
+};
+
+/**
  * Returns all the comments for the specified thread.
  * @param {string} threadId
  * @param {EndorsementStatus} endorsed
@@ -26,6 +39,7 @@ export const getThreadComments = async (threadId, {
   reverseOrder,
   enableInContextSidebar = false,
   showDeleted = false,
+  enableDiscussionBan = false,
   signal,
 } = {}) => {
   const params = snakeCaseObject({
@@ -33,7 +47,7 @@ export const getThreadComments = async (threadId, {
     page,
     pageSize,
     reverseOrder,
-    requestedFields: 'profile_image',
+    requestedFields: buildRequestedFields(enableDiscussionBan),
     enableInContextSidebar,
     mergeQuestionTypeResponses: threadType === ThreadType.QUESTION ? true : null,
     showDeleted,
@@ -55,12 +69,13 @@ export const getCommentResponses = async (commentId, {
   pageSize,
   reverseOrder,
   showDeleted = false,
+  enableDiscussionBan = false,
 } = {}) => {
   const url = `${getCommentsApiUrl()}${commentId}/`;
   const params = snakeCaseObject({
     page,
     pageSize,
-    requestedFields: 'profile_image',
+    requestedFields: buildRequestedFields(enableDiscussionBan),
     reverseOrder,
     showDeleted,
   });
