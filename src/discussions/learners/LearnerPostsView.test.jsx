@@ -21,6 +21,7 @@ import { getCohortsApiUrl } from '../cohorts/data/api';
 import fetchCourseCohorts from '../cohorts/data/thunks';
 import DiscussionContext from '../common/context';
 import { deletePostsApiUrl, learnerPostsApiUrl } from './data/api';
+import { BAN_SCOPES } from './data/constants';
 import { fetchUserPosts } from './data/thunks';
 import LearnerPostsView from './LearnerPostsView';
 import { setUpPrivilages } from './test-utils';
@@ -68,7 +69,7 @@ describe('Learner Posts View', () => {
     initializeMockApp({
       authenticatedUser: {
         userId: 3,
-        username,
+        username: 'staff123', // Changed from 'abc123' to allow viewing other users' actions
         administrator: true,
         roles: [],
       },
@@ -235,7 +236,7 @@ describe('Learner Posts View', () => {
 
   test('should display confirmation dialog when delete course posts is clicked', async () => {
     await setUpPrivilages(axiosMock, store, true, true);
-    axiosMock.onPost(deletePostsApiUrl(courseId, username, 'course', false))
+    axiosMock.onPost(deletePostsApiUrl(courseId, username, BAN_SCOPES.COURSE, false))
       .reply(202, { thread_count: 2, comment_count: 3 });
     await renderComponent();
 
@@ -244,10 +245,10 @@ describe('Learner Posts View', () => {
       fireEvent.click(actionsButton);
     });
 
-    // Hover over the delete-activity menu item to show submenu
+    // Click the delete-activity menu item to show submenu
     const deleteActivityItem = await screen.findByTestId('delete-activity');
     await act(async () => {
-      fireEvent.mouseEnter(deleteActivityItem);
+      fireEvent.click(deleteActivityItem);
     });
 
     const deleteCourseItem = await screen.findByTestId('delete-course-posts');
@@ -266,9 +267,9 @@ describe('Learner Posts View', () => {
 
   test('should complete delete course posts flow and redirect', async () => {
     await setUpPrivilages(axiosMock, store, true, true);
-    axiosMock.onPost(deletePostsApiUrl(courseId, username, 'course', false))
+    axiosMock.onPost(deletePostsApiUrl(courseId, username, BAN_SCOPES.COURSE, false))
       .reply(202, { thread_count: 2, comment_count: 3 });
-    axiosMock.onPost(deletePostsApiUrl(courseId, username, 'course', true))
+    axiosMock.onPost(deletePostsApiUrl(courseId, username, BAN_SCOPES.COURSE, true))
       .reply(202, { thread_count: 0, comment_count: 0 });
     await renderComponent();
 
@@ -277,10 +278,10 @@ describe('Learner Posts View', () => {
       fireEvent.click(actionsButton);
     });
 
-    // Hover over the delete-activity menu item to show submenu
+    // Click the delete-activity menu item to show submenu
     const deleteActivityItem = await screen.findByTestId('delete-activity');
     await act(async () => {
-      fireEvent.mouseEnter(deleteActivityItem);
+      fireEvent.click(deleteActivityItem);
     });
 
     const deleteCourseItem = await screen.findByTestId('delete-course-posts');
@@ -314,10 +315,10 @@ describe('Learner Posts View', () => {
       fireEvent.click(actionsButton);
     });
 
-    // Hover over the delete-activity menu item to show submenu
+    // Click the delete-activity menu item to show submenu
     const deleteActivityItem = await screen.findByTestId('delete-activity');
     await act(async () => {
-      fireEvent.mouseEnter(deleteActivityItem);
+      fireEvent.click(deleteActivityItem);
     });
 
     const deleteCourseItem = await screen.findByTestId('delete-course-posts');
@@ -350,10 +351,10 @@ describe('Learner Posts View', () => {
       fireEvent.click(actionsButton);
     });
 
-    // Hover over the delete-activity menu item to show submenu
+    // Click the delete-activity menu item to show submenu
     const deleteActivityItem = await screen.findByTestId('delete-activity');
     await act(async () => {
-      fireEvent.mouseEnter(deleteActivityItem);
+      fireEvent.click(deleteActivityItem);
     });
 
     const deleteOrgItem = await screen.findByTestId('delete-org-posts');

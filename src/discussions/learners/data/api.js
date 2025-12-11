@@ -14,6 +14,7 @@ export const learnersApiUrl = (courseId) => `${getCoursesApiUrl()}${courseId}/ac
 export const deletedContentApiUrl = (courseId) => `${getConfig().LMS_BASE_URL}/api/discussion/v1/deleted_content/${courseId}`;
 export const deletePostsApiUrl = (courseId, username, courseOrOrg, execute) => `${getConfig().LMS_BASE_URL}/api/discussion/v1/bulk_delete_user_posts/${courseId}?username=${username}&course_or_org=${courseOrOrg}&execute=${execute}`;
 export const restorePostsApiUrl = (courseId, username, courseOrOrg, execute) => `${getConfig().LMS_BASE_URL}/api/discussion/v1/bulk_restore_user_posts/${courseId}?username=${username}&course_or_org=${courseOrOrg}&execute=${execute}`;
+export const bannedUsersApiUrl = (courseId) => `${getConfig().LMS_BASE_URL}/api/discussion/v1/moderation/banned-users/${courseId}`;
 
 /**
  * Fetches all the learners in the given course.
@@ -86,6 +87,16 @@ export async function getUserPosts(courseId, {
 
   const { data } = await getAuthenticatedHttpClient()
     .get(learnerPostsApiUrl(courseId), { params });
+  return data;
+}
+
+/**
+ * Get banned users for a course
+ * @param {string} courseId Course ID of the course
+ * @returns API Response object with array of banned users
+ */
+export async function getBannedUsers(courseId) {
+  const { data } = await getAuthenticatedHttpClient().get(bannedUsersApiUrl(courseId));
   return data;
 }
 

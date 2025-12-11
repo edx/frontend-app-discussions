@@ -36,10 +36,173 @@ const messages = defineMessages({
     defaultMessage: 'Restore',
     description: 'Action to restore a deleted post or comment',
   },
+  // Ban submenu items
+  banAction: {
+    id: 'discussions.actions.ban',
+    defaultMessage: 'Ban',
+    description: 'Main ban menu item',
+  },
+  banUserCourse: {
+    id: 'discussions.actions.ban.course',
+    defaultMessage: 'Ban user in this course',
+    description: 'Ban user from course',
+  },
+  banUserOrg: {
+    id: 'discussions.actions.ban.org',
+    defaultMessage: 'Ban user in this organization',
+    description: 'Ban user from organization',
+  },
+  unbanUserCourse: {
+    id: 'discussions.actions.unban.course',
+    defaultMessage: 'Unban user from discussions in this course',
+    description: 'Unban user from course',
+  },
+  unbanUserOrg: {
+    id: 'discussions.actions.unban.org',
+    defaultMessage: 'Unban user from discussions in this organization',
+    description: 'Unban user from organization',
+  },
+  // Delete submenu items
+  deletePost: {
+    id: 'discussions.actions.delete.post',
+    defaultMessage: 'Delete',
+    description: 'Delete single post',
+  },
+  deleteUserCourse: {
+    id: 'discussions.actions.delete.userCourse',
+    defaultMessage: "Delete all user's discussion activity in this course",
+    description: 'Delete all posts by user in course',
+  },
+  deleteUserOrg: {
+    id: 'discussions.actions.delete.userOrg',
+    defaultMessage: "Delete all user's discussion activity in this organization",
+    description: 'Delete all posts by user in organization',
+  },
+  undeleteUserCourse: {
+    id: 'discussions.actions.undelete.userCourse',
+    defaultMessage: "Undelete all user's discussion activity in this course",
+    description: 'Restore all posts by user in course',
+  },
+  undeleteUserOrg: {
+    id: 'discussions.actions.undelete.userOrg',
+    defaultMessage: "Undelete all user's discussion activity in this organization",
+    description: 'Restore all posts by user in organization',
+  },
+  backToMenu: {
+    id: 'discussions.actions.submenu.back',
+    defaultMessage: 'Back',
+    description: 'Back button in submenu',
+  },
   confirmationConfirm: {
     id: 'discussions.confirmation.button.confirm',
     defaultMessage: 'Confirm',
     description: 'Confirm button shown on confirmation dialog',
+  },
+  banUserCheckbox: {
+    id: 'discussions.actions.delete.banUserCheckbox',
+    defaultMessage: 'Ban user from discussions in this course',
+    description: 'Checkbox label for banning user when deleting',
+  },
+  deleteUserCourseTitle: {
+    id: 'discussions.actions.delete.userCourse.title',
+    defaultMessage: "Delete this user's discussion activity?",
+    description: 'Title for delete user course confirmation',
+  },
+  deleteUserCourseDescription: {
+    id: 'discussions.actions.delete.userCourse.description',
+    defaultMessage: 'Are you sure you want to delete (count) posts, responses, or comments by {username} in this course?',
+    description: 'Description for delete user course confirmation',
+  },
+  deleteUserOrgTitle: {
+    id: 'discussions.actions.delete.userOrg.title',
+    defaultMessage: "Delete this user's discussion activity?",
+    description: 'Title for delete user org confirmation',
+  },
+  deleteUserOrgDescription: {
+    id: 'discussions.actions.delete.userOrg.description',
+    defaultMessage: 'Are you sure you want to delete (count) posts, responses, or comments by {username} across this organization?',
+    description: 'Description for delete user org confirmation',
+  },
+  undeleteUserCourseTitle: {
+    id: 'discussions.actions.undelete.userCourse.title',
+    defaultMessage: "Undelete this user's discussion activity?",
+    description: 'Title for undelete user course confirmation',
+  },
+  undeleteUserCourseDescription: {
+    id: 'discussions.actions.undelete.userCourse.description',
+    defaultMessage: 'Are you sure you want to undelete (count) responses, or comments by {username} in this course?',
+    description: 'Description for undelete user course confirmation',
+  },
+  undeleteUserOrgTitle: {
+    id: 'discussions.actions.undelete.userOrg.title',
+    defaultMessage: "Undelete this user's discussion activity?",
+    description: 'Title for undelete user org confirmation',
+  },
+  undeleteUserOrgDescription: {
+    id: 'discussions.actions.undelete.userOrg.description',
+    defaultMessage: 'Are you sure you want to undelete (count) responses, or comments by {username} across this organization?',
+    description: 'Description for undelete user org confirmation',
+  },
+  banUserCourseTitle: {
+    id: 'discussions.actions.ban.course.title',
+    defaultMessage: 'Ban user in this course',
+    description: 'Title for ban user course confirmation',
+  },
+  banUserCourseDescription: {
+    id: 'discussions.actions.ban.course.description',
+    defaultMessage: 'Are you sure you want to ban {username} from discussions in this course?',
+    description: 'Description for ban user course confirmation',
+  },
+  banUserOrgTitle: {
+    id: 'discussions.actions.ban.org.title',
+    defaultMessage: 'Ban user in this organization',
+    description: 'Title for ban user org confirmation',
+  },
+  banUserOrgDescription: {
+    id: 'discussions.actions.ban.org.description',
+    defaultMessage: 'Are you sure you want to ban {username} from discussions across this organization?',
+    description: 'Description for ban user org confirmation',
+  },
+  banUserOrgCheckbox: {
+    id: 'discussions.actions.ban.org.checkbox',
+    defaultMessage: 'Ban user from discussions across this organization',
+    description: 'Checkbox label for org-level ban',
+  },
+  unbanUserCourseTitle: {
+    id: 'discussions.actions.unban.course.title',
+    defaultMessage: 'Unban user in this course',
+    description: 'Title for unban user course confirmation',
+  },
+  unbanUserCourseDescription: {
+    id: 'discussions.actions.unban.course.description',
+    defaultMessage: 'Are you sure you want to unban {username} from discussions in this course?',
+    description: 'Description for unban user course confirmation',
+  },
+  unbanUserOrgTitle: {
+    id: 'discussions.actions.unban.org.title',
+    defaultMessage: 'Unban user in this organization',
+    description: 'Title for unban user org confirmation',
+  },
+  unbanUserOrgDescription: {
+    id: 'discussions.actions.unban.org.description',
+    defaultMessage: 'Are you sure you want to unban {username} from discussions across this organization?',
+    description: 'Description for unban user org confirmation',
+  },
+  // Button text for confirmation dialogs
+  banButtonText: {
+    id: 'discussions.button.ban',
+    defaultMessage: 'Ban',
+    description: 'Ban button text for confirmation dialogs',
+  },
+  unbanButtonText: {
+    id: 'discussions.button.unban',
+    defaultMessage: 'Unban',
+    description: 'Unban button text for confirmation dialogs',
+  },
+  undeleteButtonText: {
+    id: 'discussions.button.undelete',
+    defaultMessage: 'Undelete',
+    description: 'Undelete button text for confirmation dialogs',
   },
   closeAction: {
     id: 'discussions.actions.close',
@@ -167,6 +330,21 @@ const messages = defineMessages({
     id: 'discussions.authors.label.ta',
     defaultMessage: 'CTA',
     description: 'A label for community TAs displayed next to their username.',
+  },
+  authorLabelBanned: {
+    id: 'discussions.authors.label.banned',
+    defaultMessage: 'Banned',
+    description: 'A label for banned users displayed next to their username.',
+  },
+  bannedUserBannerTitle: {
+    id: 'discussions.bannedUser.banner.title',
+    defaultMessage: "You've been banned from discussions in this course",
+    description: 'Title for banned user banner',
+  },
+  bannedUserBannerMessage: {
+    id: 'discussions.bannedUser.banner.message',
+    defaultMessage: "You've been banned from discussions in this course",
+    description: 'Message shown in banned user banner',
   },
   loadMorePosts: {
     id: 'discussions.learner.loadMostPosts',

@@ -1,6 +1,7 @@
 import { camelCaseObject } from '@edx/frontend-platform';
 import { logError } from '@edx/frontend-platform/logging';
 
+import { selectEnableDiscussionBan } from '../../data/selectors';
 import { setContentCreationRateLimited } from '../../data/slices';
 import { getHttpErrorStatus } from '../../utils';
 import {
@@ -87,11 +88,12 @@ export function fetchThreadComments(
     signal,
   } = {},
 ) {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
     try {
       dispatch(fetchCommentsRequest());
+      const enableDiscussionBan = selectEnableDiscussionBan(getState());
       const data = await getThreadComments(threadId, {
-        page, reverseOrder, threadType, enableInContextSidebar, showDeleted, signal,
+        page, reverseOrder, threadType, enableInContextSidebar, showDeleted, enableDiscussionBan, signal,
       });
       dispatch(fetchCommentsSuccess({
         ...normaliseComments(camelCaseObject(data)),
@@ -110,10 +112,13 @@ export function fetchThreadComments(
 }
 
 export function fetchCommentResponses(commentId, { page = 1, reverseOrder = true, showDeleted = false } = {}) {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
     try {
       dispatch(fetchCommentResponsesRequest({ commentId }));
-      const data = await getCommentResponses(commentId, { page, reverseOrder, showDeleted });
+      const enableDiscussionBan = selectEnableDiscussionBan(getState());
+      const data = await getCommentResponses(commentId, {
+        page, reverseOrder, showDeleted, enableDiscussionBan,
+      });
       dispatch(fetchCommentResponsesSuccess({
         ...normaliseComments(camelCaseObject(data)),
         page,

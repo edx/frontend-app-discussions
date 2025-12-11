@@ -1,0 +1,19 @@
+.banned-user-banner {
+  --banned-user-banner-bg-color: var(--pgn-color-warning-300, #FFC107);
+  --banned-user-banner-text-color: var(--pgn-color-gray-900, #000000);
+  --banned-user-banner-border-color: var(--pgn-color-warning-500, #E0A800);
+
+  background-color: var(--banned-user-banner-bg-color);
+  color: var(--banned-user-banner-text-color);
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  position: relative;
+  z-index: 1;
+  border-bottom: 1px solid var(--banned-user-banner-border-color);
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}

@@ -10,7 +10,9 @@ import { useIntl } from '@edx/frontend-platform/i18n';
 
 import messages from './messages';
 
-const LikeButton = ({ count, onClick, voted }) => {
+const LikeButton = ({
+  count, onClick, voted, disabled,
+}) => {
   const intl = useIntl();
 
   const handleClick = useCallback((e) => {
@@ -36,6 +38,7 @@ const LikeButton = ({ count, onClick, voted }) => {
           alt="Like"
           iconAs={Icon}
           iconClassNames="like-icon-dimensions"
+          disabled={disabled}
         />
       </OverlayTrigger>
       <div className="font-style">
@@ -50,11 +53,13 @@ LikeButton.propTypes = {
   count: PropTypes.number.isRequired,
   onClick: PropTypes.func,
   voted: PropTypes.bool,
+  disabled: PropTypes.bool,
 };
 
 LikeButton.defaultProps = {
   voted: false,
   onClick: undefined,
+  disabled: false,
 };
 
 export default React.memo(LikeButton);

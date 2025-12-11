@@ -32,6 +32,8 @@ const configSlice = createSlice({
     enableInContext: false,
     isEmailVerified: false,
     contentCreationRateLimited: false,
+    isUserBanned: false,
+    enableDiscussionBan: false,
   },
   reducers: {
     fetchConfigRequest: (state) => (

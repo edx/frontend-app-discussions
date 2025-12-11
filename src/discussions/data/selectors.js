@@ -9,7 +9,14 @@ export const selectAnonymousPostingConfig = state => ({
   allowAnonymousToPeers: state.config.allowAnonymousToPeers,
 });
 
-export const selectUserHasModerationPrivileges = state => state.config.hasModerationPrivileges;
+// Moderation privileges include: forum moderators, community TAs, course staff, course admins, and global staff
+// This matches the edX pattern where different privilege checks are combined at point of use
+export const selectUserHasModerationPrivileges = state => (
+  state.config.hasModerationPrivileges
+  || state.config.isUserAdmin
+  || state.config.isCourseStaff
+  || state.config.isCourseAdmin
+);
 
 export const selectUserHasBulkDeletePrivileges = state => state.config.hasBulkDeletePrivileges;
 
@@ -42,6 +49,10 @@ export const selectIsEmailVerified = state => state.config.isEmailVerified;
 export const selectContentCreationRateLimited = state => state.config.contentCreationRateLimited;
 
 export const selectOnlyVerifiedUsersCanPost = state => state.config.onlyVerifiedUsersCanPost;
+
+export const selectIsUserBanned = state => state.config.isUserBanned;
+
+export const selectEnableDiscussionBan = state => state.config.enableDiscussionBan;
 
 export const selectConfirmEmailStatus = state => state.threads.confirmEmailStatus;
 

@@ -33,7 +33,7 @@ import { fetchDiscussionTours } from '../tours/data/thunks';
 import discussionTourFactory from '../tours/data/tours.factory';
 import { getCommentsApiUrl } from './data/api';
 import * as selectors from './data/selectors';
-import { fetchCommentResponses, removeComment } from './data/thunks';
+import { removeComment } from './data/thunks';
 
 import '../posts/data/__factories__';
 import './data/__factories__';
@@ -83,7 +83,7 @@ async function mockAxiosReturnPagedCommentsResponses() {
     show_deleted: false,
   };
 
-  [1, 2].forEach(async (page) => {
+  [1, 2].forEach((page) => {
     axiosMock.onGet(commentsResponsesApiUrl, { params: { ...paramsTemplate, page } }).reply(
       200,
       Factory.build('commentsResult', null, {
@@ -95,8 +95,6 @@ async function mockAxiosReturnPagedCommentsResponses() {
         count: 2,
       }),
     );
-
-    await executeThunk(fetchCommentResponses(parentId), store.dispatch, store.getState);
   });
 }
 

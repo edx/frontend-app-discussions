@@ -11,6 +11,19 @@ export const getThreadsApiUrl = () => `${getConfig().LMS_BASE_URL}/api/discussio
 export const getCoursesApiUrl = () => `${getConfig().LMS_BASE_URL}/api/discussion/v1/courses/`;
 
 /**
+ * Builds the requested_fields parameter conditionally including ban fields.
+ * @param {boolean} enableDiscussionBan - Whether to include ban-related fields
+ * @returns {string} Comma-separated list of fields
+ */
+const buildRequestedFields = (enableDiscussionBan = false) => {
+  const fields = ['profile_image'];
+  if (enableDiscussionBan) {
+    fields.push('is_author_banned', 'author_ban_scope');
+  }
+  return fields.join(',');
+};
+
+/**
  * Fetches all the threads in the given course and topic.
  * @param {string} courseId
  * @param {string} author
@@ -41,6 +54,7 @@ export const getThreads = async (courseId, {
   countFlagged,
   cohort,
   isDeleted,
+  enableDiscussionBan = false,
 } = {}) => {
   const params = snakeCaseObject({
     courseId,
@@ -52,7 +66,7 @@ export const getThreads = async (courseId, {
     orderBy: snakeCase(orderBy),
     following,
     view,
-    requestedFields: 'profile_image',
+    requestedFields: buildRequestedFields(enableDiscussionBan),
     author,
     flagged,
     countFlagged,
@@ -66,10 +80,12 @@ export const getThreads = async (courseId, {
 /**
  * Fetches a single thread.
  * @param {string} threadId
+ * @param {string} courseId
+ * @param {boolean} enableDiscussionBan
  * @returns {Promise<{}>}
  */
-export const getThread = async (threadId, courseId) => {
-  const params = { requested_fields: 'profile_image', course_id: courseId };
+export const getThread = async (threadId, courseId, enableDiscussionBan = false) => {
+  const params = { requested_fields: buildRequestedFields(enableDiscussionBan), course_id: courseId };
   const url = `${getThreadsApiUrl()}${threadId}/`;
   const { data } = await getAuthenticatedHttpClient().get(url, { params });
   return data;

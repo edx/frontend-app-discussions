@@ -9,7 +9,11 @@ import { useIntl } from '@edx/frontend-platform/i18n';
 import { ThreadType } from '../../../data/constants';
 import withPostingRestrictions from '../../common/withPostingRestrictions';
 import { useUserPostingEnabled } from '../../data/hooks';
-import { selectContentCreationRateLimited, selectShouldShowEmailConfirmation } from '../../data/selectors';
+import {
+  selectContentCreationRateLimited,
+  selectIsUserBanned,
+  selectShouldShowEmailConfirmation,
+} from '../../data/selectors';
 import { isLastElementOfList } from '../../utils';
 import { usePostComments } from '../data/hooks';
 import messages from '../messages';
@@ -23,6 +27,7 @@ const CommentsView = ({ threadType, openRestrictionDialogue }) => {
   const isUserPrivilegedInPostingRestriction = useUserPostingEnabled();
   const shouldShowEmailConfirmation = useSelector(selectShouldShowEmailConfirmation);
   const contentCreationRateLimited = useSelector(selectContentCreationRateLimited);
+  const isUserBanned = useSelector(selectIsUserBanned);
 
   const {
     endorsedCommentsIds,
@@ -94,7 +99,7 @@ const CommentsView = ({ threadType, openRestrictionDialogue }) => {
       </div>
       )}
       {(isUserPrivilegedInPostingRestriction && (!!unEndorsedCommentsIds.length || !!endorsedCommentsIds.length)
-         && !isClosed) && (
+         && !isClosed && !isUserBanned) && (
          <div className="mx-4">
            {!addingResponse && (
            <Button

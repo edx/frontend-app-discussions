@@ -2,6 +2,12 @@ import { camelCaseObject, snakeCaseObject } from '@edx/frontend-platform';
 import { logError } from '@edx/frontend-platform/logging';
 
 import {
+  banUser as banUserApi,
+  bulkDeleteUserPosts as bulkDeleteUserActivity,
+  bulkUndeleteUserPosts as bulkUndeleteUserActivity,
+  unbanUser as unbanUserApi,
+} from '../../../data/api/moderation';
+import {
   PostsStatusFilter, ThreadType,
 } from '../../../data/constants';
 import {
@@ -14,17 +20,33 @@ import { normaliseThreads } from '../../posts/data/thunks';
 import { getHttpErrorStatus } from '../../utils';
 import {
   deleteUserPostsApi,
+  getBannedUsers,
   getLearners,
   getUserProfiles,
 } from './api';
 import {
+  banUserFailed,
+  banUserRequest,
+  banUserSuccess,
+  deleteUserActivityFailed,
+  deleteUserActivityRequest,
+  deleteUserActivitySuccess,
   deleteUserPostsFailed,
   deleteUserPostsRequest,
   deleteUserPostsSuccess,
+  fetchBannedUsersFailed,
+  fetchBannedUsersRequest,
+  fetchBannedUsersSuccess,
   fetchLearnersDenied,
   fetchLearnersFailed,
   fetchLearnersRequest,
   fetchLearnersSuccess,
+  unbanUserFailed,
+  unbanUserRequest,
+  unbanUserSuccess,
+  undeleteUserActivityFailed,
+  undeleteUserActivityRequest,
+  undeleteUserActivitySuccess,
   undeleteUserPostsFailed,
   undeleteUserPostsRequest,
   undeleteUserPostsSuccess,
@@ -178,6 +200,125 @@ export function undeleteUserPosts(courseId, username, courseOrOrg, execute) {
       dispatch(undeleteUserPostsSuccess(camelCaseObject(response)));
     } catch (error) {
       dispatch(undeleteUserPostsFailed());
+      logError(error);
+    }
+  };
+}
+
+/**
+ * Fetches the list of banned users for the course
+ * @param {string} courseId The course ID for the course to fetch data for.
+ * @returns {(function(*): Promise<void>)|*}
+ */
+export function fetchBannedUsers(courseId) {
+  return async (dispatch) => {
+    try {
+      dispatch(fetchBannedUsersRequest({ courseId }));
+      const response = await getBannedUsers(courseId);
+      // API returns { count, results } structure
+      // camelCaseObject will convert the whole response including the array items
+      const camelCasedResponse = camelCaseObject(response);
+      const bannedUsers = (camelCasedResponse.results || []).map(ban => ({
+        ...ban,
+        // Flatten the nested user object to top level for component compatibility
+        username: ban.user?.username,
+        email: ban.user?.email,
+        userId: ban.user?.id,
+        // Flatten the bannedBy object for component compatibility
+        bannedByUsername: ban.bannedBy?.username,
+      }));
+      dispatch(fetchBannedUsersSuccess(bannedUsers));
+    } catch (error) {
+      dispatch(fetchBannedUsersFailed());
+      logError(error);
+    }
+  };
+}
+
+/**
+ * Bans a user from discussions in a course or organization
+ * @param {string} courseId Course ID
+ * @param {string} username Username of the user to ban
+ * @param {string} scope 'course' or 'organization'
+ * @returns {(function(*): Promise<void>)|*}
+ */
+export function banUser(courseId, username, scope) {
+  return async (dispatch) => {
+    try {
+      dispatch(banUserRequest());
+      await banUserApi(courseId, username, scope);
+      dispatch(banUserSuccess());
+      // Refresh the banned users list
+      dispatch(fetchBannedUsers(courseId));
+    } catch (error) {
+      dispatch(banUserFailed());
+      logError(error);
+    }
+  };
+}
+
+/**
+ * Unbans a user from discussions
+ * @param {string} courseId Course ID
+ * @param {string} username Username of the user to unban
+ * @param {string} scope 'course' or 'organization'
+ * @returns {(function(*): Promise<void>)|*}
+ */
+export function unbanUser(courseId, username, scope) {
+  return async (dispatch) => {
+    try {
+      dispatch(unbanUserRequest());
+      await unbanUserApi(courseId, username, scope);
+      dispatch(unbanUserSuccess());
+      // Refresh the banned users list
+      dispatch(fetchBannedUsers(courseId));
+    } catch (error) {
+      dispatch(unbanUserFailed());
+      logError(error);
+    }
+  };
+}
+
+/**
+ * Deletes all discussion activity for a user in a course or organization
+ * @param {string} courseId Course ID
+ * @param {string} username Username of the user
+ * @param {string} scope 'course' or 'organization'
+ * @param {boolean} shouldBanUser Whether to also ban the user
+ * @returns {(function(*): Promise<void>)|*}
+ */
+export function deleteUserActivity(courseId, username, scope, shouldBanUser = false) {
+  return async (dispatch) => {
+    try {
+      dispatch(deleteUserActivityRequest());
+      const response = await bulkDeleteUserActivity(courseId, username, scope, shouldBanUser);
+      dispatch(deleteUserActivitySuccess(camelCaseObject(response)));
+      // Refresh banned users list if user was banned
+      if (shouldBanUser) {
+        dispatch(fetchBannedUsers(courseId));
+      }
+    } catch (error) {
+      dispatch(deleteUserActivityFailed());
+      logError(error);
+    }
+  };
+}
+
+/**
+ * Undeletes all discussion activity for a user in a course or organization
+ * @param {string} courseId Course ID
+ * @param {string} username Username of the user
+ * @param {string} scope 'course' or 'organization'
+ * @returns {(function(*): Promise<void>)|*}
+ */
+export function undeleteUserActivity(courseId, username, scope) {
+  return async (dispatch) => {
+    try {
+      dispatch(undeleteUserActivityRequest());
+      const response = await bulkUndeleteUserActivity(courseId, username, scope);
+      dispatch(undeleteUserActivitySuccess(camelCaseObject(response)));
+    } catch (error) {
+      dispatch(undeleteUserActivityFailed());
       logError(error);
     }
   };

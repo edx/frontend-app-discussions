@@ -1,101 +1,176 @@
 import { useMemo } from 'react';
 
-import { Delete } from '@openedx/paragon/icons';
+import {
+  Block, Delete,
+} from '@openedx/paragon/icons';
+import { useSelector } from 'react-redux';
 
 import { useIntl } from '@edx/frontend-platform/i18n';
 
-import { ReactComponent as Undelete } from '../../assets/undelete.svg';
 import { ContentActions } from '../../data/constants';
+import { selectEnableDiscussionBan } from '../data/selectors';
+import { checkBanActionDisabled } from '../utils/banUtils';
+import { BAN_SCOPES } from './data/constants';
 import messages from './messages';
 
 export const LEARNER_ACTIONS_LIST = [
   {
-    id: 'delete-course-posts',
-    action: ContentActions.DELETE_COURSE_POSTS,
+    id: 'ban',
+    icon: Block,
+    label: messages.banUser,
+    hasSubmenu: true,
+    submenu: [
+      {
+        id: 'ban-course',
+        action: ContentActions.BAN_COURSE,
+        label: messages.banUserCourse,
+        disabledConditions: { isAuthorBanned: true, $scope: BAN_SCOPES.COURSE },
+      },
+      {
+        id: 'ban-org',
+        action: ContentActions.BAN_ORG,
+        label: messages.banUserOrg,
+        disabledConditions: { isAuthorBanned: true, $scope: BAN_SCOPES.ORGANIZATION },
+      },
+      {
+        id: 'unban-course',
+        action: ContentActions.UNBAN_COURSE,
+        label: messages.unbanUserCourse,
+        disabledConditions: { isAuthorBanned: false, $scope: BAN_SCOPES.COURSE },
+      },
+      {
+        id: 'unban-org',
+        action: ContentActions.UNBAN_ORG,
+        label: messages.unbanUserOrg,
+        disabledConditions: { isAuthorBanned: false, $scope: BAN_SCOPES.ORGANIZATION },
+      },
+    ],
+  },
+  {
+    id: 'delete-activity',
     icon: Delete,
-    label: messages.deleteCoursePosts,
+    label: messages.deleteActivity,
+    hasSubmenu: true,
+    submenu: [
+      {
+        id: 'delete-course-posts',
+        action: ContentActions.DELETE_COURSE_POSTS,
+        label: messages.deleteUserCourse,
+      },
+      {
+        id: 'delete-org-posts',
+        action: ContentActions.DELETE_ORG_POSTS,
+        label: messages.deleteUserOrg,
+      },
+    ],
   },
   {
-    id: 'delete-org-posts',
-    action: ContentActions.DELETE_ORG_POSTS,
+    id: 'restore-activity',
     icon: Delete,
-    label: messages.deleteOrgPosts,
-  },
-  {
-    id: 'restore-course-posts',
-    action: ContentActions.RESTORE_COURSE_POSTS,
-    icon: Undelete,
-    label: messages.restoreCoursePosts,
-  },
-  {
-    id: 'restore-org-posts',
-    action: ContentActions.RESTORE_ORG_POSTS,
-    icon: Undelete,
-    label: messages.restoreOrgPosts,
+    label: messages.restoreActivity,
+    hasSubmenu: true,
+    submenu: [
+      {
+        id: 'restore-course-posts',
+        action: ContentActions.RESTORE_COURSE_POSTS,
+        label: messages.restoreCoursePosts,
+      },
+      {
+        id: 'restore-org-posts',
+        action: ContentActions.RESTORE_ORG_POSTS,
+        label: messages.restoreOrgPosts,
+      },
+    ],
   },
 ];
 
-export function useLearnerActions(userHasBulkDeletePrivileges = false) {
+/**
+ * Checks if an action should be disabled based on disabled conditions.
+ * Uses the banUtils module for ban-related logic.
+ * @param {Object} learnerBanInfo - Ban information for the learner
+ * @param {Object} disabledConditions - Conditions that determine if action should be disabled
+ * @returns {boolean} - True if the action should be disabled
+ */
+const checkDisabled = (learnerBanInfo, disabledConditions) => {
+  if (!disabledConditions) {
+    return false;
+  }
+
+  // Handle ban status with scope awareness using dedicated utility
+  if ('isAuthorBanned' in disabledConditions) {
+    return checkBanActionDisabled(learnerBanInfo, disabledConditions);
+  }
+
+  return false;
+};
+
+export function useLearnerActions(userHasBulkDeletePrivileges = false, learnerBanInfo = {}) {
   const intl = useIntl();
+  const enableDiscussionBan = useSelector(selectEnableDiscussionBan);
 
   const actions = useMemo(() => {
     if (!userHasBulkDeletePrivileges) {
       return [];
     }
-    return LEARNER_ACTIONS_LIST.map(action => ({
-      ...action,
-      label: {
-        id: action.label.id,
-        defaultMessage: intl.formatMessage(action.label),
-      },
-    }));
-  }, [userHasBulkDeletePrivileges, intl]);
+
+    return LEARNER_ACTIONS_LIST.filter(action => {
+      // Hide ban menu if feature flag is disabled
+      if (action.id === 'ban' && !enableDiscussionBan) {
+        return false;
+      }
+      return true;
+    }).map(action => {
+      // For actions with submenus, check disabled conditions
+      if (action.submenu) {
+        const processedSubmenu = action.submenu
+          .filter(subAction => {
+            // Filter ban-related actions if feature flag is disabled
+            if (!enableDiscussionBan && (
+              subAction.action === ContentActions.BAN_COURSE
+              || subAction.action === ContentActions.BAN_ORG
+              || subAction.action === ContentActions.UNBAN_COURSE
+              || subAction.action === ContentActions.UNBAN_ORG
+            )) {
+              return false;
+            }
+            return true;
+          })
+          .map(subAction => {
+            const disabled = checkDisabled(learnerBanInfo, subAction.disabledConditions);
+            return {
+              ...subAction,
+              label: {
+                id: subAction.label.id,
+                defaultMessage: intl.formatMessage(subAction.label),
+              },
+              disabled,
+            };
+          });
+
+        // If no submenu items remain, filter out this action
+        if (processedSubmenu.length === 0) {
+          return null;
+        }
+
+        return {
+          ...action,
+          label: {
+            id: action.label.id,
+            defaultMessage: intl.formatMessage(action.label),
+          },
+          submenu: processedSubmenu,
+        };
+      }
+
+      return {
+        ...action,
+        label: {
+          id: action.label.id,
+          defaultMessage: intl.formatMessage(action.label),
+        },
+      };
+    }).filter(Boolean); // Remove null entries (actions with empty submenus)
+  }, [userHasBulkDeletePrivileges, learnerBanInfo, enableDiscussionBan, intl]);
 
   return actions;
-}
-
-export function useLearnerActionsMenu(intl, userHasBulkDeletePrivileges = false) {
-  const menuItems = useMemo(() => {
-    if (!userHasBulkDeletePrivileges) {
-      return [];
-    }
-    return [
-      {
-        id: 'delete-activity',
-        icon: Delete,
-        label: intl.formatMessage(messages.deleteActivity),
-        submenu: [
-          {
-            id: 'delete-course-posts',
-            action: ContentActions.DELETE_COURSE_POSTS,
-            label: intl.formatMessage(messages.deleteCoursePosts),
-          },
-          {
-            id: 'delete-org-posts',
-            action: ContentActions.DELETE_ORG_POSTS,
-            label: intl.formatMessage(messages.deleteOrgPosts),
-          },
-        ],
-      },
-      {
-        id: 'restore-activity',
-        icon: Undelete,
-        label: intl.formatMessage(messages.restoreActivity),
-        submenu: [
-          {
-            id: 'restore-course-posts',
-            action: ContentActions.RESTORE_COURSE_POSTS,
-            label: intl.formatMessage(messages.restoreCoursePosts),
-          },
-          {
-            id: 'restore-org-posts',
-            action: ContentActions.RESTORE_ORG_POSTS,
-            label: intl.formatMessage(messages.restoreOrgPosts),
-          },
-        ],
-      },
-    ];
-  }, [userHasBulkDeletePrivileges, intl]);
-
-  return menuItems;
 }

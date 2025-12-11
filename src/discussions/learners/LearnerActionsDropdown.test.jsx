@@ -90,10 +90,10 @@ describe('LearnerActionsDropdown', () => {
       fireEvent.click(openButton);
     });
 
-    // Hover over the delete-activity menu item to show submenu
+    // Click the delete-activity menu item to show submenu
     const deleteActivityItem = await screen.findByTestId('delete-activity');
     await act(async () => {
-      fireEvent.mouseEnter(deleteActivityItem);
+      fireEvent.click(deleteActivityItem);
     });
 
     await waitFor(() => {
@@ -122,10 +122,10 @@ describe('LearnerActionsDropdown', () => {
 
     await waitFor(() => expect(screen.queryByTestId('learner-actions-dropdown-modal-popup')).toBeInTheDocument());
 
-    // Hover over the delete-activity menu item to show submenu
+    // Click the delete-activity menu item to show submenu
     const deleteActivityItem = await screen.findByTestId('delete-activity');
     await act(async () => {
-      fireEvent.mouseEnter(deleteActivityItem);
+      fireEvent.click(deleteActivityItem);
     });
 
     const deleteCourseItem = await screen.findByTestId('delete-course-posts');
@@ -156,10 +156,10 @@ describe('LearnerActionsDropdown', () => {
 
     await waitFor(() => expect(screen.queryByTestId('learner-actions-dropdown-modal-popup')).toBeInTheDocument());
 
-    // Hover over the delete-activity menu item to show submenu
+    // Click the delete-activity menu item to show submenu
     const deleteActivityItem = await screen.findByTestId('delete-activity');
     await act(async () => {
-      fireEvent.mouseEnter(deleteActivityItem);
+      fireEvent.click(deleteActivityItem);
     });
 
     const deleteOrgItem = await screen.findByTestId('delete-org-posts');

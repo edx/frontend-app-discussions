@@ -63,6 +63,20 @@ export const ContentActions = {
   DELETE_ORG_POSTS: 'delete-org-posts',
   RESTORE_COURSE_POSTS: 'restore-course-posts',
   RESTORE_ORG_POSTS: 'restore-org-posts',
+  // Mute actions
+  MUTE: 'mute',
+  UNMUTE: 'unmute',
+  // Ban actions
+  BAN_COURSE: 'ban-course',
+  BAN_ORG: 'ban-org',
+  UNBAN_COURSE: 'unban-course',
+  UNBAN_ORG: 'unban-org',
+  // Enhanced delete actions
+  DELETE_POST: 'delete-post',
+  DELETE_USER_COURSE: 'delete-user-course',
+  DELETE_USER_ORG: 'delete-user-org',
+  UNDELETE_USER_COURSE: 'undelete-user-course',
+  UNDELETE_USER_ORG: 'undelete-user-org',
 };
 
 /**

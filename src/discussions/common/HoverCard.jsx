@@ -30,6 +30,7 @@ const HoverCard = ({
   following,
   endorseIcons,
   isDeleted,
+  isUserBanned,
 }) => {
   const intl = useIntl();
   const { enableInContextSidebar } = useContext(DiscussionContext);
@@ -43,7 +44,7 @@ const HoverCard = ({
       data-testid={`hover-card-${id}`}
       id={`hover-card-${id}`}
     >
-      {isUserPrivilegedInPostingRestriction && (
+      {isUserPrivilegedInPostingRestriction && !isUserBanned && (
         <div className="d-flex">
           <Button
             variant="tertiary"
@@ -52,7 +53,7 @@ const HoverCard = ({
               { 'w-100': enableInContextSidebar },
             )}
             onClick={handleResponseCommentButton}
-            disabled={isClosed || isDeleted}
+            disabled={isClosed || isDeleted || isUserBanned}
             style={{ lineHeight: '20px', ...(isDeleted ? { opacity: 0.3, cursor: 'not-allowed' } : {}) }}
           >
             {addResponseCommentButtonMessage}
@@ -79,7 +80,7 @@ const HoverCard = ({
               className={['endorse', 'unendorse'].includes(endorseIcons.id) ? 'text-dark-500' : 'text-success-500'}
               size="sm"
               alt="Endorse"
-              disabled={isDeleted}
+              disabled={isDeleted || isUserBanned}
               style={isDeleted ? { opacity: 0.3, cursor: 'not-allowed' } : {}}
             />
           </OverlayTrigger>
@@ -98,7 +99,7 @@ const HoverCard = ({
             iconAs={Icon}
             size="sm"
             alt="Like"
-            disabled={!userHasLikePermission || isDeleted}
+            disabled={!userHasLikePermission || isDeleted || isUserBanned}
             iconClassNames="like-icon-dimensions"
             style={isDeleted ? { opacity: 0.3, cursor: 'not-allowed' } : {}}
             onClick={(e) => {
@@ -123,7 +124,7 @@ const HoverCard = ({
               size="sm"
               alt="Follow"
               iconClassNames="follow-icon-dimensions"
-              disabled={isDeleted}
+              disabled={isDeleted || isUserBanned}
               style={isDeleted ? { opacity: 0.3, cursor: 'not-allowed' } : {}}
               onClick={(e) => {
                 e.preventDefault();
@@ -139,6 +140,7 @@ const HoverCard = ({
           contentType={contentType}
           actionHandlers={actionHandlers}
           dropDownIconSize
+          disabled={isUserBanned}
         />
       </div>
     </div>
@@ -172,6 +174,7 @@ HoverCard.propTypes = {
   onFollow: PropTypes.func,
   following: PropTypes.bool,
   isDeleted: PropTypes.bool,
+  isUserBanned: PropTypes.bool,
 };
 
 HoverCard.defaultProps = {
@@ -179,6 +182,7 @@ HoverCard.defaultProps = {
   endorseIcons: null,
   following: undefined,
   isDeleted: false,
+  isUserBanned: false,
 };
 
 export default React.memo(HoverCard);

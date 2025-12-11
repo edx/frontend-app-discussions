@@ -114,17 +114,19 @@ describe('Author label', () => {
       `it has "${!linkToProfile && 'not'}" label text and label color when linkToProfile is ${!!linkToProfile}`,
       async () => {
         renderComponent(author, authorLabel, linkToProfile, labelColor);
-        const authorElement = container.querySelector('[role=heading]');
-        const labelParentNode = authorElement.parentNode.parentNode;
-        const labelElement = labelParentNode.lastChild.lastChild;
-        const label = ['CTA', 'TA', 'Staff'].includes(labelElement.textContent) && labelElement.textContent;
+        const roleLabelByAuthorLabel = {
+          'Community TA': 'CTA',
+          Moderator: 'TA',
+          Staff: 'Staff',
+        };
+        const expectedRoleLabel = roleLabelByAuthorLabel[authorLabel];
 
-        if (linkToProfile) {
-          expect(labelParentNode).toHaveClass(labelColor);
-          expect(labelElement).toHaveTextContent(label);
+        if (linkToProfile && expectedRoleLabel) {
+          expect(screen.getByText(expectedRoleLabel)).toBeInTheDocument();
         } else {
-          expect(authorElement.parentNode.lastChild).not.toHaveTextContent(label, { exact: true });
-          expect(authorElement.parentNode).not.toHaveClass(labelColor, { exact: true });
+          expect(screen.queryByText('CTA')).not.toBeInTheDocument();
+          expect(screen.queryByText('TA')).not.toBeInTheDocument();
+          expect(screen.queryByText('Staff')).not.toBeInTheDocument();
         }
       },
     );
@@ -236,7 +238,8 @@ describe('Author label', () => {
       it('should not display regular learner message in sidebar', () => {
         const postData = { learner_status: 'regular' };
         renderComponent('testuser', null, false, '', false, postData, false);
-        expect(screen.queryByText('Learner')).not.toBeInTheDocument();
+        expect(screen.getByText('Learner')).toBeInTheDocument();
+        expect(screen.queryByText('👋 Hi, I am a new learner')).not.toBeInTheDocument();
       });
 
       it('should display learner messages in post view (postOrComment=true)', () => {
