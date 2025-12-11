@@ -128,11 +128,11 @@ describe('Learner Posts View', () => {
     },
   );
 
-  it('should display a post-filter bar and All active posts sorted by recent activity text.', async () => {
+  it('should display a post-filter bar and All posts sorted by recent activity text.', async () => {
     await renderComponent();
 
     const filterBar = container.querySelector('.filter-bar');
-    const recentActivity = screen.getByText('All active posts sorted by recent activity');
+    const recentActivity = screen.getByText('All posts sorted by recent activity');
 
     expect(filterBar).toBeInTheDocument();
     expect(recentActivity).toBeInTheDocument();
@@ -244,6 +244,12 @@ describe('Learner Posts View', () => {
       fireEvent.click(actionsButton);
     });
 
+    // Hover over the delete-activity menu item to show submenu
+    const deleteActivityItem = await screen.findByTestId('delete-activity');
+    await act(async () => {
+      fireEvent.mouseEnter(deleteActivityItem);
+    });
+
     const deleteCourseItem = await screen.findByTestId('delete-course-posts');
     await act(async () => {
       fireEvent.click(deleteCourseItem);
@@ -270,6 +276,12 @@ describe('Learner Posts View', () => {
     const actionsButton = await screen.findByRole('button', { name: /actions menu/i });
     await act(async () => {
       fireEvent.click(actionsButton);
+    });
+
+    // Hover over the delete-activity menu item to show submenu
+    const deleteActivityItem = await screen.findByTestId('delete-activity');
+    await act(async () => {
+      fireEvent.mouseEnter(deleteActivityItem);
     });
 
     const deleteCourseItem = await screen.findByTestId('delete-course-posts');
@@ -303,6 +315,12 @@ describe('Learner Posts View', () => {
       fireEvent.click(actionsButton);
     });
 
+    // Hover over the delete-activity menu item to show submenu
+    const deleteActivityItem = await screen.findByTestId('delete-activity');
+    await act(async () => {
+      fireEvent.mouseEnter(deleteActivityItem);
+    });
+
     const deleteCourseItem = await screen.findByTestId('delete-course-posts');
     await act(async () => {
       fireEvent.click(deleteCourseItem);
@@ -331,6 +349,12 @@ describe('Learner Posts View', () => {
     const actionsButton = await screen.findByRole('button', { name: /actions menu/i });
     await act(async () => {
       fireEvent.click(actionsButton);
+    });
+
+    // Hover over the delete-activity menu item to show submenu
+    const deleteActivityItem = await screen.findByTestId('delete-activity');
+    await act(async () => {
+      fireEvent.mouseEnter(deleteActivityItem);
     });
 
     const deleteOrgItem = await screen.findByTestId('delete-org-posts');

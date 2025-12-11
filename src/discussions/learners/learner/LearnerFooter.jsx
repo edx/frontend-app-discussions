@@ -14,7 +14,7 @@ import messages from '../messages';
 
 const LearnerFooter = ({
   inactiveFlags, activeFlags, threads, responses, replies, username,
-  deletedCount, deletedThreads, deletedResponses, deletedReplies,
+  deletedThreads, deletedResponses, deletedReplies,
 }) => {
   const intl = useIntl();
   const userHasModerationPrivileges = useSelector(selectUserHasModerationPrivileges);
@@ -118,7 +118,6 @@ LearnerFooter.propTypes = {
   responses: PropTypes.number,
   replies: PropTypes.number,
   username: PropTypes.string,
-  deletedCount: PropTypes.number,
   deletedThreads: PropTypes.number,
   deletedResponses: PropTypes.number,
   deletedReplies: PropTypes.number,
@@ -131,7 +130,6 @@ LearnerFooter.defaultProps = {
   responses: 0,
   replies: 0,
   username: '',
-  deletedCount: 0,
   deletedThreads: 0,
   deletedResponses: 0,
   deletedReplies: 0,
