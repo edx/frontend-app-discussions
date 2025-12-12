@@ -54,8 +54,17 @@ const PostLink = ({
   // For comments/responses, show parent thread title with arrow
   const displayTitle = (type === 'response' || type === 'comment') && threadTitle ? threadTitle : title;
 
+  // Strip render_id suffix (e.g., "-thread", "-response", "-comment") for navigation
+  const stripRenderIdSuffix = (idValue) => {
+    if (typeof idValue === 'string') {
+      return idValue.replace(/-(thread|response|comment)$/, '');
+    }
+    return idValue;
+  };
+
   // For comments/responses, navigate to the parent thread instead of the comment itself
-  const navigationPostId = (type === 'response' || type === 'comment') && commentThreadId ? commentThreadId : postId;
+  const rawNavigationId = (type === 'response' || type === 'comment') && commentThreadId ? commentThreadId : postId;
+  const navigationPostId = stripRenderIdSuffix(rawNavigationId);
 
   const { pathname } = discussionsPath(Routes.COMMENTS.PAGES[page], {
     0: enableInContextSidebar ? 'in-context' : undefined,
