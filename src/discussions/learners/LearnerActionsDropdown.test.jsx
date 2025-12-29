@@ -79,12 +79,21 @@ describe('LearnerActionsDropdown', () => {
     const mockHandler = jest.fn();
     renderComponent({
       userHasBulkDeletePrivileges: true,
-      actionHandlers: { deleteCoursePosts: mockHandler, deleteOrgPosts: mockHandler },
+      actionHandlers: {
+        [ContentActions.DELETE_COURSE_POSTS]: mockHandler,
+        [ContentActions.DELETE_ORG_POSTS]: mockHandler,
+      },
     });
 
     const openButton = await findOpenActionsDropdownButton();
     await act(async () => {
       fireEvent.click(openButton);
+    });
+
+    // Hover over the delete-activity menu item to show submenu
+    const deleteActivityItem = await screen.findByTestId('delete-activity');
+    await act(async () => {
+      fireEvent.mouseEnter(deleteActivityItem);
     });
 
     await waitFor(() => {
@@ -113,6 +122,12 @@ describe('LearnerActionsDropdown', () => {
 
     await waitFor(() => expect(screen.queryByTestId('learner-actions-dropdown-modal-popup')).toBeInTheDocument());
 
+    // Hover over the delete-activity menu item to show submenu
+    const deleteActivityItem = await screen.findByTestId('delete-activity');
+    await act(async () => {
+      fireEvent.mouseEnter(deleteActivityItem);
+    });
+
     const deleteCourseItem = await screen.findByTestId('delete-course-posts');
     await act(async () => {
       fireEvent.click(deleteCourseItem);
@@ -140,6 +155,12 @@ describe('LearnerActionsDropdown', () => {
     });
 
     await waitFor(() => expect(screen.queryByTestId('learner-actions-dropdown-modal-popup')).toBeInTheDocument());
+
+    // Hover over the delete-activity menu item to show submenu
+    const deleteActivityItem = await screen.findByTestId('delete-activity');
+    await act(async () => {
+      fireEvent.mouseEnter(deleteActivityItem);
+    });
 
     const deleteOrgItem = await screen.findByTestId('delete-org-posts');
     await act(async () => {

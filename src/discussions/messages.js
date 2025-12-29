@@ -31,6 +31,11 @@ const messages = defineMessages({
     defaultMessage: 'Delete',
     description: 'Action to delete a post or comment',
   },
+  restoreAction: {
+    id: 'discussions.actions.restore',
+    defaultMessage: 'Restore',
+    description: 'Action to restore a deleted post or comment',
+  },
   confirmationConfirm: {
     id: 'discussions.confirmation.button.confirm',
     defaultMessage: 'Confirm',
@@ -242,6 +247,81 @@ const messages = defineMessages({
     id: 'discussions.spamWarning.message',
     defaultMessage: 'Faculty and staff will never invite you to join external groups or ask for personal or financial information in the discussions. Stay safe, and if you see suspicious activity, please report it.',
     description: 'Warning message about spam and impersonation in discussion forums',
+  },
+  activeThreads: {
+    id: 'discussions.filter.activeThreads',
+    defaultMessage: 'Active Threads',
+    description: 'Label for active threads filter button',
+  },
+  deletedThreads: {
+    id: 'discussions.filter.deletedThreads',
+    defaultMessage: 'Deleted Threads',
+    description: 'Label for deleted threads filter button',
+  },
+  deletedBadge: {
+    id: 'discussions.thread.deletedBadge',
+    defaultMessage: 'Deleted',
+    description: 'Badge shown on deleted threads',
+  },
+  selectedCount: {
+    id: 'discussions.bulk.selectedCount',
+    defaultMessage: '{count} selected',
+    description: 'Count of selected threads for bulk actions',
+  },
+  deleteSelected: {
+    id: 'discussions.bulk.deleteSelected',
+    defaultMessage: 'Delete Selected',
+    description: 'Button text for bulk delete action',
+  },
+  restoreSelected: {
+    id: 'discussions.bulk.restoreSelected',
+    defaultMessage: 'Restore Selected',
+    description: 'Button text for bulk restore action',
+  },
+  deleting: {
+    id: 'discussions.bulk.deleting',
+    defaultMessage: 'Deleting...',
+    description: 'Loading text when bulk deleting threads',
+  },
+  restoring: {
+    id: 'discussions.bulk.restoring',
+    defaultMessage: 'Restoring...',
+    description: 'Loading text when bulk restoring threads',
+  },
+  loadingThreads: {
+    id: 'discussions.threads.loading',
+    defaultMessage: 'Loading threads...',
+    description: 'Loading text when fetching threads',
+  },
+  autoSpamFlaggedMessage: {
+    id: 'discussions.autoSpamFlaggedMessage',
+    defaultMessage: 'Content automatically reported as possible spam pending staff review.',
+    description: 'Message shown when a post is automatically flagged as potential spam',
+  },
+  autoSpamModalTitle: {
+    id: 'discussions.autoSpamModalTitle',
+    defaultMessage: 'What does "automatically reported" mean?',
+    description: 'Title for the modal that explains automatic spam flagging',
+  },
+  autoSpamModalBodyParagraph1: {
+    id: 'discussions.autoSpamModalBodyParagraph1',
+    defaultMessage: 'Some content is flagged by an automated system when it matches patterns commonly associated with spam. This helps reduce harmful or misleading posts in discussions.',
+    description: 'First paragraph of explanation about automatic spam flagging process shown in modal',
+  },
+  autoSpamModalBodyParagraph2: {
+    id: 'discussions.autoSpamModalBodyParagraph2',
+    defaultMessage: 'Automatically reported content is only visible to course staff and remains hidden from learners until action is taken.',
+    description: 'Second paragraph of explanation about automatic spam flagging process shown in modal',
+  },
+  autoSpamModalClose: {
+    id: 'discussions.autoSpamModalClose',
+    defaultMessage: 'Understand',
+    description: 'Button text to close the automatic spam explanation modal',
+  },
+  autoSpamModalIconAlt: {
+    id: 'discussions.autoSpamModalIconAlt',
+    defaultMessage: 'Show more information about automatic flagging',
+    description: 'Alt text for the icon that opens the automatic spam explanation modal',
   },
 });
 

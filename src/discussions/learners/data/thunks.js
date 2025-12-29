@@ -14,9 +14,11 @@ import { normaliseThreads } from '../../posts/data/thunks';
 import { getHttpErrorStatus } from '../../utils';
 import {
   deleteUserPostsApi,
+  getDeletedContent,
   getLearners,
   getUserPosts,
   getUserProfiles,
+  restoreUserPostsApi,
 } from './api';
 import {
   deleteUserPostsFailed,
@@ -26,6 +28,9 @@ import {
   fetchLearnersFailed,
   fetchLearnersRequest,
   fetchLearnersSuccess,
+  undeleteUserPostsFailed,
+  undeleteUserPostsRequest,
+  undeleteUserPostsSuccess,
 } from './slices';
 
 /**
@@ -84,38 +89,60 @@ export function fetchUserPosts(courseId, {
   author = null,
   countFlagged,
 } = {}) {
-  const options = {
-    orderBy,
-    page,
-    author,
-    countFlagged,
-  };
-  if (filters.status === PostsStatusFilter.UNREAD) {
-    options.status = 'unread';
-  }
-  if (filters.status === PostsStatusFilter.UNANSWERED) {
-    options.status = 'unanswered';
-  }
-  if (filters.status === PostsStatusFilter.REPORTED) {
-    options.status = 'flagged';
-  }
-  if (filters.status === PostsStatusFilter.UNRESPONDED) {
-    options.status = 'unresponded';
-  }
-  if (filters.postType !== ThreadType.ALL) {
-    options.threadType = filters.postType;
-  }
-  if (filters.search) {
-    options.textSearch = filters.search;
-  }
-  if (filters.cohort) {
-    options.cohort = filters.cohort;
-  }
   return async (dispatch) => {
     try {
       dispatch(fetchLearnerThreadsRequest({ courseId, author }));
 
-      const data = await getUserPosts(courseId, options);
+      let data;
+
+      // Use dedicated deleted content endpoint when viewing deleted posts
+      if (filters.contentStatus === PostsStatusFilter.DELETED) {
+        data = await getDeletedContent(courseId, {
+          author,
+          page,
+          pageSize: 10,
+        });
+      } else {
+        // Use regular learner posts endpoint for active content
+        const options = {
+          orderBy,
+          page,
+          author,
+          countFlagged,
+        };
+
+        // Only show active content (not deleted)
+        if (filters.contentStatus === PostsStatusFilter.ACTIVE) {
+          options.showDeleted = false;
+        }
+
+        // Map of status filters to their API values
+        const statusMap = {
+          [PostsStatusFilter.UNREAD]: 'unread',
+          [PostsStatusFilter.UNANSWERED]: 'unanswered',
+          [PostsStatusFilter.REPORTED]: 'flagged',
+          [PostsStatusFilter.UNRESPONDED]: 'unresponded',
+        };
+
+        // Apply status filter if it exists in the map
+        if (statusMap[filters.status]) {
+          options.status = statusMap[filters.status];
+        }
+
+        // Apply additional filters
+        if (filters.postType !== ThreadType.ALL) {
+          options.threadType = filters.postType;
+        }
+        if (filters.search) {
+          options.textSearch = filters.search;
+        }
+        if (filters.cohort) {
+          options.cohort = filters.cohort;
+        }
+
+        data = await getUserPosts(courseId, options);
+      }
+
       const normalisedData = normaliseThreads(camelCaseObject(data));
 
       dispatch(fetchThreadsSuccess({ ...normalisedData, page, author }));
@@ -130,18 +157,28 @@ export function fetchUserPosts(courseId, {
   };
 }
 
-export const deleteUserPosts = (
-  courseId,
-  username,
-  courseOrOrg,
-  execute,
-) => async (dispatch) => {
-  try {
-    dispatch(deleteUserPostsRequest({ courseId, username }));
-    const response = await deleteUserPostsApi(courseId, username, courseOrOrg, execute);
-    dispatch(deleteUserPostsSuccess(camelCaseObject(response)));
-  } catch (error) {
-    dispatch(deleteUserPostsFailed());
-    logError(error);
-  }
-};
+export function deleteUserPosts(courseId, username, courseOrOrg, execute) {
+  return async (dispatch) => {
+    try {
+      dispatch(deleteUserPostsRequest({ courseId, username }));
+      const response = await deleteUserPostsApi(courseId, username, courseOrOrg, execute);
+      dispatch(deleteUserPostsSuccess(camelCaseObject(response)));
+    } catch (error) {
+      dispatch(deleteUserPostsFailed());
+      logError(error);
+    }
+  };
+}
+
+export function undeleteUserPosts(courseId, username, courseOrOrg, execute) {
+  return async (dispatch) => {
+    try {
+      dispatch(undeleteUserPostsRequest({ courseId, username }));
+      const response = await restoreUserPostsApi(courseId, username, courseOrOrg, execute);
+      dispatch(undeleteUserPostsSuccess(camelCaseObject(response)));
+    } catch (error) {
+      dispatch(undeleteUserPostsFailed());
+      logError(error);
+    }
+  };
+}

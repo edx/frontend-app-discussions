@@ -28,6 +28,19 @@ body,
     background-color: var(--pgn-color-card-bg-base) !important;
 }
 
+// New learner message styling
+.new-learner-message {
+  font-style: italic;
+  font-size: 12px;
+  margin-top: 0.25rem;
+  line-height: 1.2;
+  
+  @media (max-width: 767.98px) {
+    font-size: 11px;
+    margin-top: 0.1rem;
+  }
+}
+
 #post,
 #comment,
 #reply,
@@ -54,6 +67,22 @@ body,
 
 .outline-TA-color {
   outline: var(--pgn-color-success-700) solid 2px;
+}
+
+.text-learner-color {
+  color: var(--pgn-color-primary-500);
+}
+
+.outline-learner-color {
+  outline: var(--pgn-color-primary-500) solid 2px;
+}
+
+.text-new-learner-color {
+  color: var(--pgn-color-accent-500);
+}
+
+.outline-new-learner-color {
+  outline: var(--pgn-color-accent-500) solid 2px;
 }
 
 .outline-anonymous {
@@ -558,8 +587,36 @@ code {
 .actions-dropdown-item {
   padding: 12px 16px;
   height: 48px !important;
-  min-width: 195px !important
+  min-width: 195px !important;
+  border: none !important;
+  outline: none !important;
 }
+
+.actions-dropdown-item:hover,
+.actions-dropdown-item:focus,
+.actions-dropdown-item:active {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.learner-submenu-container {
+  min-width: 280px;
+  max-width: 320px;
+  z-index: 1051;
+  border: 1px solid var(--pgn-color-light-400) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  outline: none !important;
+}
+
+.learner-submenu-container .actions-dropdown-item {
+  min-width: 280px !important;
+  max-width: 320px !important;
+  white-space: normal;
+  text-align: left;
+  border: none !important;
+}
+
 
 .font-xl {
   font-size: 18px !important;
@@ -702,8 +759,84 @@ th, td {
 }
 
 .spam-warning-banner {
+  letter-spacing: -0.1px;
   border-left: 4px solid var(--pgn-color-warning-500);
   margin-bottom: 0.5rem;
+  background-color: var(--pgn-color-warning-100);
+  color: var(--pgn-color-gray-900);
+  font-size: 15px; // Mobile default (bigger than body text)
+  
+  @media (min-width: 768px) {
+    font-size: 16px; // Desktop size
+  }
+  
+  // Target Paragon's internal classes with higher specificity
+  &.pgn__page-banner,
+  &.alert,
+  &.alert-warning {
+    background-color: var(--pgn-color-warning-100);
+    color: var(--pgn-color-gray-900);
+  }
+  
+  // Ensure nested Paragon components inherit our styling
+  .pgn__page-banner,
+  .alert,
+  .alert-warning {
+    background-color: inherit;
+    color: inherit;
+    font-size: inherit;
+  }
+  
+  // Target specific text elements instead of universal selector
+  p, span, strong, em, div {
+    background-color: inherit;
+    color: inherit;
+    font-size: inherit;
+  }
+  
+  // Content layout
+  .spam-warning-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+  
+  .spam-warning-text {
+    text-align: left;
+    display: flex;
+    align-items: center;
+    flex: 1;
+  }
+  
+  .spam-warning-message {
+    font-size: inherit;
+    color: inherit;
+  }
+  
+  // Warning icon styling
+  .spam-warning-icon {
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+    color: var(--pgn-color-warning-600);
+    fill: var(--pgn-color-warning-600);
+  }
+  
+  // Override Paragon icon defaults if needed
+  .pgn__icon svg {
+    color: var(--pgn-color-warning-600);
+    fill: var(--pgn-color-warning-600);
+  }
+  
+  // Ensure icon and "Reminder:" stay together on all screen sizes
+  .spam-warning-text {
+    word-break: break-word;
+    
+    // Ensure proper text wrapping on small screens
+    @media (max-width: 767.98px) {
+      line-height: 1.4;
+    }
+  }
   
   .spam-warning-close-btn {
     background: none;
@@ -744,12 +877,8 @@ th, td {
     }
   }
   
-  .alert-warning {
-    background-color: var(--pgn-color-warning-100);
-    color: var(--pgn-color-gray-900);
-  }
-  
-  @media (max-width: 768px) {
+  // Mobile responsive adjustments  
+  @media (max-width: 767.98px) {
     margin: 0 0.25rem 0.5rem 0.25rem;
     border-radius: 0.375rem;
     
@@ -762,4 +891,30 @@ th, td {
       margin-left: 0.5rem;
     }
   }
+}
+
+// Learner submenu styling
+.learner-submenu-container {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  min-width: 300px;
+  max-width: 360px;
+  z-index: 9999;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--pgn-color-light-400);
+  overflow: visible;
+}
+
+// Deleted content icon styling
+.deleted-content-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+// Subdirectory arrow icon styling
+.subdirectory-arrow-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 4px;
 }
