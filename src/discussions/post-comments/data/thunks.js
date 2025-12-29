@@ -60,7 +60,11 @@ function normaliseComments(data) {
           commentsInThreads[threadId].push(id);
         }
       }
-      commentsById[id] = comment;
+      // Normalize editableFields to always be an array
+      commentsById[id] = {
+        ...comment,
+        editableFields: comment.editableFields || [],
+      };
     },
   );
   return {

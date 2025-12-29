@@ -15,7 +15,7 @@ const NoResults = () => {
   const inContextTopicsFilter = useSelector(selectTopicFilter);
   const topicsFilter = useSelector(({ topics }) => topics.filter);
   const filters = useSelector((state) => state.threads.filters);
-  const learnersFilter = useSelector(({ learners }) => learners?.usernameSearch);
+  const learnersFilter = useSelector(({ learners }) => learners.usernameSearch);
   const isFiltered = postsFiltered || (topicsFilter !== '')
     || (learnersFilter) || (inContextTopicsFilter !== '');
 

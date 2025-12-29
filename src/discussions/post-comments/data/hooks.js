@@ -44,7 +44,7 @@ export function usePost(postId) {
 
 const useShowDeletedContent = () => {
   const { learnerUsername } = useContext(DiscussionContext);
-  const postFilter = useSelector(state => state.learners?.postFilter);
+  const postFilter = useSelector(state => state.learners.postFilter);
 
   // Show deleted content if we're in learner view and the deleted filter is active (contentStatus)
   return learnerUsername && postFilter?.contentStatus === PostsStatusFilter.DELETED;

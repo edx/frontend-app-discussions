@@ -61,15 +61,11 @@ export function useCommentsPagePath() {
  * @returns {boolean}
  */
 export function checkPermissions(content, action) {
-  if (content.editableFields && content.editableFields.includes(action)) {
+  if (content.editableFields.includes(action)) {
     return true;
   }
-  // For delete action we check `content.canDelete`
-  if (action === ContentActions.DELETE) {
-    return true;
-  }
-  // For restore action we check `content.canDelete`
-  if (action === ContentActions.RESTORE) {
+  // Both delete and restore actions check `content.canDelete`
+  if (action === ContentActions.DELETE || action === ContentActions.RESTORE) {
     return content.canDelete;
   }
   return false;
@@ -210,6 +206,11 @@ export function useActions(contentType, id) {
       : true
   ), []);
 
+  const isActionDisabled = useCallback((actionId, isDeleted) => (
+    // For deleted items, disable all actions except 'copy-link' and 'restore'
+    isDeleted && actionId !== 'copy-link' && actionId !== 'restore'
+  ), []);
+
   const actions = useMemo(() => ACTIONS_LIST.filter(
     ({
       action,
@@ -217,9 +218,8 @@ export function useActions(contentType, id) {
     }) => checkPermissions(content, action) && checkConditions(content, conditions),
   ).map(action => ({
     ...action,
-    // For deleted items, disable all actions except 'copy-link' and 'restore'
-    disabled: content.isDeleted && action.id !== 'copy-link' && action.id !== 'restore',
-  })), [content]);
+    disabled: isActionDisabled(action.id, content.isDeleted),
+  })), [content, checkConditions, isActionDisabled]);
 
   return actions;
 }

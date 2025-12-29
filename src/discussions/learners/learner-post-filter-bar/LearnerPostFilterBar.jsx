@@ -27,7 +27,7 @@ const LearnerPostFilterBar = () => {
       filters: ['type-all', 'type-discussions', 'type-questions'],
     },
     {
-      name: 'status', // secondary status
+      name: 'status',
       filters: ['status-any', 'status-unread', 'status-unanswered', 'status-unresponded'],
     },
     {

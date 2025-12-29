@@ -45,13 +45,10 @@ const LearnerActionsDropdown = ({
     setActiveSubmenu(null);
   }, [close]);
 
-  // Cleanup portal on unmount to prevent memory leaks
+  // Cleanup portal on unmount to prevent memory leaks and orphaned DOM nodes
   useEffect(() => () => {
-    if (isOpen) {
-      close();
-      setTarget(null);
-      setActiveSubmenu(null);
-    }
+    setTarget(null);
+    setActiveSubmenu(null);
   }, []);
 
   return (

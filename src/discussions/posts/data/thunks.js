@@ -81,7 +81,11 @@ export function normaliseThreads(data, topicIds = null) {
       if (!threadsInTopic[topicId].includes(id)) {
         threadsInTopic[topicId].push(id);
       }
-      threadsById[id] = thread;
+      // Normalize editableFields to always be an array
+      threadsById[id] = {
+        ...thread,
+        editableFields: thread.editableFields || [],
+      };
       avatars = { ...avatars, ...thread.users };
     },
   );
@@ -321,10 +325,12 @@ export function removeThread(threadId) {
 }
 
 export function performRestoreThread(threadId, courseId) {
-  return async () => {
+  return async (dispatch) => {
     try {
       const { restoreThread } = await import('./api');
-      await restoreThread(threadId, courseId);
+      const data = await restoreThread(threadId, courseId);
+      // Update the thread in Redux state to reflect the restore
+      dispatch(updateThreadSuccess(camelCaseObject(data)));
       return { success: true };
     } catch (error) {
       logError(error);

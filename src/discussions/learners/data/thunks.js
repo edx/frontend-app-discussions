@@ -97,11 +97,16 @@ export function fetchUserPosts(courseId, {
 
       // Use dedicated deleted content endpoint when viewing deleted posts
       if (filters.contentStatus === PostsStatusFilter.DELETED) {
-        data = await getDeletedContent(courseId, {
-          author,
-          page,
-          pageSize: 10,
-        });
+        try {
+          data = await getDeletedContent(courseId, {
+            author,
+            page,
+            pageSize: 10,
+          });
+        } catch (importError) {
+          logError('Failed to fetch deleted content:', importError);
+          throw importError;
+        }
       } else {
         // Use regular learner posts endpoint for active content
         const options = {

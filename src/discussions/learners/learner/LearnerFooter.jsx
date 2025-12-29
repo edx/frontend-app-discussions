@@ -60,7 +60,7 @@ const LearnerFooter = ({
           {threads}
         </div>
       </OverlayTrigger>
-      {canSeeDeletedStats && (
+      {Boolean(canSeeDeletedStats) && (
         <OverlayTrigger
           placement="right"
           id={`learner-${username}-deleted`}
@@ -78,20 +78,20 @@ const LearnerFooter = ({
           </div>
         </OverlayTrigger>
       )}
-      {canSeeLearnerReportedStats && (
+      {Boolean(canSeeLearnerReportedStats) && (
         <OverlayTrigger
           placement="right"
           id={`learner-${username}-flags`}
           overlay={(
             <Tooltip id={`learner-${username}-flags`}>
               <div className="d-flex flex-column align-items-start">
-                {activeFlags > 0
+                {Boolean(activeFlags)
                   && (
                   <span>
                     {intl.formatMessage(messages.reported, { reported: activeFlags })}
                   </span>
                   )}
-                {inactiveFlags > 0
+                {Boolean(inactiveFlags)
                       && (
                         <span>
                           {intl.formatMessage(messages.previouslyReported, { previouslyReported: inactiveFlags })}
@@ -103,7 +103,7 @@ const LearnerFooter = ({
         >
           <div className="d-flex align-items-center">
             <Icon src={activeFlags ? Report : ReportGmailerrorred} className="icon-size mr-2 ml-4 text-danger" />
-            {activeFlags} {inactiveFlags > 0 && `/ ${inactiveFlags}`}
+            {activeFlags} {Boolean(inactiveFlags) && `/ ${inactiveFlags}`}
           </div>
         </OverlayTrigger>
       )}

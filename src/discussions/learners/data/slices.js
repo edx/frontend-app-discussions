@@ -122,6 +122,7 @@ const learnersSlice = createSlice({
         ...state,
         status: RequestStatus.SUCCESSFUL,
         bulkDeleteStats: payload,
+        bulkUndeleteStats: payload,
       }
     ),
     undeleteUserPostsFailed: (state) => (

@@ -117,8 +117,9 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
     try {
       const { performRestoreThread } = await import('../data/thunks');
       const result = await dispatch(performRestoreThread(postId, courseId));
-      if (result.success) {
-        window.location.reload();
+      // Check if restore failed and log the error
+      if (result && !result.success) {
+        logError(`Failed to restore thread: ${result.error || 'Unknown error'}`);
       }
     } catch (error) {
       logError(error);
