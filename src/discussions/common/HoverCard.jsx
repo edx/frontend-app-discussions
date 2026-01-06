@@ -29,6 +29,7 @@ const HoverCard = ({
   voted,
   following,
   endorseIcons,
+  isDeleted,
 }) => {
   const intl = useIntl();
   const { enableInContextSidebar } = useContext(DiscussionContext);
@@ -50,9 +51,9 @@ const HoverCard = ({
               'px-2.5 py-2 border-0 font-style text-gray-700',
               { 'w-100': enableInContextSidebar },
             )}
-            onClick={() => handleResponseCommentButton()}
-            disabled={isClosed}
-            style={{ lineHeight: '20px' }}
+            onClick={handleResponseCommentButton}
+            disabled={isClosed || isDeleted}
+            style={{ lineHeight: '20px', ...(isDeleted ? { opacity: 0.3, cursor: 'not-allowed' } : {}) }}
           >
             {addResponseCommentButtonMessage}
           </Button>
@@ -78,6 +79,8 @@ const HoverCard = ({
               className={['endorse', 'unendorse'].includes(endorseIcons.id) ? 'text-dark-500' : 'text-success-500'}
               size="sm"
               alt="Endorse"
+              disabled={isDeleted}
+              style={isDeleted ? { opacity: 0.3, cursor: 'not-allowed' } : {}}
             />
           </OverlayTrigger>
         </div>
@@ -95,8 +98,9 @@ const HoverCard = ({
             iconAs={Icon}
             size="sm"
             alt="Like"
-            disabled={!userHasLikePermission}
+            disabled={!userHasLikePermission || isDeleted}
             iconClassNames="like-icon-dimensions"
+            style={isDeleted ? { opacity: 0.3, cursor: 'not-allowed' } : {}}
             onClick={(e) => {
               e.preventDefault();
               onLike();
@@ -119,6 +123,8 @@ const HoverCard = ({
               size="sm"
               alt="Follow"
               iconClassNames="follow-icon-dimensions"
+              disabled={isDeleted}
+              style={isDeleted ? { opacity: 0.3, cursor: 'not-allowed' } : {}}
               onClick={(e) => {
                 e.preventDefault();
                 onFollow();
@@ -165,12 +171,14 @@ HoverCard.propTypes = {
   )),
   onFollow: PropTypes.func,
   following: PropTypes.bool,
+  isDeleted: PropTypes.bool,
 };
 
 HoverCard.defaultProps = {
   onFollow: () => null,
   endorseIcons: null,
   following: undefined,
+  isDeleted: false,
 };
 
 export default React.memo(HoverCard);

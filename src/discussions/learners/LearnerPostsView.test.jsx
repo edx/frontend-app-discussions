@@ -244,6 +244,12 @@ describe('Learner Posts View', () => {
       fireEvent.click(actionsButton);
     });
 
+    // Hover over the delete-activity menu item to show submenu
+    const deleteActivityItem = await screen.findByTestId('delete-activity');
+    await act(async () => {
+      fireEvent.mouseEnter(deleteActivityItem);
+    });
+
     const deleteCourseItem = await screen.findByTestId('delete-course-posts');
     await act(async () => {
       fireEvent.click(deleteCourseItem);
@@ -270,6 +276,12 @@ describe('Learner Posts View', () => {
     const actionsButton = await screen.findByRole('button', { name: /actions menu/i });
     await act(async () => {
       fireEvent.click(actionsButton);
+    });
+
+    // Hover over the delete-activity menu item to show submenu
+    const deleteActivityItem = await screen.findByTestId('delete-activity');
+    await act(async () => {
+      fireEvent.mouseEnter(deleteActivityItem);
     });
 
     const deleteCourseItem = await screen.findByTestId('delete-course-posts');
@@ -303,6 +315,12 @@ describe('Learner Posts View', () => {
       fireEvent.click(actionsButton);
     });
 
+    // Hover over the delete-activity menu item to show submenu
+    const deleteActivityItem = await screen.findByTestId('delete-activity');
+    await act(async () => {
+      fireEvent.mouseEnter(deleteActivityItem);
+    });
+
     const deleteCourseItem = await screen.findByTestId('delete-course-posts');
     await act(async () => {
       fireEvent.click(deleteCourseItem);
@@ -331,6 +349,12 @@ describe('Learner Posts View', () => {
     const actionsButton = await screen.findByRole('button', { name: /actions menu/i });
     await act(async () => {
       fireEvent.click(actionsButton);
+    });
+
+    // Hover over the delete-activity menu item to show submenu
+    const deleteActivityItem = await screen.findByTestId('delete-activity');
+    await act(async () => {
+      fireEvent.mouseEnter(deleteActivityItem);
     });
 
     const deleteOrgItem = await screen.findByTestId('delete-org-posts');

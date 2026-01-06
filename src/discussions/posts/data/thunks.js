@@ -81,7 +81,11 @@ export function normaliseThreads(data, topicIds = null) {
       if (!threadsInTopic[topicId].includes(id)) {
         threadsInTopic[topicId].push(id);
       }
-      threadsById[id] = thread;
+      // Normalize editableFields to always be an array
+      threadsById[id] = {
+        ...thread,
+        editableFields: thread.editableFields || [],
+      };
       avatars = { ...avatars, ...thread.users };
     },
   );
@@ -140,6 +144,12 @@ export function fetchThreads(courseId, {
   }
   if (filters.cohort) {
     options.cohort = filters.cohort;
+  }
+  if (filters.status === PostsStatusFilter.ACTIVE) {
+    options.isDeleted = false;
+  }
+  if (filters.status === PostsStatusFilter.DELETED) {
+    options.isDeleted = true;
   }
   return async (dispatch) => {
     try {
@@ -310,6 +320,21 @@ export function removeThread(threadId) {
         dispatch(deleteThreadFailed());
       }
       logError(error);
+    }
+  };
+}
+
+export function performRestoreThread(threadId, courseId) {
+  return async (dispatch) => {
+    try {
+      const { restoreThread } = await import('./api');
+      const data = await restoreThread(threadId, courseId);
+      // Update the thread in Redux state to reflect the restore
+      dispatch(updateThreadSuccess(camelCaseObject(data)));
+      return { success: true };
+    } catch (error) {
+      logError(error);
+      return { success: false, error: error.message };
     }
   };
 }

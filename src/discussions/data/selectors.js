@@ -67,7 +67,7 @@ export function selectAreThreadsFiltered(state) {
   }
 
   return !(
-    filters.status === PostsStatusFilter.ALL
+    (filters.status === PostsStatusFilter.ALL || filters.status === PostsStatusFilter.ACTIVE)
     && filters.postType === ThreadType.ALL
   );
 }
