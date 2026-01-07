@@ -2,7 +2,6 @@ import React, { useCallback, useContext, useMemo } from 'react';
 import PropTypes from 'prop-types';
 
 import { Hyperlink, useToggle } from '@openedx/paragon';
-import { DeleteOutline } from '@openedx/paragon/icons';
 import classNames from 'classnames';
 import { toString } from 'lodash';
 import { useDispatch, useSelector } from 'react-redux';
@@ -10,14 +9,11 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 import { getConfig } from '@edx/frontend-platform';
 import { useIntl } from '@edx/frontend-platform/i18n';
-import { logError } from '@edx/frontend-platform/logging';
 
 import HTMLLoader from '../../../components/HTMLLoader';
-import { AvatarOutlineAndLabelColors, ContentActions, getFullUrl } from '../../../data/constants';
+import { ContentActions, getFullUrl } from '../../../data/constants';
 import { selectorForUnitSubsection, selectTopicContext } from '../../../data/selectors';
-import {
-  AlertBanner, AuthorLabel, AutoSpamAlertBanner, Confirmation,
-} from '../../common';
+import { AlertBanner, AutoSpamAlertBanner, Confirmation } from '../../common';
 import DiscussionContext from '../../common/context';
 import HoverCard from '../../common/HoverCard';
 import withPostingRestrictions from '../../common/withPostingRestrictions';
@@ -33,24 +29,22 @@ import PostFooter from './PostFooter';
 import PostHeader from './PostHeader';
 
 const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
-  const { enableInContextSidebar, postId, courseId } = useContext(DiscussionContext);
-
+  const { enableInContextSidebar, postId } = useContext(DiscussionContext);
   const threadData = useSelector(selectThread(postId));
   const {
     topicId, abuseFlagged, closed, pinned, voted, hasEndorsed, following, closedBy, voteCount, groupId, groupName,
     closeReason, authorLabel, type: postType, author, title, createdAt, renderedBody, lastEdit, editByLabel,
-    closedByLabel, users: postUsers, isDeleted, deletedBy, deletedByLabel, is_spam: isSpam,
+    closedByLabel, users: postUsers, is_spam: isSpam,
   } = threadData;
-
   const intl = useIntl();
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { courseId } = useContext(DiscussionContext);
   const topic = useSelector(selectTopic(topicId));
   const getTopicSubsection = useSelector(selectorForUnitSubsection);
   const topicContext = useSelector(selectTopicContext(topicId));
   const [isDeleting, showDeleteConfirmation, hideDeleteConfirmation] = useToggle(false);
-  const [isRestoring, showRestoreConfirmation, hideRestoreConfirmation] = useToggle(false);
   const [isReporting, showReportConfirmation, hideReportConfirmation] = useToggle(false);
   const [isClosing, showClosePostModal, hideClosePostModal] = useToggle(false);
   const userHasModerationPrivileges = useSelector(selectUserHasModerationPrivileges);
@@ -109,35 +103,15 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
     }
   }, [abuseFlagged, postId, showReportConfirmation]);
 
-  const handleRestore = useCallback(() => {
-    showRestoreConfirmation();
-  }, [showRestoreConfirmation]);
-
-  const handleRestoreConfirmation = useCallback(async () => {
-    try {
-      const { performRestoreThread } = await import('../data/thunks');
-      const result = await dispatch(performRestoreThread(postId, courseId));
-      // Check if restore failed and log the error
-      if (result && !result.success) {
-        logError(`Failed to restore thread: ${result.error || 'Unknown error'}`);
-      }
-    } catch (error) {
-      logError(error);
-    }
-    hideRestoreConfirmation();
-  }, [postId, courseId, dispatch, hideRestoreConfirmation]);
-
   const actionHandlers = useMemo(() => ({
     [ContentActions.EDIT_CONTENT]: handlePostContentEdit,
     [ContentActions.DELETE]: showDeleteConfirmation,
-    [ContentActions.RESTORE]: handleRestore,
     [ContentActions.CLOSE]: handlePostClose,
     [ContentActions.COPY_LINK]: handlePostCopyLink,
     [ContentActions.PIN]: handlePostPin,
     [ContentActions.REPORT]: handlePostReport,
   }), [
     handlePostClose, handlePostContentEdit, handlePostCopyLink, handlePostPin, handlePostReport, showDeleteConfirmation,
-    handleRestore,
   ]);
 
   const handleClosePostConfirmation = useCallback((closeReasonCode) => {
@@ -173,14 +147,6 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
         closeButtonVariant="tertiary"
         confirmButtonText={intl.formatMessage(messages.deleteConfirmationDelete)}
       />
-      <Confirmation
-        isOpen={isRestoring}
-        title={intl.formatMessage(messages.undeletePostTitle)}
-        description={intl.formatMessage(messages.undeletePostDescription)}
-        onClose={hideRestoreConfirmation}
-        confirmAction={handleRestoreConfirmation}
-        closeButtonVariant="tertiary"
-      />
       {!abuseFlagged && (
         <Confirmation
           isOpen={isReporting}
@@ -202,25 +168,7 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
         onFollow={handlePostFollow}
         voted={voted}
         following={following}
-        isDeleted={isDeleted}
       />
-      {isDeleted && deletedBy && (
-        <div className="alert alert-info px-3 shadow-none mb-1 py-10px bg-light-200 d-flex align-items-start">
-          <DeleteOutline className="mr-2 text-dark-500 flex-shrink-0 deleted-content-icon" />
-          <div className="d-flex align-items-center flex-wrap text-gray-700 font-style">
-            {intl.formatMessage(messages.deletedBy)}
-            <span className="ml-1">
-              <AuthorLabel
-                author={deletedBy}
-                authorLabel={deletedByLabel}
-                labelColor={AvatarOutlineAndLabelColors[deletedByLabel] && `text-${AvatarOutlineAndLabelColors[deletedByLabel]}`}
-                linkToProfile
-                postOrComment
-              />
-            </span>
-          </div>
-        </div>
-      )}
       <AlertBanner
         author={author}
         abuseFlagged={abuseFlagged}

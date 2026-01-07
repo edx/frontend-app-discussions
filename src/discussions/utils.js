@@ -14,7 +14,6 @@ import {
 
 import { getConfig } from '@edx/frontend-platform';
 
-import { ReactComponent as RestoreFromTrash } from '../assets/undelete.svg';
 import { DENIED, LOADED } from '../components/NavigationBar/data/slice';
 import {
   ContentActions, Routes, ThreadType,
@@ -64,9 +63,9 @@ export function checkPermissions(content, action) {
   if (content.editableFields.includes(action)) {
     return true;
   }
-  // Both delete and restore actions check `content.canDelete`
-  if (action === ContentActions.DELETE || action === ContentActions.RESTORE) {
-    return content.canDelete;
+  // For delete action we check `content.canDelete`
+  if (action === ContentActions.DELETE) {
+    return true;
   }
   return false;
 }
@@ -183,14 +182,7 @@ export const ACTIONS_LIST = [
     action: ContentActions.DELETE,
     icon: Delete,
     label: messages.deleteAction,
-    conditions: { canDelete: true, isDeleted: false },
-  },
-  {
-    id: 'restore',
-    action: ContentActions.RESTORE,
-    icon: RestoreFromTrash,
-    label: messages.restoreAction,
-    conditions: { canDelete: true, isDeleted: true },
+    conditions: { canDelete: true },
   },
 ];
 
@@ -206,20 +198,12 @@ export function useActions(contentType, id) {
       : true
   ), []);
 
-  const isActionDisabled = useCallback((actionId, isDeleted) => (
-    // For deleted items, disable all actions except 'copy-link' and 'restore'
-    isDeleted && actionId !== 'copy-link' && actionId !== 'restore'
-  ), []);
-
   const actions = useMemo(() => ACTIONS_LIST.filter(
     ({
       action,
       conditions = null,
     }) => checkPermissions(content, action) && checkConditions(content, conditions),
-  ).map(action => ({
-    ...action,
-    disabled: isActionDisabled(action.id, content.isDeleted),
-  })), [content, checkConditions, isActionDisabled]);
+  ), [content]);
 
   return actions;
 }
