@@ -40,7 +40,6 @@ export const getThreads = async (courseId, {
   threadType,
   countFlagged,
   cohort,
-  isDeleted,
 } = {}) => {
   const params = snakeCaseObject({
     courseId,
@@ -57,7 +56,6 @@ export const getThreads = async (courseId, {
     flagged,
     countFlagged,
     groupId: cohort,
-    isDeleted,
   });
   const { data } = await getAuthenticatedHttpClient().get(getThreadsApiUrl(), { params });
   return data;
@@ -214,21 +212,5 @@ export const sendEmailForAccountActivation = async () => {
   const url = `${getConfig().LMS_BASE_URL}/api/send_account_activation_email`;
   const { data } = await getAuthenticatedHttpClient()
     .post(url);
-  return data;
-};
-
-/**
- * Restore a deleted thread.
- * @param {string} threadId
- * @param {string} courseId
- * @returns {Promise<{}>}
- */
-export const restoreThread = async (threadId, courseId) => {
-  const url = `${getConfig().LMS_BASE_URL}/api/discussion/v1/restore_content`;
-  const { data } = await getAuthenticatedHttpClient().post(url, {
-    content_type: 'thread',
-    content_id: threadId,
-    course_id: courseId,
-  });
   return data;
 };

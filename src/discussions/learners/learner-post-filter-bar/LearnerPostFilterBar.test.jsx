@@ -68,7 +68,7 @@ describe('LearnerPostFilterBar', () => {
       fireEvent.click(queryAllByRole('button')[0]);
     });
     await waitFor(() => {
-      expect(queryAllByRole('radiogroup')).toHaveLength(5);
+      expect(queryAllByRole('radiogroup')).toHaveLength(4);
     });
   });
 
@@ -78,24 +78,17 @@ describe('LearnerPostFilterBar', () => {
       fireEvent.click(queryAllByRole('button')[0]);
     });
     await waitFor(() => {
-      const radiogroups = queryAllByRole('radiogroup');
-      // Radiogroup 0: postType filter - default is 'all'
       expect(
-        radiogroups[0].querySelector('input[value="all"]'),
+        queryAllByRole('radiogroup')[0].querySelector('input[value="all"]'),
       ).toBeChecked();
-      // Radiogroup 1: status filter (any/unread/reported/unanswered/unresponded)
-      // - not checked since default is statusActive
-      // Radiogroup 2: orderBy filter - default is 'lastActivityAt'
       expect(
-        radiogroups[2].querySelector('input[value="lastActivityAt"]'),
+        queryAllByRole('radiogroup')[1].querySelector('input[value="statusAll"]'),
       ).toBeChecked();
-      // Radiogroup 3: active/deleted status filter - default is 'statusActive'
       expect(
-        radiogroups[3].querySelector('input[value="statusActive"]'),
+        queryAllByRole('radiogroup')[2].querySelector('input[value="lastActivityAt"]'),
       ).toBeChecked();
-      // Radiogroup 4: cohort filter - default is empty string
       expect(
-        radiogroups[4].querySelector('input[value=""]'),
+        queryAllByRole('radiogroup')[3].querySelector('input[value=""]'),
       ).toBeChecked();
     });
   });

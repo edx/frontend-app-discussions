@@ -7,9 +7,10 @@ import { useParams } from 'react-router-dom';
 import { sendTrackEvent } from '@edx/frontend-platform/analytics';
 
 import FilterBar from '../../../components/FilterBar';
+import { PostsStatusFilter, ThreadType } from '../../../data/constants';
 import selectCourseCohorts from '../../cohorts/data/selectors';
 import fetchCourseCohorts from '../../cohorts/data/thunks';
-import { selectUserHasModerationPrivileges, selectUserIsGroupTa, selectUserIsStaff } from '../../data/selectors';
+import { selectUserHasModerationPrivileges, selectUserIsGroupTa } from '../../data/selectors';
 import { setPostFilter } from '../data/slices';
 
 const LearnerPostFilterBar = () => {
@@ -17,7 +18,6 @@ const LearnerPostFilterBar = () => {
   const { courseId } = useParams();
   const userHasModerationPrivileges = useSelector(selectUserHasModerationPrivileges);
   const userIsGroupTa = useSelector(selectUserIsGroupTa);
-  const userIsStaff = useSelector(selectUserIsStaff);
   const cohorts = useSelector(selectCourseCohorts);
   const postFilter = useSelector(state => state.learners.postFilter);
 
@@ -36,17 +36,7 @@ const LearnerPostFilterBar = () => {
     },
   ];
 
-  // Add content status filter only for staff, moderators, and TAs
-  if (userHasModerationPrivileges || userIsGroupTa || userIsStaff) {
-    filtersToShow.push({
-      name: 'contentStatus', // main content status
-      filters: ['status-active', 'status-deleted'],
-      hasSeparator: true,
-    });
-  }
-
   if (userHasModerationPrivileges || userIsGroupTa) {
-    // Add reported filter only for group TA and moderators
     filtersToShow[1].filters.splice(2, 0, 'status-reported');
   }
 
@@ -61,27 +51,40 @@ const LearnerPostFilterBar = () => {
     };
     if (name === 'postType') {
       if (postFilter.postType !== value) {
-        dispatch(setPostFilter({ postType: value }));
+        dispatch(setPostFilter({
+          ...postFilter,
+          postType: value,
+        }));
         filterContentEventProperties.threadTypeFilter = value;
       }
     } else if (name === 'status') {
       if (postFilter.status !== value) {
-        dispatch(setPostFilter({ status: value }));
+        const postType = (value === PostsStatusFilter.UNANSWERED && ThreadType.QUESTION)
+        || (value === PostsStatusFilter.UNRESPONDED && ThreadType.DISCUSSION)
+        || postFilter.postType;
+
+        dispatch(setPostFilter({
+          ...postFilter,
+          postType,
+          status: value,
+        }));
+
         filterContentEventProperties.statusFilter = value;
-      }
-    } else if (name === 'contentStatus') {
-      if (postFilter.contentStatus !== value) {
-        dispatch(setPostFilter({ contentStatus: value }));
-        filterContentEventProperties.contentStatusFilter = value;
       }
     } else if (name === 'orderBy') {
       if (postFilter.orderBy !== value) {
-        dispatch(setPostFilter({ orderBy: value }));
+        dispatch(setPostFilter({
+          ...postFilter,
+          orderBy: value,
+        }));
         filterContentEventProperties.sortFilter = value;
       }
     } else if (name === 'cohort') {
       if (postFilter.cohort !== value) {
-        dispatch(setPostFilter({ cohort: value }));
+        dispatch(setPostFilter({
+          ...postFilter,
+          cohort: value,
+        }));
         filterContentEventProperties.cohortFilter = value;
       }
     }

@@ -1,29 +1,23 @@
-import React, {
-  useCallback, useContext, useMemo, useState,
-} from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import { Avatar, useToggle } from '@openedx/paragon';
-import { DeleteOutline } from '@openedx/paragon/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import * as timeago from 'timeago.js';
 
 import { useIntl } from '@edx/frontend-platform/i18n';
-import { logError } from '@edx/frontend-platform/logging';
 
 import HTMLLoader from '../../../../components/HTMLLoader';
 import { AvatarOutlineAndLabelColors, ContentActions } from '../../../../data/constants';
 import {
   ActionsDropdown, AlertBanner, AuthorLabel, AutoSpamAlertBanner, Confirmation,
 } from '../../../common';
-import DiscussionContext from '../../../common/context';
 import timeLocale from '../../../common/time-locale';
 import { ContentTypes } from '../../../data/constants';
 import { useAlertBannerVisible } from '../../../data/hooks';
 import { selectAuthorAvatar } from '../../../posts/data/selectors';
-import { fetchThread } from '../../../posts/data/thunks';
 import { selectCommentOrResponseById } from '../../data/selectors';
-import { editComment, performRestoreComment, removeComment } from '../../data/thunks';
+import { editComment, removeComment } from '../../data/thunks';
 import messages from '../../messages';
 import CommentEditor from './CommentEditor';
 
@@ -32,15 +26,12 @@ const Reply = ({ responseId }) => {
   const commentData = useSelector(selectCommentOrResponseById(responseId));
   const {
     id, abuseFlagged, author, authorLabel, endorsed, lastEdit, closed, closedBy,
-    closeReason, createdAt, threadId, parentId, rawBody, renderedBody, editByLabel,
-    closedByLabel, isDeleted, deletedBy, deletedByLabel, is_spam: isSpam,
+    closeReason, createdAt, threadId, parentId, rawBody, renderedBody, editByLabel, closedByLabel, is_spam: isSpam,
   } = commentData;
   const intl = useIntl();
   const dispatch = useDispatch();
-  const { courseId } = useContext(DiscussionContext);
   const [isEditing, setEditing] = useState(false);
   const [isDeleting, showDeleteConfirmation, hideDeleteConfirmation] = useToggle(false);
-  const [isRestoring, showRestoreConfirmation, hideRestoreConfirmation] = useToggle(false);
   const [isReporting, showReportConfirmation, hideReportConfirmation] = useToggle(false);
   const colorClass = AvatarOutlineAndLabelColors[authorLabel];
   // If isSpam is not provided in the API response, default to false
@@ -79,22 +70,6 @@ const Reply = ({ responseId }) => {
     }
   }, [abuseFlagged, id, showReportConfirmation]);
 
-  const handleRestore = useCallback(() => {
-    showRestoreConfirmation();
-  }, [showRestoreConfirmation]);
-
-  const handleRestoreConfirmation = useCallback(async () => {
-    try {
-      const result = await dispatch(performRestoreComment(id, courseId));
-      if (result.success) {
-        await dispatch(fetchThread(threadId, courseId));
-      }
-    } catch (error) {
-      logError(error);
-    }
-    hideRestoreConfirmation();
-  }, [id, courseId, threadId, dispatch, hideRestoreConfirmation]);
-
   const handleCloseEditor = useCallback(() => {
     setEditing(false);
   }, []);
@@ -103,9 +78,8 @@ const Reply = ({ responseId }) => {
     [ContentActions.EDIT_CONTENT]: handleEditContent,
     [ContentActions.ENDORSE]: handleReplyEndorse,
     [ContentActions.DELETE]: showDeleteConfirmation,
-    [ContentActions.RESTORE]: handleRestore,
     [ContentActions.REPORT]: handleAbusedFlag,
-  }), [handleEditContent, handleReplyEndorse, showDeleteConfirmation, handleRestore, handleAbusedFlag]);
+  }), [handleEditContent, handleReplyEndorse, showDeleteConfirmation, handleAbusedFlag]);
 
   return (
     <div className="d-flex flex-column mt-2.5 " data-testid={`reply-${id}`} role="listitem">
@@ -117,14 +91,6 @@ const Reply = ({ responseId }) => {
         confirmAction={handleDeleteConfirmation}
         closeButtonVariant="tertiary"
         confirmButtonText={intl.formatMessage(messages.deleteConfirmationDelete)}
-      />
-      <Confirmation
-        isOpen={isRestoring}
-        title={intl.formatMessage(messages.undeleteCommentTitle)}
-        description={intl.formatMessage(messages.undeleteCommentDescription)}
-        onClose={hideRestoreConfirmation}
-        confirmAction={handleRestoreConfirmation}
-        closeButtonVariant="tertiary"
       />
       {!abuseFlagged && (
         <Confirmation
@@ -163,30 +129,6 @@ const Reply = ({ responseId }) => {
           </div>
           <div className="w-100">
             <AutoSpamAlertBanner autoSpamFlagged={isSpamFlagged} />
-          </div>
-        </div>
-      )}
-      {isDeleted && deletedBy && (
-        <div className="d-flex">
-          <div className="d-flex invisible">
-            <Avatar />
-          </div>
-          <div className="w-100">
-            <div className="alert alert-info px-3 shadow-none mb-1 py-10px bg-light-200 d-flex align-items-start">
-              <DeleteOutline className="mr-2 text-dark-500 flex-shrink-0 deleted-content-icon" />
-              <div className="d-flex align-items-center flex-wrap text-gray-700 font-style">
-                {intl.formatMessage(messages.deletedBy)}
-                <span className="ml-1">
-                  <AuthorLabel
-                    author={deletedBy}
-                    authorLabel={deletedByLabel}
-                    labelColor={AvatarOutlineAndLabelColors[deletedByLabel] && `text-${AvatarOutlineAndLabelColors[deletedByLabel]}`}
-                    linkToProfile
-                    postOrComment
-                  />
-                </span>
-              </div>
-            </div>
           </div>
         </div>
       )}

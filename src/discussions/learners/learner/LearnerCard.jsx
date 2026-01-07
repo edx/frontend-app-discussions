@@ -13,7 +13,6 @@ import learnerShape from './proptypes';
 const LearnerCard = ({ learner }) => {
   const {
     username, threads, inactiveFlags, activeFlags, responses, replies,
-    deletedCount, deletedThreads, deletedResponses, deletedReplies,
   } = learner;
   const { enableInContextSidebar, learnerUsername, courseId } = useContext(DiscussionContext);
   const linkUrl = discussionsPath(Routes.LEARNERS.POSTS, {
@@ -52,10 +51,6 @@ const LearnerCard = ({ learner }) => {
                 responses={responses}
                 replies={replies}
                 username={username}
-                deletedCount={deletedCount}
-                deletedThreads={deletedThreads}
-                deletedResponses={deletedResponses}
-                deletedReplies={deletedReplies}
               />
             )}
           </div>
