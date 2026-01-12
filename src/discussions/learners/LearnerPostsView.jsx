@@ -32,12 +32,13 @@ import {
   threadsLoadingStatus,
 } from '../posts/data/selectors';
 import { clearPostsPages } from '../posts/data/slices';
+import { fetchThread } from '../posts/data/thunks';
 import NoResults from '../posts/NoResults';
 import { PostLink } from '../posts/post';
 import { discussionsPath } from '../utils';
 import { BulkDeleteType } from './data/constants';
 import { learnersLoadingStatus, selectBulkDeleteStats } from './data/selectors';
-import { deleteUserPosts, fetchUserPosts } from './data/thunks';
+import { deleteUserPosts, fetchUserPosts, undeleteUserPosts } from './data/thunks';
 import LearnerPostFilterBar from './learner-post-filter-bar/LearnerPostFilterBar';
 import LearnerActionsDropdown from './LearnerActionsDropdown';
 import messages from './messages';
@@ -53,7 +54,7 @@ const LearnerPostsView = () => {
   const loadingStatus = useSelector(threadsLoadingStatus());
   const learnerLoadingStatus = useSelector(learnersLoadingStatus());
   const postFilter = useSelector(state => state.learners.postFilter);
-  const { courseId, learnerUsername: username } = useContext(DiscussionContext);
+  const { courseId, learnerUsername: username, postId } = useContext(DiscussionContext);
   const nextPage = useSelector(selectThreadNextPage());
   const userHasModerationPrivileges = useSelector(selectUserHasModerationPrivileges);
   const userIsStaff = useSelector(selectUserIsStaff);
@@ -61,7 +62,10 @@ const LearnerPostsView = () => {
   const bulkDeleteStats = useSelector(selectBulkDeleteStats());
   const sortedPostsIds = usePostList(postsIds);
   const [isDeleting, showDeleteConfirmation, hideDeleteConfirmation] = useToggle(false);
+  const [isRestoring, showRestoreConfirmation, hideRestoreConfirmation] = useToggle(false);
   const [isDeletingCourseOrOrg, setIsDeletingCourseOrOrg] = useState(BulkDeleteType.COURSE);
+  const [isRestoringCourseOrOrg, setIsRestoringCourseOrOrg] = useState(BulkDeleteType.COURSE);
+  const [isLoadingRestoreData, setIsLoadingRestoreData] = useState(false);
 
   const loadMorePosts = useCallback((pageNum = undefined) => {
     const params = {
@@ -79,25 +83,54 @@ const LearnerPostsView = () => {
     setIsDeletingCourseOrOrg(courseOrOrg);
     showDeleteConfirmation();
     await dispatch(deleteUserPosts(courseId, username, courseOrOrg, false));
-  }, [courseId, username, showDeleteConfirmation]);
+  }, [courseId, username, showDeleteConfirmation, dispatch]);
 
   const handleDeletePosts = useCallback(async (courseOrOrg) => {
     await dispatchDelete(deleteUserPosts(courseId, username, courseOrOrg, true));
-    navigate({ ...discussionsPath(Routes.LEARNERS.PATH, { courseId })(location) });
+    dispatch(clearPostsPages());
+    loadMorePosts();
     hideDeleteConfirmation();
-  }, [courseId, username, hideDeleteConfirmation]);
+    // If viewing a post, refresh it to show deleted state
+    if (postId) {
+      await dispatch(fetchThread(postId, courseId));
+    } else {
+      // Navigate back to learners list after deletion
+      navigate({ ...discussionsPath(Routes.LEARNERS.PATH, { courseId })(location) });
+    }
+  }, [courseId, username, hideDeleteConfirmation, dispatchDelete, navigate, location, postId, dispatch, loadMorePosts]);
+
+  const handleShowRestoreConfirmation = useCallback(async (courseOrOrg) => {
+    setIsRestoringCourseOrOrg(courseOrOrg);
+    setIsLoadingRestoreData(true);
+    showRestoreConfirmation();
+    await dispatch(undeleteUserPosts(courseId, username, courseOrOrg, false));
+    setIsLoadingRestoreData(false);
+  }, [courseId, username, showRestoreConfirmation, dispatch]);
+
+  const handleRestorePosts = useCallback(async (courseOrOrg) => {
+    await dispatch(undeleteUserPosts(courseId, username, courseOrOrg, true));
+    dispatch(clearPostsPages());
+    loadMorePosts();
+    hideRestoreConfirmation();
+    // If viewing a post, refresh it to show restored state
+    if (postId) {
+      await dispatch(fetchThread(postId, courseId));
+    }
+  }, [courseId, username, hideRestoreConfirmation, dispatch, loadMorePosts, postId]);
 
   const actionHandlers = useMemo(() => ({
     [ContentActions.DELETE_COURSE_POSTS]: () => handleShowDeleteConfirmation(BulkDeleteType.COURSE),
     [ContentActions.DELETE_ORG_POSTS]: () => handleShowDeleteConfirmation(BulkDeleteType.ORG),
-  }), [handleShowDeleteConfirmation]);
+    [ContentActions.RESTORE_COURSE_POSTS]: () => handleShowRestoreConfirmation(BulkDeleteType.COURSE),
+    [ContentActions.RESTORE_ORG_POSTS]: () => handleShowRestoreConfirmation(BulkDeleteType.ORG),
+  }), [handleShowDeleteConfirmation, handleShowRestoreConfirmation]);
 
   const postInstances = useMemo(() => (
-    sortedPostsIds?.map((postId, idx) => (
+    sortedPostsIds?.map((threadId, idx) => (
       <PostLink
-        postId={postId}
+        postId={threadId}
         idx={idx}
-        key={postId}
+        key={threadId}
         showDivider={(sortedPostsIds.length - 1) !== idx}
       />
     ))
@@ -169,6 +202,19 @@ const LearnerPostsView = () => {
         isDataLoading={!(learnerLoadingStatus === RequestStatus.SUCCESSFUL)}
         isConfirmButtonPending={bulkDeleting}
         pendingConfirmButtonText={intl.formatMessage(messages.deletePostConfirmPending)}
+      />
+      <Confirmation
+        isOpen={isRestoring}
+        title={intl.formatMessage(messages.restorePostsTitle)}
+        description={intl.formatMessage(messages.restorePostsDescription, {
+          count: bulkDeleteStats.threadCount + bulkDeleteStats.commentCount,
+          bulkType: isRestoringCourseOrOrg,
+        })}
+        onClose={hideRestoreConfirmation}
+        confirmAction={() => handleRestorePosts(isRestoringCourseOrOrg)}
+        confirmButtonText={intl.formatMessage(messages.restorePostsConfirm)}
+        confirmButtonVariant="primary"
+        isDataLoading={isLoadingRestoreData}
       />
     </div>
   );

@@ -141,6 +141,12 @@ export function fetchThreads(courseId, {
   if (filters.cohort) {
     options.cohort = filters.cohort;
   }
+  if (filters.status === PostsStatusFilter.ACTIVE) {
+    options.isDeleted = false;
+  }
+  if (filters.status === PostsStatusFilter.DELETED) {
+    options.isDeleted = true;
+  }
   return async (dispatch) => {
     try {
       dispatch(fetchThreadsRequest({ courseId }));
@@ -310,6 +316,19 @@ export function removeThread(threadId) {
         dispatch(deleteThreadFailed());
       }
       logError(error);
+    }
+  };
+}
+
+export function performRestoreThread(threadId, courseId) {
+  return async () => {
+    try {
+      const { restoreThread } = await import('./api');
+      await restoreThread(threadId, courseId);
+      return { success: true };
+    } catch (error) {
+      logError(error);
+      return { success: false, error: error.message };
     }
   };
 }

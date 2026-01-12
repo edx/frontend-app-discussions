@@ -52,6 +52,7 @@ describe('Learner redux test cases', () => {
     expect(learners.usernameSearch).toBeNull();
     expect(learners.postFilter.postType).toEqual('all');
     expect(learners.postFilter.status).toEqual('statusAll');
+    expect(learners.postFilter.contentStatus).toEqual('statusActive');
     expect(learners.postFilter.orderBy).toEqual('lastActivityAt');
     expect(learners.postFilter.cohort).toEqual('');
   });
