@@ -13,6 +13,7 @@ import learnerShape from './proptypes';
 const LearnerCard = ({ learner }) => {
   const {
     username, threads, inactiveFlags, activeFlags, responses, replies,
+    deletedCount, deletedThreads, deletedResponses, deletedReplies,
   } = learner;
   const { enableInContextSidebar, learnerUsername, courseId } = useContext(DiscussionContext);
   const linkUrl = discussionsPath(Routes.LEARNERS.POSTS, {
@@ -34,8 +35,8 @@ const LearnerCard = ({ learner }) => {
         } : null}
       >
         <LearnerAvatar username={username} />
-        <div className="d-flex flex-column flex-fill" style={{ minWidth: 0 }}>
-          <div className="d-flex flex-column justify-content-start mw-100 flex-fill">
+        <div className="d-flex flex-column flex-fill" style={{ overflow: 'visible' }}>
+          <div className="d-flex flex-column justify-content-start flex-fill">
             <div className="d-flex align-items-center flex-fill">
               <div
                 className="text-truncate font-weight-500 text-primary-500 font-style"
@@ -51,6 +52,10 @@ const LearnerCard = ({ learner }) => {
                 responses={responses}
                 replies={replies}
                 username={username}
+                deletedCount={deletedCount}
+                deletedThreads={deletedThreads}
+                deletedResponses={deletedResponses}
+                deletedReplies={deletedReplies}
               />
             )}
           </div>

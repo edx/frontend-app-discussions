@@ -48,6 +48,7 @@ const messages = defineMessages({
     defaultMessage: `All learners sorted by {sort, select,
       flagged {reported activity}
       activity {most activity}
+      deleted {deleted activity}
       other {{sort}}
     }`,
     description: 'Text for current selected learners filter',
@@ -62,6 +63,31 @@ const messages = defineMessages({
     defaultMessage: 'Posts',
     description: 'Tooltip text for all posts icon',
   },
+  deletedActivity: {
+    id: 'discussion.learner.deletedActivity',
+    defaultMessage: 'Deleted activity',
+    description: 'Tooltip text for deleted activity icon',
+  },
+  deleteActivity: {
+    id: 'discussions.learner.actions.deleteActivity',
+    defaultMessage: 'Delete activity',
+    description: 'Main menu option for deleting user activity',
+  },
+  restoreActivity: {
+    id: 'discussions.learner.actions.restoreActivity',
+    defaultMessage: 'Restore activity',
+    description: 'Main menu option for restoring user activity',
+  },
+  withinCourse: {
+    id: 'discussions.learner.actions.withinCourse',
+    defaultMessage: 'Within course',
+    description: 'Submenu option for actions within the current course',
+  },
+  withinOrg: {
+    id: 'discussions.learner.actions.withinOrg',
+    defaultMessage: 'Within organization',
+    description: 'Submenu option for actions within the organization',
+  },
   deleteCoursePosts: {
     id: 'discussions.learner.actions.deleteCoursePosts',
     defaultMessage: 'Delete user posts within this course',
@@ -71,6 +97,16 @@ const messages = defineMessages({
     id: 'discussions.learner.actions.deleteOrgPosts',
     defaultMessage: 'Delete user posts within this organization',
     description: 'Action to delete user posts within the organization',
+  },
+  restoreCoursePosts: {
+    id: 'discussions.learner.actions.restoreCoursePosts',
+    defaultMessage: 'Restore user posts within this course',
+    description: 'Action to restore deleted user posts within a specific course',
+  },
+  restoreOrgPosts: {
+    id: 'discussions.learner.actions.restoreOrgPosts',
+    defaultMessage: 'Restore user posts within this organization',
+    description: 'Action to restore deleted user posts within the organization',
   },
   deletePostsTitle: {
     id: 'discussions.learner.deletePosts.title',
@@ -100,6 +136,30 @@ const messages = defineMessages({
     id: 'discussions.learner.deletePosts.boldDescription',
     defaultMessage: 'This action cannot be undone.',
     description: 'Bold disclaimer description for delete confirmation dialog',
+  },
+  restorePostsTitle: {
+    id: 'discussions.learner.restorePosts.title',
+    defaultMessage: 'Restore this user\'s discussion contributions?',
+    description: 'Title for restore course posts confirmation dialog',
+  },
+  restorePostsDescription: {
+    id: 'discussions.learner.restorePosts.description',
+    defaultMessage: `{bulkType, select,
+    course {You are about to restore {count, plural, one {# discussion contribution} other {# discussion contributions}} by this user in this course. This includes all deleted discussion threads, responses, and comments authored by them.}
+    org {You are about to restore {count, plural, one {# discussion contribution} other {# discussion contributions}} by this user across the organization. This includes all deleted discussion threads, responses, and comments authored by them.}
+    other {You are about to restore {count, plural, one {# discussion contribution} other {# discussion contributions}} by this user. This includes all deleted discussion threads, responses, and comments authored by them.}
+  }`,
+    description: 'Description for restore posts confirmation dialog',
+  },
+  restorePostsConfirm: {
+    id: 'discussions.learner.restorePosts.confirm',
+    defaultMessage: 'Restore',
+    description: 'Confirm button text for restore posts',
+  },
+  restorePostConfirmPending: {
+    id: 'discussions.learner.restorePosts.confirm.pending',
+    defaultMessage: 'Restoring',
+    description: 'Pending state of confirm button text for restore posts',
   },
 });
 

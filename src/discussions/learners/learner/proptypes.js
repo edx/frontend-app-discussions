@@ -7,6 +7,10 @@ const learnerShape = PropTypes.shape({
   replies: PropTypes.number,
   responses: PropTypes.number,
   threads: PropTypes.number,
+  deletedCount: PropTypes.number,
+  deletedThreads: PropTypes.number,
+  deletedResponses: PropTypes.number,
+  deletedReplies: PropTypes.number,
 });
 
 export default learnerShape;

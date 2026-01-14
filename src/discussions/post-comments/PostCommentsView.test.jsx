@@ -80,6 +80,7 @@ async function mockAxiosReturnPagedCommentsResponses() {
     page_size: undefined,
     requested_fields: 'profile_image',
     reverse_order: true,
+    show_deleted: false,
   };
 
   [1, 2].forEach(async (page) => {
