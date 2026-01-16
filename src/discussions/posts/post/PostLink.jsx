@@ -2,7 +2,7 @@ import React, { useContext, useMemo } from 'react';
 import PropTypes from 'prop-types';
 
 import { Badge, Icon } from '@openedx/paragon';
-import { CheckCircle, PushPin } from '@openedx/paragon/icons';
+import { CheckCircle, PushPin, SubdirectoryArrowRight } from '@openedx/paragon/icons';
 import classNames from 'classnames';
 import { useSelector } from 'react-redux';
 import { Link, useLocation } from 'react-router-dom';
@@ -37,13 +37,40 @@ const PostLink = ({
   const {
     topicId, hasEndorsed, type, author, authorLabel, abuseFlagged, abuseFlaggedCount, read, commentCount,
     unreadCommentCount, id, pinned, previewBody, title, voted, voteCount, following, groupId, groupName, createdAt,
-    users: postUsers,
+    users: postUsers, isDeleted, threadTitle, commentThreadId,
   } = threadData;
+
+  // Get the type label to display
+  const getTypeLabel = () => {
+    if (type === 'response') {
+      return 'Response';
+    }
+    if (type === 'comment') {
+      return 'Comment';
+    }
+    return null;
+  };
+
+  // For comments/responses, show parent thread title with arrow
+  const displayTitle = (type === 'response' || type === 'comment') && threadTitle ? threadTitle : title;
+
+  // Strip render_id suffix (e.g., "-thread", "-response", "-comment") for navigation
+  const stripRenderIdSuffix = (idValue) => {
+    if (typeof idValue === 'string') {
+      return idValue.replace(/-(thread|response|comment)$/, '');
+    }
+    return idValue;
+  };
+
+  // For comments/responses, navigate to the parent thread instead of the comment itself
+  const rawNavigationId = (type === 'response' || type === 'comment') && commentThreadId ? commentThreadId : postId;
+  const navigationPostId = stripRenderIdSuffix(rawNavigationId);
+
   const { pathname } = discussionsPath(Routes.COMMENTS.PAGES[page], {
     0: enableInContextSidebar ? 'in-context' : undefined,
     courseId,
     topicId,
-    postId,
+    postId: navigationPostId,
     category,
     learnerUsername,
   })();
@@ -76,8 +103,10 @@ const PostLink = ({
               'd-flex flex-row pt-2 pb-2 px-4 border-primary-500 position-relative',
               { 'bg-light-300': isPostRead },
               { 'post-summary-card-selected': id === selectedPostId },
+              { 'bg-light-200': isDeleted }, // Gray background for deleted threads
             )
           }
+        style={isDeleted ? { opacity: 0.7 } : {}} // Slightly faded for deleted threads
       >
         <PostAvatar
           postType={type}
@@ -91,12 +120,24 @@ const PostLink = ({
           <div className="d-flex flex-column justify-content-start mw-100 flex-fill" style={{ marginBottom: '-3px' }}>
             <div className="d-flex align-items-center pb-0 mb-0 flex-fill">
               <div className="text-truncate mr-1">
+                {(type === 'response' || type === 'comment') && threadTitle && (
+                  <>
+                    <Icon
+                      src={SubdirectoryArrowRight}
+                      className="text-gray-500 align-bottom subdirectory-arrow-icon"
+                    />
+                    <span className="text-gray-700 font-weight-normal font-style align-bottom mr-1">
+                      {getTypeLabel()} in
+                    </span>
+                  </>
+                )}
                 <span className={classNames(
                   'font-weight-500 text-primary-500 font-style align-bottom mr-1',
                   { 'font-weight-bolder': !read },
+                  { 'text-decoration-line-through': isDeleted }, // Line-through for deleted threads
                 )}
                 >
-                  {title}
+                  {displayTitle}
                 </span>
                 <span className="text-gray-700 font-weight-normal  font-style align-bottom">
                   {isPostPreviewAvailable(previewBody) ? previewBody : intl.formatMessage(messages.postWithoutPreview)}
@@ -121,12 +162,25 @@ const PostLink = ({
                   <span className="sr-only">{' '}reported</span>
                 </Badge>
               )}
+              {isDeleted && (
+                <Badge
+                  variant="light"
+                  data-testid="deleted-post"
+                  className={classNames('font-weight-500 badge-padding bg-light-400 text-dark', {
+                    'ml-2': canSeeReportedBadge || showAnsweredBadge,
+                    'ml-auto': !canSeeReportedBadge && !showAnsweredBadge,
+                  })}
+                >
+                  {intl.formatMessage(messages.deletedPost)}
+                  <span className="sr-only">{' '}deleted</span>
+                </Badge>
+              )}
               {pinned && (
                 <Icon
                   src={PushPin}
                   className={classNames('post-summary-icons-dimensions text-gray-700', {
-                    'ml-2': canSeeReportedBadge || showAnsweredBadge,
-                    'ml-auto': !canSeeReportedBadge && !showAnsweredBadge,
+                    'ml-2': canSeeReportedBadge || showAnsweredBadge || isDeleted,
+                    'ml-auto': !canSeeReportedBadge && !showAnsweredBadge && !isDeleted,
                   })}
                 />
               )}

@@ -60,7 +60,11 @@ function normaliseComments(data) {
           commentsInThreads[threadId].push(id);
         }
       }
-      commentsById[id] = comment;
+      // Normalize editableFields to always be an array
+      commentsById[id] = {
+        ...comment,
+        editableFields: comment.editableFields || [],
+      };
     },
   );
   return {
@@ -79,6 +83,7 @@ export function fetchThreadComments(
     reverseOrder,
     threadType,
     enableInContextSidebar,
+    showDeleted = false,
     signal,
   } = {},
 ) {
@@ -86,7 +91,7 @@ export function fetchThreadComments(
     try {
       dispatch(fetchCommentsRequest());
       const data = await getThreadComments(threadId, {
-        page, reverseOrder, threadType, enableInContextSidebar, signal,
+        page, reverseOrder, threadType, enableInContextSidebar, showDeleted, signal,
       });
       dispatch(fetchCommentsSuccess({
         ...normaliseComments(camelCaseObject(data)),
@@ -104,11 +109,11 @@ export function fetchThreadComments(
   };
 }
 
-export function fetchCommentResponses(commentId, { page = 1, reverseOrder = true } = {}) {
+export function fetchCommentResponses(commentId, { page = 1, reverseOrder = true, showDeleted = false } = {}) {
   return async (dispatch) => {
     try {
       dispatch(fetchCommentResponsesRequest({ commentId }));
-      const data = await getCommentResponses(commentId, { page, reverseOrder });
+      const data = await getCommentResponses(commentId, { page, reverseOrder, showDeleted });
       dispatch(fetchCommentResponsesSuccess({
         ...normaliseComments(camelCaseObject(data)),
         page,
@@ -182,6 +187,22 @@ export function removeComment(commentId, threadId) {
         dispatch(deleteCommentFailed());
       }
       logError(error);
+    }
+  };
+}
+
+export function performRestoreComment(commentId, courseId) {
+  return async (dispatch) => {
+    try {
+      const { restoreComment } = await import('./api');
+      await restoreComment(commentId, courseId);
+      // Fetch the updated comment state by calling editComment with empty object
+      // This will refresh the comment data from the backend
+      await dispatch(editComment(commentId, {}));
+      return { success: true };
+    } catch (error) {
+      logError(error);
+      return { success: false, error: error.message };
     }
   };
 }

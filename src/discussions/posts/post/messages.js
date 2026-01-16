@@ -24,6 +24,25 @@ const messages = defineMessages({
     defaultMessage: 'Reported',
     description: 'Content reported for staff review',
   },
+  deletedBy: {
+    id: 'discussions.post.deletedBy',
+    defaultMessage: 'Deleted by',
+  },
+  deletedPost: {
+    id: 'discussions.post.deletedPost',
+    defaultMessage: 'Deleted',
+    description: 'Badge showing that the post has been deleted',
+  },
+  deletedResponse: {
+    id: 'discussions.post.deletedResponse',
+    defaultMessage: 'Deleted',
+    description: 'Badge showing that the response has been deleted',
+  },
+  deletedComment: {
+    id: 'discussions.post.deletedComment',
+    defaultMessage: 'Deleted',
+    description: 'Badge showing that the comment has been deleted',
+  },
   following: {
     id: 'discussions.post.following',
     defaultMessage: 'Following',
@@ -106,6 +125,14 @@ const messages = defineMessages({
     defaultMessage: 'Delete',
     description: 'Delete button shown on delete confirmation dialog',
   },
+  undeletePostTitle: {
+    id: 'discussions.editor.undelete.post.title',
+    defaultMessage: 'Restore post',
+  },
+  undeletePostDescription: {
+    id: 'discussions.editor.undelete.post.description',
+    defaultMessage: 'Are you sure you want to restore this post?',
+  },
   reportPostTitle: {
     id: 'discussions.editor.report.post.title',
     defaultMessage: 'Report inappropriate content?',
@@ -170,6 +197,11 @@ const messages = defineMessages({
     id: 'discussions.post.unfollow.description',
     defaultMessage: 'you are not following this post',
     description: 'tell screen readers if user is not following a post',
+  },
+  deleted: {
+    id: 'discussions.post.deleted',
+    defaultMessage: 'Deleted',
+    description: 'Label shown on deleted threads',
   },
 });
 

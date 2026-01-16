@@ -17,7 +17,7 @@ const NoResults = () => {
   const filters = useSelector((state) => state.threads.filters);
   const learnersFilter = useSelector(({ learners }) => learners.usernameSearch);
   const isFiltered = postsFiltered || (topicsFilter !== '')
-    || (learnersFilter !== null) || (inContextTopicsFilter !== '');
+    || (learnersFilter) || (inContextTopicsFilter !== '');
 
   let helpMessage = messages.removeFilters;
 

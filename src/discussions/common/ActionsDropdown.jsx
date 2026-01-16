@@ -78,10 +78,13 @@ const ActionsDropdown = ({
             size="inline"
             onClick={() => {
               close();
-              handleActions(action.action);
+              if (!action.disabled) {
+                handleActions(action.action);
+              }
             }}
             className="d-flex justify-content-start actions-dropdown-item"
             data-testId={action.id}
+            disabled={action.disabled}
           >
             <Icon
               src={action.icon}

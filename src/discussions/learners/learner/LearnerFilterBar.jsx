@@ -10,7 +10,7 @@ import { sendTrackEvent } from '@edx/frontend-platform/analytics';
 import { useIntl } from '@edx/frontend-platform/i18n';
 
 import { LearnersOrdering } from '../../../data/constants';
-import { selectUserHasModerationPrivileges, selectUserIsGroupTa } from '../../data/selectors';
+import { selectUserHasModerationPrivileges, selectUserIsGroupTa, selectUserIsStaff } from '../../data/selectors';
 import { setSortedBy } from '../data';
 import { selectLearnerSorting } from '../data/selectors';
 import messages from '../messages';
@@ -52,6 +52,7 @@ const LearnerFilterBar = () => {
   const dispatch = useDispatch();
   const userHasModerationPrivileges = useSelector(selectUserHasModerationPrivileges);
   const userIsGroupTa = useSelector(selectUserIsGroupTa);
+  const userIsStaff = useSelector(selectUserIsStaff);
   const currentSorting = useSelector(selectLearnerSorting());
   const [isOpen, setOpen] = useState(false);
 
@@ -118,6 +119,14 @@ const LearnerFilterBar = () => {
                 value={LearnersOrdering.BY_RECENCY}
                 selected={currentSorting}
               />
+              {(userHasModerationPrivileges || userIsGroupTa || userIsStaff) && (
+                <ActionItem
+                  id="sort-deleted"
+                  label={intl.formatMessage(messages.deletedActivity)}
+                  value={LearnersOrdering.BY_DELETED}
+                  selected={currentSorting}
+                />
+              )}
             </Form.RadioSet>
           </div>
         </Form>
