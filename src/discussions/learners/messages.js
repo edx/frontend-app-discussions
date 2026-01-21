@@ -132,11 +132,6 @@ const messages = defineMessages({
     defaultMessage: 'Deleting',
     description: 'Pending state of confirm button text for delete posts',
   },
-  deletePostsBoldDescription: {
-    id: 'discussions.learner.deletePosts.boldDescription',
-    defaultMessage: 'This action cannot be undone.',
-    description: 'Bold disclaimer description for delete confirmation dialog',
-  },
   restorePostsTitle: {
     id: 'discussions.learner.restorePosts.title',
     defaultMessage: 'Restore this user\'s discussion contributions?',
