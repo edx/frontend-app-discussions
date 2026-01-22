@@ -5,10 +5,13 @@
 @import "~@edx/frontend-component-header/dist/index";
 
 
-body,
-#main
-{
-  font-size: 14px ;
+body {
+  font-size: 14px;
+  overflow-x: hidden;
+}
+
+#main {
+  font-size: 14px;
 }
 
 .btn,
@@ -264,19 +267,30 @@ header {
   }
 }
 
-.sidebar-desktop-width {
-  max-width: 45rem !important;
-  flex-shrink: 0 !important;
-}
-
-.sidebar-tablet-width {
-  max-width: 35rem !important;
-  flex-shrink: 0 !important;
-}
-
+.sidebar-desktop-width,
+.sidebar-tablet-width,
 .sidebar-XL-width {
-  min-width: 45rem !important;
-  flex-shrink: 0 !important;
+  width: 100%;
+  max-width: 21rem;
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .sidebar-desktop-width,
+  .sidebar-tablet-width,
+  .sidebar-XL-width {
+    max-width: 28rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .sidebar-XL-width {
+    max-width: 29rem;
+  }
+}
+
+.container-fluid {
+  overflow-x: hidden;
 }
 
 .filter-menu:focus-visible {

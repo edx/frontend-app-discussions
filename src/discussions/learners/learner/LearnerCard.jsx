@@ -1,16 +1,20 @@
 import React, { useContext } from 'react';
 
 import capitalize from 'lodash/capitalize';
-import { Link } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 
-import { Routes } from '../../../data/constants';
+import { PostsStatusFilter, Routes, ThreadType } from '../../../data/constants';
 import DiscussionContext from '../../common/context';
 import { discussionsPath } from '../../utils';
+import { setPostFilter } from '../data/slices';
 import LearnerAvatar from './LearnerAvatar';
 import LearnerFooter from './LearnerFooter';
 import learnerShape from './proptypes';
 
 const LearnerCard = ({ learner }) => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const {
     username, threads, inactiveFlags, activeFlags, responses, replies,
     deletedCount, deletedThreads, deletedResponses, deletedReplies,
@@ -22,10 +26,36 @@ const LearnerCard = ({ learner }) => {
     courseId,
   })();
 
+  const handleFilterClick = (filters) => {
+    // Apply the filters
+    dispatch(setPostFilter(filters));
+    // Navigate to the learner's posts view
+    navigate(linkUrl);
+  };
+
+  // Handle clicking the card body (not footer icons)
+  const handleCardClick = () => {
+    // Set default filter to show all active posts
+    handleFilterClick({
+      postType: ThreadType.ALL,
+      status: PostsStatusFilter.ALL,
+      contentStatus: PostsStatusFilter.ACTIVE,
+    });
+  };
+
   return (
-    <Link
+    <div
       className="discussion-post p-0 text-decoration-none text-gray-900 border-bottom border-light-400"
-      to={linkUrl}
+      role="button"
+      tabIndex={0}
+      onClick={handleCardClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleCardClick();
+        }
+      }}
+      style={{ cursor: 'pointer' }}
     >
       <div
         className="d-flex flex-row flex-fill mw-100 py-3 px-4 border-primary-500"
@@ -56,12 +86,13 @@ const LearnerCard = ({ learner }) => {
                 deletedThreads={deletedThreads}
                 deletedResponses={deletedResponses}
                 deletedReplies={deletedReplies}
+                onFilterClick={handleFilterClick}
               />
             )}
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 };
 

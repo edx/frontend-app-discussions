@@ -149,7 +149,7 @@ const messages = defineMessages({
   },
   deleteResponseDescription: {
     id: 'discussions.editor.delete.response.description',
-    defaultMessage: 'Are you sure you want to permanently delete this response?',
+    defaultMessage: 'Are you sure you want to delete this response?',
     description: 'Text displayed in confirmation dialog when deleting a response',
   },
   undeleteResponseTitle: {
@@ -169,7 +169,7 @@ const messages = defineMessages({
   },
   deleteCommentDescription: {
     id: 'discussions.editor.delete.comment.description',
-    defaultMessage: 'Are you sure you want to permanently delete this comment?',
+    defaultMessage: 'Are you sure you want to delete this comment?',
     description: 'Text displayed in confirmation dialog when deleting a comment',
   },
   undeleteCommentTitle: {

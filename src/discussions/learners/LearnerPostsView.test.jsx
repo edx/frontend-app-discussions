@@ -259,7 +259,6 @@ describe('Learner Posts View', () => {
       const dialog = screen.getByText('Are you sure you want to delete this user\'s discussion contributions?');
       expect(dialog).toBeInTheDocument();
       expect(screen.getByText('You are about to delete 5 discussion contributions by this user in this course. This includes all discussion threads, responses, and comments authored by them.')).toBeInTheDocument();
-      expect(screen.getByText('This action cannot be undone.')).toBeInTheDocument();
       expect(screen.getByText('Cancel')).toBeInTheDocument();
       expect(screen.getByText('Delete')).toBeInTheDocument();
     });
@@ -365,7 +364,6 @@ describe('Learner Posts View', () => {
     await waitFor(() => {
       expect(screen.getByText('Are you sure you want to delete this user\'s discussion contributions?')).toBeInTheDocument();
       expect(screen.getByText('You are about to delete 15 discussion contributions by this user across the organization. This includes all discussion threads, responses, and comments authored by them.')).toBeInTheDocument();
-      expect(screen.getByText('This action cannot be undone.')).toBeInTheDocument();
     });
   });
 });
