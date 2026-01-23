@@ -81,11 +81,7 @@ export function normaliseThreads(data, topicIds = null) {
       if (!threadsInTopic[topicId].includes(id)) {
         threadsInTopic[topicId].push(id);
       }
-      // Normalize editableFields to always be an array
-      threadsById[id] = {
-        ...thread,
-        editableFields: thread.editableFields || [],
-      };
+      threadsById[id] = thread;
       avatars = { ...avatars, ...thread.users };
     },
   );
@@ -144,12 +140,6 @@ export function fetchThreads(courseId, {
   }
   if (filters.cohort) {
     options.cohort = filters.cohort;
-  }
-  if (filters.status === PostsStatusFilter.ACTIVE) {
-    options.isDeleted = false;
-  }
-  if (filters.status === PostsStatusFilter.DELETED) {
-    options.isDeleted = true;
   }
   return async (dispatch) => {
     try {
@@ -320,21 +310,6 @@ export function removeThread(threadId) {
         dispatch(deleteThreadFailed());
       }
       logError(error);
-    }
-  };
-}
-
-export function performRestoreThread(threadId, courseId) {
-  return async (dispatch) => {
-    try {
-      const { restoreThread } = await import('./api');
-      await restoreThread(threadId, courseId);
-      // Fetch the updated thread to get the current state
-      await dispatch(fetchThread(threadId, courseId, false));
-      return { success: true };
-    } catch (error) {
-      logError(error);
-      return { success: false, error: error.message };
     }
   };
 }

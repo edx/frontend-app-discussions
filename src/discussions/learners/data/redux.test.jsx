@@ -52,7 +52,6 @@ describe('Learner redux test cases', () => {
     expect(learners.usernameSearch).toBeNull();
     expect(learners.postFilter.postType).toEqual('all');
     expect(learners.postFilter.status).toEqual('statusAll');
-    expect(learners.postFilter.contentStatus).toEqual('statusActive');
     expect(learners.postFilter.orderBy).toEqual('lastActivityAt');
     expect(learners.postFilter.cohort).toEqual('');
   });
@@ -98,10 +97,14 @@ describe('Learner redux test cases', () => {
 
   test('Successfully updated the post-filter data in redux', async () => {
     const learners = await setupLearnerMockResponse();
+    const filter = {
+      ...learners.postFilter,
+      postType: 'discussion',
+    };
 
     expect(learners.postFilter.postType).toEqual('all');
 
-    await store.dispatch(setPostFilter({ postType: 'discussion' }));
+    await store.dispatch(setPostFilter(filter));
     const updatedLearners = store.getState().learners;
 
     expect(updatedLearners.postFilter.postType).toEqual('discussion');

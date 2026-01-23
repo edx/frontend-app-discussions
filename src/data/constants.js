@@ -51,7 +51,6 @@ export const ContentActions = {
   COPY_LINK: 'copy_link',
   REPORT: 'abuse_flagged',
   DELETE: 'delete',
-  RESTORE: 'restore',
   FOLLOWING: 'following',
   CHANGE_GROUP: 'group_id',
   MARK_READ: 'read',
@@ -61,8 +60,6 @@ export const ContentActions = {
   VOTE: 'voted',
   DELETE_COURSE_POSTS: 'delete-course-posts',
   DELETE_ORG_POSTS: 'delete-org-posts',
-  RESTORE_COURSE_POSTS: 'restore-course-posts',
-  RESTORE_ORG_POSTS: 'restore-org-posts',
 };
 
 /**
@@ -112,8 +109,6 @@ export const PostsStatusFilter = {
   REPORTED: 'statusReported',
   UNANSWERED: 'statusUnanswered',
   UNRESPONDED: 'statusUnresponded',
-  ACTIVE: 'statusActive',
-  DELETED: 'statusDeleted',
 };
 
 /**
@@ -137,7 +132,6 @@ export const LearnersOrdering = {
   BY_FLAG: 'flagged',
   BY_LAST_ACTIVITY: 'activity',
   BY_RECENCY: 'recency',
-  BY_DELETED: 'deleted',
 };
 
 /**

@@ -45,7 +45,6 @@ Factory.define('thread')
     non_endorsed_comment_list_url: null,
     read: false,
     has_endorsed: false,
-    is_deleted: false,
   });
 
 Factory.define('threadsResult')

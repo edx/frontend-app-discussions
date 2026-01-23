@@ -11,20 +11,6 @@ const messages = defineMessages({
     defaultMessage: 'Add a response',
     description: 'Button to add a response to a response',
   },
-  deletedBy: {
-    id: 'discussions.comments.comment.deletedBy',
-    defaultMessage: 'Deleted by',
-  },
-  deletedResponse: {
-    id: 'discussions.comments.comment.deletedResponse',
-    defaultMessage: 'Deleted Response',
-    description: 'Badge showing that the response has been deleted',
-  },
-  deletedComment: {
-    id: 'discussions.comments.comment.deletedComment',
-    defaultMessage: 'Deleted Comment',
-    description: 'Badge showing that the comment has been deleted',
-  },
   abuseFlaggedMessage: {
     id: 'discussions.comments.comment.abuseFlaggedMessage',
     defaultMessage: 'Content reported for staff to review',
@@ -149,18 +135,8 @@ const messages = defineMessages({
   },
   deleteResponseDescription: {
     id: 'discussions.editor.delete.response.description',
-    defaultMessage: 'Are you sure you want to delete this response?',
+    defaultMessage: 'Are you sure you want to permanently delete this response?',
     description: 'Text displayed in confirmation dialog when deleting a response',
-  },
-  undeleteResponseTitle: {
-    id: 'discussions.editor.undelete.response.title',
-    defaultMessage: 'Restore response',
-    description: 'Title of confirmation dialog shown when restoring a response',
-  },
-  undeleteResponseDescription: {
-    id: 'discussions.editor.undelete.response.description',
-    defaultMessage: 'Are you sure you want to restore this response?',
-    description: 'Text displayed in confirmation dialog when restoring a response',
   },
   deleteCommentTitle: {
     id: 'discussions.editor.delete.comment.title',
@@ -169,18 +145,8 @@ const messages = defineMessages({
   },
   deleteCommentDescription: {
     id: 'discussions.editor.delete.comment.description',
-    defaultMessage: 'Are you sure you want to delete this comment?',
+    defaultMessage: 'Are you sure you want to permanently delete this comment?',
     description: 'Text displayed in confirmation dialog when deleting a comment',
-  },
-  undeleteCommentTitle: {
-    id: 'discussions.editor.undelete.comment.title',
-    defaultMessage: 'Restore comment',
-    description: 'Title of confirmation dialog shown when restoring a comment',
-  },
-  undeleteCommentDescription: {
-    id: 'discussions.editor.undelete.comment.description',
-    defaultMessage: 'Are you sure you want to restore this comment?',
-    description: 'Text displayed in confirmation dialog when restoring a comment',
   },
   deleteConfirmationDelete: {
     id: 'discussions.delete.confirmation.button.delete',

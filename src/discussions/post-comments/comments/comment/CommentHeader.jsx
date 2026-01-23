@@ -40,7 +40,7 @@ const CommentHeader = ({
       'mt-2': hasAnyAlert,
     })}
     >
-      <div className="align-items-center d-flex flex-row flex-wrap">
+      <div className="align-items-center d-flex flex-row">
         <Avatar
           className={`border-0 ml-0.5 mr-2.5 ${colorClass ? `outline-${colorClass}` : 'outline-anonymous'}`}
           alt={author}

@@ -244,12 +244,6 @@ describe('Learner Posts View', () => {
       fireEvent.click(actionsButton);
     });
 
-    // Hover over the delete-activity menu item to show submenu
-    const deleteActivityItem = await screen.findByTestId('delete-activity');
-    await act(async () => {
-      fireEvent.mouseEnter(deleteActivityItem);
-    });
-
     const deleteCourseItem = await screen.findByTestId('delete-course-posts');
     await act(async () => {
       fireEvent.click(deleteCourseItem);
@@ -259,6 +253,7 @@ describe('Learner Posts View', () => {
       const dialog = screen.getByText('Are you sure you want to delete this user\'s discussion contributions?');
       expect(dialog).toBeInTheDocument();
       expect(screen.getByText('You are about to delete 5 discussion contributions by this user in this course. This includes all discussion threads, responses, and comments authored by them.')).toBeInTheDocument();
+      expect(screen.getByText('This action cannot be undone.')).toBeInTheDocument();
       expect(screen.getByText('Cancel')).toBeInTheDocument();
       expect(screen.getByText('Delete')).toBeInTheDocument();
     });
@@ -275,12 +270,6 @@ describe('Learner Posts View', () => {
     const actionsButton = await screen.findByRole('button', { name: /actions menu/i });
     await act(async () => {
       fireEvent.click(actionsButton);
-    });
-
-    // Hover over the delete-activity menu item to show submenu
-    const deleteActivityItem = await screen.findByTestId('delete-activity');
-    await act(async () => {
-      fireEvent.mouseEnter(deleteActivityItem);
     });
 
     const deleteCourseItem = await screen.findByTestId('delete-course-posts');
@@ -314,12 +303,6 @@ describe('Learner Posts View', () => {
       fireEvent.click(actionsButton);
     });
 
-    // Hover over the delete-activity menu item to show submenu
-    const deleteActivityItem = await screen.findByTestId('delete-activity');
-    await act(async () => {
-      fireEvent.mouseEnter(deleteActivityItem);
-    });
-
     const deleteCourseItem = await screen.findByTestId('delete-course-posts');
     await act(async () => {
       fireEvent.click(deleteCourseItem);
@@ -350,12 +333,6 @@ describe('Learner Posts View', () => {
       fireEvent.click(actionsButton);
     });
 
-    // Hover over the delete-activity menu item to show submenu
-    const deleteActivityItem = await screen.findByTestId('delete-activity');
-    await act(async () => {
-      fireEvent.mouseEnter(deleteActivityItem);
-    });
-
     const deleteOrgItem = await screen.findByTestId('delete-org-posts');
     await act(async () => {
       fireEvent.click(deleteOrgItem);
@@ -364,6 +341,7 @@ describe('Learner Posts View', () => {
     await waitFor(() => {
       expect(screen.getByText('Are you sure you want to delete this user\'s discussion contributions?')).toBeInTheDocument();
       expect(screen.getByText('You are about to delete 15 discussion contributions by this user across the organization. This includes all discussion threads, responses, and comments authored by them.')).toBeInTheDocument();
+      expect(screen.getByText('This action cannot be undone.')).toBeInTheDocument();
     });
   });
 });

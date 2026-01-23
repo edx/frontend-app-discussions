@@ -20,8 +20,7 @@ const learnersSlice = createSlice({
     sortedBy: LearnersOrdering.BY_LAST_ACTIVITY,
     postFilter: {
       postType: ThreadType.ALL,
-      status: PostsStatusFilter.ALL, // secondary status (Unread, etc.)
-      contentStatus: PostsStatusFilter.ACTIVE, // main content status (Active/Deleted)
+      status: PostsStatusFilter.ALL,
       orderBy: ThreadOrdering.BY_LAST_ACTIVITY,
       cohort: '',
     },
@@ -86,10 +85,7 @@ const learnersSlice = createSlice({
       {
         ...state,
         pages: [],
-        postFilter: {
-          ...state.postFilter,
-          ...payload,
-        },
+        postFilter: payload,
       }
     ),
     deleteUserPostsRequest: (state) => (
@@ -103,31 +99,9 @@ const learnersSlice = createSlice({
         ...state,
         status: RequestStatus.SUCCESSFUL,
         bulkDeleteStats: payload,
-        pages: [], // Clear pages to force refetch with updated stats
       }
     ),
     deleteUserPostsFailed: (state) => (
-      {
-        ...state,
-        status: RequestStatus.FAILED,
-      }
-    ),
-    undeleteUserPostsRequest: (state) => (
-      {
-        ...state,
-        status: RequestStatus.IN_PROGRESS,
-      }
-    ),
-    undeleteUserPostsSuccess: (state, { payload }) => (
-      {
-        ...state,
-        status: RequestStatus.SUCCESSFUL,
-        bulkDeleteStats: payload,
-        bulkUndeleteStats: payload,
-        pages: [], // Clear pages to force refetch with updated stats
-      }
-    ),
-    undeleteUserPostsFailed: (state) => (
       {
         ...state,
         status: RequestStatus.FAILED,
@@ -147,9 +121,6 @@ export const {
   deleteUserPostsRequest,
   deleteUserPostsSuccess,
   deleteUserPostsFailed,
-  undeleteUserPostsRequest,
-  undeleteUserPostsSuccess,
-  undeleteUserPostsFailed,
 } = learnersSlice.actions;
 
 export const learnersReducer = learnersSlice.reducer;
