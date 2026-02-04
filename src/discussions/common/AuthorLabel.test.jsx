@@ -246,4 +246,37 @@ describe('Author label', () => {
       });
     });
   });
+
+  describe('Null author handling', () => {
+    it('should display "[Deleted User]" when author is null', () => {
+      renderComponent(null, null, false, '');
+      const authorElement = container.querySelector('[role=heading]');
+      expect(authorElement).toHaveTextContent('[Deleted User]');
+    });
+
+    it('should use text-gray-700 styling when author is null', () => {
+      renderComponent(null, null, false, '');
+      const authorElement = container.querySelector('[role=heading]');
+      expect(authorElement).toHaveClass('text-gray-700');
+    });
+
+    it('should not generate a link when author is null even with linkToProfile=true', () => {
+      renderComponent(null, null, true, '');
+      expect(screen.queryByTestId('learner-posts-link')).not.toBeInTheDocument();
+    });
+
+    it('should handle null author with staff label correctly', () => {
+      renderComponent(null, 'Staff', false, 'text-staff-color');
+      const authorElement = container.querySelector('[role=heading]');
+      expect(authorElement).toHaveTextContent('[Deleted User]');
+      // Should still show the staff label even though author is null
+      expect(container).toHaveTextContent('Staff');
+    });
+
+    it('should not display learner messages when author is null', () => {
+      const postData = { learner_status: 'new' };
+      renderComponent(null, null, false, '', false, postData, true);
+      expect(screen.queryByText('👋 Hi, I am a new learner')).not.toBeInTheDocument();
+    });
+  });
 });

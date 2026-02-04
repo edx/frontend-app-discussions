@@ -58,13 +58,13 @@ const AuthorLabel = ({
     () => (
       <span
         className={classNames('mr-1.5 font-style font-weight-500 author-name', {
-          'text-gray-700': isRetiredUser,
-          'text-primary-500': !authorLabelMessage && !isRetiredUser,
+          'text-gray-700': isRetiredUser || !author,
+          'text-primary-500': !authorLabelMessage && !isRetiredUser && author,
         })}
         role="heading"
         aria-level="2"
       >
-        {isRetiredUser ? '[Deactivated]' : author}
+        {isRetiredUser ? '[Deactivated]' : (author || '[Deleted User]')}
       </span>
     ),
     [author, authorLabelMessage, isRetiredUser],
@@ -162,7 +162,7 @@ const AuthorLabel = ({
     ],
   );
 
-  const learnerPostsLink = (
+  const learnerPostsLink = author ? (
     <Link
       data-testid="learner-posts-link"
       id="learner-posts-link"
@@ -172,6 +172,10 @@ const AuthorLabel = ({
     >
       {!alert && authorName}
     </Link>
+  ) : (
+    <span style={{ width: 'fit-content' }}>
+      {!alert && authorName}
+    </span>
   );
 
   return showUserNameAsLink ? (
@@ -222,7 +226,7 @@ const AuthorLabel = ({
 };
 
 AuthorLabel.propTypes = {
-  author: PropTypes.string.isRequired,
+  author: PropTypes.string,
   authorLabel: PropTypes.string,
   linkToProfile: PropTypes.bool,
   labelColor: PropTypes.string,
@@ -234,6 +238,18 @@ AuthorLabel.propTypes = {
     is_new_learner: PropTypes.bool,
     is_regular_learner: PropTypes.bool,
   }), // Thread or comment data from API
+};
+
+AuthorLabel.defaultProps = {
+  author: null,
+  authorLabel: null,
+  linkToProfile: false,
+  labelColor: '',
+  alert: false,
+  postCreatedAt: null,
+  authorToolTip: false,
+  postOrComment: false,
+  postData: null,
 };
 
 export default React.memo(AuthorLabel);

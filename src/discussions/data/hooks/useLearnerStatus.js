@@ -14,11 +14,12 @@ import { useMemo } from 'react';
  */
 export const useLearnerStatus = (postData, author, authorLabel) => useMemo(() => {
   // Users with special roles (Staff, Moderator, Community TA) should not display learner messages
-  // Anonymous and retired users should also not display learner messages
+  // Anonymous, retired, and deleted users should also not display learner messages
   if (
-    authorLabel
+    !author
+    || authorLabel
     || author === 'anonymous'
-    || (author && author.startsWith('retired__user'))
+    || author.startsWith('retired__user')
   ) {
     return {
       isNewLearner: false,
