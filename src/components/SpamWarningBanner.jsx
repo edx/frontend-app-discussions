@@ -53,7 +53,7 @@ const SpamWarningBanner = ({ className = '' }) => {
             <strong>{intl.formatMessage(messages.spamWarningHeading)}:</strong>{' '}
             {(() => {
               const msg = intl.formatMessage(messages.spamWarningMessage);
-              const boldText = 'never invite you to join external groups or ask for personal or financial information';
+              const boldText = 'never invite you to join external groups, such as on WhatsApp, or ask for personal or financial information';
               const idx = msg.indexOf(boldText);
               if (idx === -1) {
                 return msg;

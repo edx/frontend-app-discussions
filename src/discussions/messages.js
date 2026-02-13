@@ -245,7 +245,7 @@ const messages = defineMessages({
   },
   spamWarningMessage: {
     id: 'discussions.spamWarning.message',
-    defaultMessage: 'Faculty and staff will never invite you to join external groups or ask for personal or financial information in the discussions. Stay safe, and if you see suspicious activity, please report it.',
+    defaultMessage: 'Faculty and staff will never invite you to join external groups, such as on WhatsApp, or ask for personal or financial information in the discussions. Stay safe, and if you see suspicious activity, please report it.',
     description: 'Warning message about spam and impersonation in discussion forums',
   },
   activeThreads: {
