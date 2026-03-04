@@ -78,6 +78,7 @@ const PostLink = ({
   const authorLabelColor = AvatarOutlineAndLabelColors[authorLabel];
   const canSeeReportedBadge = abuseFlagged || abuseFlaggedCount;
   const isPostRead = read || (!read && commentCount !== unreadCommentCount);
+  const shouldUseSingleLineAuthorRole = ['learners', 'posts', 'my-posts'].includes(page);
 
   const checkIsSelected = useMemo(
     () => (
@@ -190,6 +191,7 @@ const PostLink = ({
             author={author || intl.formatMessage(messages.anonymous)}
             authorLabel={authorLabel}
             labelColor={authorLabelColor && `text-${authorLabelColor}`}
+            singleLine={shouldUseSingleLineAuthorRole}
             postData={threadData}
           />
           <PostSummaryFooter

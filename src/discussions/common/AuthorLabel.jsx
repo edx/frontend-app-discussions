@@ -25,6 +25,8 @@ const AuthorLabel = ({
   postCreatedAt = null,
   authorToolTip = false,
   postOrComment = false,
+  singleLine = false,
+  roleBeforeTimestamp = false,
   postData = null, // Thread or comment data from API containing is_new_learner field
 }) => {
   timeago.register('time-locale', timeLocale);
@@ -233,6 +235,20 @@ const AuthorLabel = ({
     </span>
   );
 
+  if (singleLine) {
+    return (
+      <div className={className}>
+        <div className={classNames('d-flex align-items-center flex-nowrap', labelColor)}>
+          {showUserNameAsLink ? learnerPostsLink : authorName}
+          {roleBeforeTimestamp && roleContents}
+          {timestamp}
+          {!roleBeforeTimestamp && roleContents}
+          {bannedIndicator}
+        </div>
+      </div>
+    );
+  }
+
   return showUserNameAsLink ? (
     <div className={`${className} flex-wrap`}>
       <div className="d-flex flex-column w-100">
@@ -273,6 +289,8 @@ AuthorLabel.propTypes = {
   postCreatedAt: PropTypes.string,
   authorToolTip: PropTypes.bool,
   postOrComment: PropTypes.bool,
+  singleLine: PropTypes.bool,
+  roleBeforeTimestamp: PropTypes.bool,
   postData: PropTypes.shape({
     is_new_learner: PropTypes.bool,
     is_regular_learner: PropTypes.bool,
@@ -288,6 +306,8 @@ AuthorLabel.defaultProps = {
   postCreatedAt: null,
   authorToolTip: false,
   postOrComment: false,
+  singleLine: false,
+  roleBeforeTimestamp: false,
   postData: null,
 };
 

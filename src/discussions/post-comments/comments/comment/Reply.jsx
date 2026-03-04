@@ -14,7 +14,7 @@ import {
 } from '../../../../data/api/moderation';
 import { AvatarOutlineAndLabelColors, ContentActions } from '../../../../data/constants';
 import {
-  ActionsDropdown, AlertBanner, AuthorLabel, AutoSpamAlertBanner, Confirmation,
+  ActionsDropdown, AlertBanner, AuthorLabel, AutoSpamAlertBanner, Confirmation, DeletedByBanner,
 } from '../../../common';
 import DiscussionContext from '../../../common/context';
 import timeLocale from '../../../common/time-locale';
@@ -35,7 +35,8 @@ const Reply = ({ responseId }) => {
   const commentData = useSelector(selectCommentOrResponseById(responseId));
   const {
     id, abuseFlagged, author, authorLabel, endorsed, lastEdit, closed, closedBy,
-    closeReason, createdAt, threadId, parentId, rawBody, renderedBody, editByLabel, closedByLabel, is_spam: isSpam,
+    closeReason, createdAt, threadId, parentId, rawBody, renderedBody, editByLabel,
+    closedByLabel, isDeleted, deletedBy, deletedByLabel, is_spam: isSpam,
   } = commentData;
   const intl = useIntl();
   const dispatch = useDispatch();
@@ -303,6 +304,21 @@ const Reply = ({ responseId }) => {
           </div>
           <div className="w-100">
             <AutoSpamAlertBanner autoSpamFlagged={isSpamFlagged} />
+          </div>
+        </div>
+      )}
+      {isDeleted && deletedBy && (
+        <div className="d-flex">
+          <div className="d-flex invisible">
+            <Avatar />
+          </div>
+          <div className="w-100">
+            <DeletedByBanner
+              deletedBy={deletedBy}
+              deletedByLabel={deletedByLabel}
+              message={intl.formatMessage(messages.deletedBy)}
+              postData={commentData}
+            />
           </div>
         </div>
       )}

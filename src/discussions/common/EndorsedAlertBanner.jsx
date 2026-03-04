@@ -47,7 +47,7 @@ const EndorsedAlertBanner = ({
               {intl.formatMessage(isQuestion ? messages.answer : messages.endorsed)}
             </strong>
           </div>
-          <span className="d-flex align-items-center align-items-center flex-wrap" style={{ marginRight: '-1px' }}>
+          <span className="d-flex align-items-center flex-nowrap" style={{ marginRight: '-1px' }}>
             <AuthorLabel
               author={endorsedBy}
               authorLabel={endorsedByLabel}
@@ -56,6 +56,8 @@ const EndorsedAlertBanner = ({
               postCreatedAt={endorsedAt}
               authorToolTip
               postOrComment
+              singleLine
+              roleBeforeTimestamp
             />
           </span>
         </div>

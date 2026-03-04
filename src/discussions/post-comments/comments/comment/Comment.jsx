@@ -18,12 +18,15 @@ import HTMLLoader from '../../../../components/HTMLLoader';
 import {
   banUser, bulkDeleteUserPosts, unbanUser,
 } from '../../../../data/api/moderation';
-import { ContentActions, EndorsementStatus } from '../../../../data/constants';
+import {
+  ContentActions, EndorsementStatus,
+} from '../../../../data/constants';
 import {
   AlertBanner,
   AutoSpamAlertBanner,
   BanModerationModals,
   Confirmation,
+  DeletedByBanner,
   EndorsedAlertBanner,
 } from '../../../common';
 import DiscussionContext from '../../../common/context';
@@ -40,6 +43,7 @@ import {
 import { fetchThread } from '../../../posts/data/thunks';
 import LikeButton from '../../../posts/post/LikeButton';
 import { useActions } from '../../../utils';
+import { useShowDeletedContent } from '../../data/hooks';
 import {
   selectCommentCurrentPage,
   selectCommentHasMorePages,
@@ -70,7 +74,7 @@ const Comment = ({
   const {
     id, parentId, childCount, abuseFlagged, endorsed, threadId, endorsedAt, endorsedBy, endorsedByLabel, renderedBody,
     voted, following, voteCount, authorLabel, author, createdAt, lastEdit, rawBody, closed, closedBy, closeReason,
-    editByLabel, closedByLabel, users: postUsers, is_spam: isSpam,
+    editByLabel, closedByLabel, users: postUsers, isDeleted, deletedBy, deletedByLabel, is_spam: isSpam,
   } = comment;
   const intl = useIntl();
   const hasChildren = childCount > 0;
@@ -138,6 +142,7 @@ const Comment = ({
   const shouldShowEmailConfirmation = useSelector(selectShouldShowEmailConfirmation);
   const contentCreationRateLimited = useSelector(selectContentCreationRateLimited);
   const isUserBanned = useSelector(selectIsUserBanned);
+  const showDeleted = useShowDeletedContent();
   // If isSpam is not provided in the API response, default to false
   const isSpamFlagged = isSpam || false;
   useEffect(() => {
@@ -146,9 +151,10 @@ const Comment = ({
       dispatch(fetchCommentResponses(id, {
         page: 1,
         reverseOrder: sortedOrder,
+        showDeleted,
       }));
     }
-  }, [id, sortedOrder]);
+  }, [id, sortedOrder, showDeleted]);
 
   const endorseIcons = useMemo(() => (
     actions.find(({ action }) => action === EndorsementStatus.ENDORSED)
@@ -352,8 +358,9 @@ const Comment = ({
     dispatch(fetchCommentResponses(id, {
       page: currentPage + 1,
       reverseOrder: sortedOrder,
+      showDeleted,
     }))
-  ), [id, currentPage, sortedOrder]);
+  ), [id, currentPage, sortedOrder, showDeleted]);
 
   const handleAddCommentButton = useCallback(() => {
     if (isUserPrivilegedInPostingRestriction) {
@@ -444,8 +451,17 @@ const Comment = ({
             voted={voted}
             following={following}
             endorseIcons={endorseIcons}
+            isDeleted={isDeleted}
             isUserBanned={isUserBanned}
           />
+          {isDeleted && deletedBy && (
+            <DeletedByBanner
+              deletedBy={deletedBy}
+              deletedByLabel={deletedByLabel}
+              message={intl.formatMessage(messages.deletedBy)}
+              postData={comment}
+            />
+          )}
           <AlertBanner
             author={author}
             abuseFlagged={abuseFlagged}

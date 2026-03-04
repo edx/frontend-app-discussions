@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
 import { IntlProvider } from 'react-intl';
 import { Factory } from 'rosie';
@@ -44,11 +44,11 @@ const mockThread = async (id, abuseFlagged) => {
   await executeThunk(fetchThread(id), store.dispatch, store.getState);
 };
 
-function renderComponent(id) {
+function renderComponent(id, page = 'posts', contextOverrides = {}) {
   return render(
     <IntlProvider locale="en">
       <AppProvider store={store}>
-        <DiscussionContext.Provider value={{ courseId, page: 'posts' }}>
+        <DiscussionContext.Provider value={{ courseId, page, ...contextOverrides }}>
           <PostLink
             key={id}
             postId={id}
@@ -104,4 +104,61 @@ describe('Post username', () => {
 
     expect(screen.queryByTestId('learner-posts-link')).not.toBeInTheDocument();
   });
+
+  it('does not show deleted by attribution in post list cards', async () => {
+    store = initializeStore();
+    Factory.resetAll();
+
+    axiosMock = new MockAdapter(getAuthenticatedHttpClient());
+    axiosMock.onGet(`${courseConfigApiUrl}${courseId}/settings`).reply(200, {});
+    axiosMock.onGet(`${courseConfigApiUrl}${courseId}/`).reply(200, {
+      has_moderation_privileges: true,
+    });
+    axiosMock.onGet(`${threadsApiUrl}${postId}/`).reply(200, Factory.build('thread', {
+      id: postId,
+      is_deleted: true,
+      deleted_by: 'staff-user',
+      deleted_by_label: 'Staff',
+    }));
+
+    await executeThunk(fetchCourseConfig(courseId), store.dispatch, store.getState);
+    await executeThunk(fetchThread(postId), store.dispatch, store.getState);
+
+    const { container } = renderComponent(postId);
+
+    expect(container.querySelector('.deleted-content-icon')).not.toBeInTheDocument();
+  });
+
+  it.each(['learners', 'posts', 'my-posts'])(
+    'shows author name and role on a single line for %s listing',
+    async (page) => {
+      store = initializeStore();
+      Factory.resetAll();
+
+      axiosMock = new MockAdapter(getAuthenticatedHttpClient());
+      axiosMock.onGet(`${courseConfigApiUrl}${courseId}/settings`).reply(200, {});
+      axiosMock.onGet(`${courseConfigApiUrl}${courseId}/`).reply(200, {
+        has_moderation_privileges: true,
+      });
+      axiosMock.onGet(`${threadsApiUrl}${postId}/`).reply(200, Factory.build('thread', {
+        id: postId,
+        author: 'staff-user',
+        author_label: 'Staff',
+      }));
+
+      await executeThunk(fetchCourseConfig(courseId), store.dispatch, store.getState);
+      await executeThunk(fetchThread(postId), store.dispatch, store.getState);
+
+      renderComponent(
+        postId,
+        page,
+        page === 'learners' ? { learnerUsername: 'staff-user' } : {},
+      );
+
+      const authorName = screen.getByRole('heading', { name: 'staff-user' });
+      const singleLineRow = authorName.closest('div.d-flex.align-items-center.flex-nowrap');
+      expect(singleLineRow).toBeInTheDocument();
+      expect(within(singleLineRow).getByText('Staff')).toBeInTheDocument();
+    },
+  );
 });

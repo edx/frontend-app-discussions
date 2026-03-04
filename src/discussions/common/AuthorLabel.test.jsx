@@ -250,6 +250,33 @@ describe('Author label', () => {
     });
   });
 
+  describe('Single-line ordering', () => {
+    it('renders role before age when roleBeforeTimestamp is true', () => {
+      render(
+        <IntlProvider locale="en">
+          <AppProvider store={store}>
+            <DiscussionContext.Provider value={{ courseId, enableInContextSidebar: false }}>
+              <AuthorLabel
+                author="staff_user"
+                authorLabel="Staff"
+                postCreatedAt="2026-03-06T00:00:00.000Z"
+                singleLine
+                roleBeforeTimestamp
+                alert
+              />
+            </DiscussionContext.Provider>
+          </AppProvider>
+        </IntlProvider>,
+      );
+
+      const roleLabel = screen.getByText('Staff');
+      const timestamp = document.querySelector('.post-summary-timestamp');
+
+      expect(timestamp).toBeInTheDocument();
+      expect(roleLabel.compareDocumentPosition(timestamp)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    });
+  });
+
   describe('Null author handling', () => {
     it('should display "[Deleted User]" when author is null', () => {
       renderComponent(null, null, false, '');

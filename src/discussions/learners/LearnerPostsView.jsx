@@ -323,6 +323,7 @@ const LearnerPostsView = () => {
               actionHandlers={actionHandlers}
               userHasBulkDeletePrivileges={userHasBulkDeletePrivileges}
               learnerBanInfo={learnerBanInfo}
+              contentStatus={postFilter?.contentStatus}
               dropDownIconSize
             />
           </div>

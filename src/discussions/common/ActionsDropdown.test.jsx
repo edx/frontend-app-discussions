@@ -252,6 +252,59 @@ describe('ActionsDropdown', () => {
     await waitFor(() => expect(screen.queryByText('Copy link')).not.toBeInTheDocument());
   });
 
+  it('shows deleted content actions as disabled except copy link and restore', async () => {
+    const deletedDiscussion = buildTestContent({
+      editable_fields: ['copy_link', 'delete', 'raw_body'],
+      is_deleted: true,
+      can_delete: true,
+    }).discussion;
+
+    await mockThreadAndComment(deletedDiscussion);
+    renderComponent({ ...camelCaseObject(deletedDiscussion) });
+
+    const openButton = await findOpenActionsDropdownButton();
+    await act(async () => {
+      fireEvent.click(openButton);
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('copy-link')).toBeInTheDocument();
+      expect(screen.queryByTestId('restore')).toBeInTheDocument();
+      expect(screen.queryByTestId('copy-link')).not.toBeDisabled();
+      expect(screen.queryByTestId('restore')).not.toBeDisabled();
+      expect(screen.queryByTestId('edit')).toBeInTheDocument();
+      expect(screen.queryByTestId('edit')).toBeDisabled();
+      expect(screen.queryByTestId('delete-post')).toBeInTheDocument();
+      expect(screen.queryByTestId('delete-post')).toBeDisabled();
+    });
+  });
+
+  it('shows deleted comment actions as disabled except restore', async () => {
+    const deletedComment = buildTestContent({
+      editable_fields: ['delete', 'raw_body'],
+      is_deleted: true,
+      can_delete: true,
+    }).comment;
+
+    await mockThreadAndComment(deletedComment);
+    renderComponent({ ...camelCaseObject(deletedComment) });
+
+    const openButton = await findOpenActionsDropdownButton();
+    await act(async () => {
+      fireEvent.click(openButton);
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('restore')).toBeInTheDocument();
+      expect(screen.queryByTestId('restore')).not.toBeDisabled();
+      expect(screen.queryByTestId('copy-link')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('edit')).toBeInTheDocument();
+      expect(screen.queryByTestId('edit')).toBeDisabled();
+      expect(screen.queryByTestId('delete-post')).toBeInTheDocument();
+      expect(screen.queryByTestId('delete-post')).toBeDisabled();
+    });
+  });
+
   it('should close the dropdown when pressing escape', async () => {
     const discussionObject = buildTestContent({ editable_fields: ['copy_link'] }).discussion;
     await mockThreadAndComment(discussionObject);
