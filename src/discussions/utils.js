@@ -342,7 +342,10 @@ export function useActions(contentType, id, hasModerationPrivileges) {
           })
           .map(subAction => ({
             ...subAction,
-            disabled: checkDisabled(content, subAction.disabledConditions),
+            disabled: (
+              checkDisabled(content, subAction.disabledConditions)
+              || isActionDisabled(subAction.id, content.isDeleted)
+            ),
           }));
 
         // If only one submenu item remains, convert to direct action (no submenu)
@@ -361,6 +364,7 @@ export function useActions(contentType, id, hasModerationPrivileges) {
           return {
             ...action,
             submenu: filteredSubmenu,
+            disabled: filteredSubmenu.every(subAction => subAction.disabled),
           };
         }
 

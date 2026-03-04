@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux';
 
 import { useIntl } from '@edx/frontend-platform/i18n';
 
-import { ContentActions } from '../../data/constants';
+import { ContentActions, PostsStatusFilter } from '../../data/constants';
 import { selectEnableDiscussionBan } from '../data/selectors';
 import { checkBanActionDisabled } from '../utils/banUtils';
 import { BAN_SCOPES } from './data/constants';
@@ -104,7 +104,11 @@ const checkDisabled = (learnerBanInfo, disabledConditions) => {
   return false;
 };
 
-export function useLearnerActions(userHasBulkDeletePrivileges = false, learnerBanInfo = {}) {
+export function useLearnerActions(
+  userHasBulkDeletePrivileges = false,
+  learnerBanInfo = {},
+  contentStatus = PostsStatusFilter.ACTIVE,
+) {
   const intl = useIntl();
   const enableDiscussionBan = useSelector(selectEnableDiscussionBan);
 
@@ -118,6 +122,15 @@ export function useLearnerActions(userHasBulkDeletePrivileges = false, learnerBa
       if (action.id === 'ban' && !enableDiscussionBan) {
         return false;
       }
+
+      if (contentStatus === PostsStatusFilter.DELETED && action.id === 'delete-activity') {
+        return false;
+      }
+
+      if (contentStatus !== PostsStatusFilter.DELETED && action.id === 'restore-activity') {
+        return false;
+      }
+
       return true;
     }).map(action => {
       // For actions with submenus, check disabled conditions
@@ -170,7 +183,7 @@ export function useLearnerActions(userHasBulkDeletePrivileges = false, learnerBa
         },
       };
     }).filter(Boolean); // Remove null entries (actions with empty submenus)
-  }, [userHasBulkDeletePrivileges, learnerBanInfo, enableDiscussionBan, intl]);
+  }, [userHasBulkDeletePrivileges, learnerBanInfo, contentStatus, enableDiscussionBan, intl]);
 
   return actions;
 }

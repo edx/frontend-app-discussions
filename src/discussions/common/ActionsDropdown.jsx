@@ -12,7 +12,6 @@ import { useSelector } from 'react-redux';
 import { useIntl } from '@edx/frontend-platform/i18n';
 import { logError } from '@edx/frontend-platform/logging';
 
-import { ContentActions } from '../../data/constants';
 import { selectIsPostingEnabled, selectUserHasModerationPrivileges } from '../data/selectors';
 import messages from '../messages';
 import { useActions } from '../utils';
@@ -73,7 +72,11 @@ const ActionsDropdown = ({
       as={Button}
       variant="tertiary"
       size="inline"
+      disabled={action.disabled}
       onClick={() => {
+        if (action.disabled) {
+          return;
+        }
         if (action.hasSubmenu) {
           setActiveSubmenu(action.id);
         } else {
@@ -161,7 +164,7 @@ const ActionsDropdown = ({
       ) : (
         actions.map(action => (
           <React.Fragment key={action.id}>
-            {(action.id === 'ban' || action.action === ContentActions.DELETE) && <Dropdown.Divider />}
+            {(action.id === 'ban' || action.id === 'delete') && <Dropdown.Divider />}
             {action.hasSubmenu ? (
               renderMenuItem(action)
             ) : (

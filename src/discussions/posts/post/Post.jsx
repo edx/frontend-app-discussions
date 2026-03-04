@@ -20,7 +20,7 @@ import {
 import { ContentActions, getFullUrl } from '../../../data/constants';
 import { selectorForUnitSubsection, selectTopicContext } from '../../../data/selectors';
 import {
-  AlertBanner, AutoSpamAlertBanner, BanModerationModals, Confirmation,
+  AlertBanner, AutoSpamAlertBanner, BanModerationModals, Confirmation, DeletedByBanner,
 } from '../../common';
 import DiscussionContext from '../../common/context';
 import HoverCard from '../../common/HoverCard';
@@ -90,6 +90,9 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
     editByLabel,
     closedByLabel,
     users: postUsers,
+    isDeleted,
+    deletedBy,
+    deletedByLabel,
     is_spam: isSpam,
   } = threadData;
   const intl = useIntl();
@@ -495,8 +498,17 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
         onFollow={handlePostFollow}
         voted={voted}
         following={following}
+        isDeleted={isDeleted}
         isUserBanned={isUserBanned}
       />
+      {isDeleted && deletedBy && (
+        <DeletedByBanner
+          deletedBy={deletedBy}
+          deletedByLabel={deletedByLabel}
+          message={intl.formatMessage(messages.deletedBy)}
+          postData={threadData}
+        />
+      )}
       <AlertBanner
         author={author}
         abuseFlagged={abuseFlagged}

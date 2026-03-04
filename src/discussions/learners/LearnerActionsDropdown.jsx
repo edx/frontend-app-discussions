@@ -17,6 +17,7 @@ const LearnerActionsDropdown = ({
   dropDownIconSize,
   userHasBulkDeletePrivileges,
   learnerBanInfo,
+  contentStatus,
 }) => {
   const buttonRef = useRef();
   const intl = useIntl();
@@ -25,7 +26,7 @@ const LearnerActionsDropdown = ({
   const [submenuOpen, setSubmenuOpen] = useState(null);
   const [submenuTarget, setSubmenuTarget] = useState(null);
   const submenuRef = useRef({});
-  const actions = useLearnerActions(userHasBulkDeletePrivileges, learnerBanInfo);
+  const actions = useLearnerActions(userHasBulkDeletePrivileges, learnerBanInfo, contentStatus);
 
   // Cleanup refs when actions change to prevent memory leaks
   useEffect(() => {
@@ -201,12 +202,14 @@ LearnerActionsDropdown.propTypes = {
     isAuthorBanned: PropTypes.bool,
     authorBanScope: PropTypes.string,
   }),
+  contentStatus: PropTypes.string,
 };
 
 LearnerActionsDropdown.defaultProps = {
   dropDownIconSize: false,
   userHasBulkDeletePrivileges: false,
   learnerBanInfo: {},
+  contentStatus: undefined,
 };
 
 export default LearnerActionsDropdown;

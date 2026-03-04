@@ -4,4 +4,5 @@ export { default as AuthorLabel } from './AuthorLabel';
 export { default as AutoSpamAlertBanner } from './AutoSpamAlertBanner';
 export { default as BanModerationModals } from './BanModerationModals';
 export { default as Confirmation } from './Confirmation';
+export { default as DeletedByBanner } from './DeletedByBanner';
 export { default as EndorsedAlertBanner } from './EndorsedAlertBanner';

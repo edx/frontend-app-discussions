@@ -10,7 +10,7 @@ import { initializeMockApp } from '@edx/frontend-platform';
 import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
 import { AppProvider } from '@edx/frontend-platform/react';
 
-import { ContentActions } from '../../data/constants';
+import { ContentActions, PostsStatusFilter } from '../../data/constants';
 import { initializeStore } from '../../store';
 import executeThunk from '../../test-utils';
 import { getCourseConfigApiUrl } from '../data/api';
@@ -26,6 +26,7 @@ const renderComponent = ({
   contentType = 'LEARNER',
   userHasBulkDeletePrivileges = false,
   actionHandlers = {},
+  contentStatus,
 } = {}) => {
   render(
     <IntlProvider locale="en">
@@ -34,6 +35,7 @@ const renderComponent = ({
           contentType={contentType}
           userHasBulkDeletePrivileges={userHasBulkDeletePrivileges}
           actionHandlers={actionHandlers}
+          contentStatus={contentStatus}
         />
       </AppProvider>
     </IntlProvider>,
@@ -170,5 +172,22 @@ describe('LearnerActionsDropdown', () => {
     await waitFor(() => expect(screen.queryByTestId('learner-actions-dropdown-modal-popup')).not.toBeInTheDocument());
     expect(mockDeleteOrgHandler).toHaveBeenCalled();
     expect(mockDeleteCourseHandler).not.toHaveBeenCalled();
+  });
+
+  it('shows restore-only learner actions in deleted filter', async () => {
+    renderComponent({
+      userHasBulkDeletePrivileges: true,
+      contentStatus: PostsStatusFilter.DELETED,
+    });
+
+    const openButton = await findOpenActionsDropdownButton();
+    await act(async () => {
+      fireEvent.click(openButton);
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('delete-activity')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('restore-activity')).toBeInTheDocument();
+    });
   });
 });
