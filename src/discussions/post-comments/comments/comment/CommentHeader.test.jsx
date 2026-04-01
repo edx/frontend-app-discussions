@@ -12,7 +12,7 @@ import { useAlertBannerVisible } from '../../../data/hooks';
 import CommentHeader from './CommentHeader';
 
 jest.mock('react-redux', () => ({ useSelector: jest.fn() }));
-jest.mock('@edx/frontend-platform', () => ({ getConfig: jest.fn(), ensureConfig: jest.fn() }));
+jest.mock('@edx/frontend-platform', () => ({ getConfig: jest.fn() }));
 jest.mock('../../../data/hooks', () => ({ useAlertBannerVisible: jest.fn() }));
 
 const defaultProps = {

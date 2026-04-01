@@ -9,10 +9,13 @@ export const selectAnonymousPostingConfig = state => ({
   allowAnonymousToPeers: state.config.allowAnonymousToPeers,
 });
 
-// Moderation privileges include: Discussion Admin, Discussion Moderator, and Global Staff
-// Course Staff and Course Admin are explicitly EXCLUDED and should behave like learners
+// Moderation privileges include: forum moderators, community TAs, course staff, course admins, and global staff
+// This matches the edX pattern where different privilege checks are combined at point of use
 export const selectUserHasModerationPrivileges = state => (
-  state.config.hasModerationPrivileges || state.config.isUserAdmin
+  state.config.hasModerationPrivileges
+  || state.config.isUserAdmin
+  || state.config.isCourseStaff
+  || state.config.isCourseAdmin
 );
 
 export const selectUserHasBulkDeletePrivileges = state => state.config.hasBulkDeletePrivileges;
@@ -66,10 +69,6 @@ export const selectModerationSettings = state => ({
 });
 
 export const selectDiscussionProvider = state => state.config.provider;
-
-export const selectPersonalMutedUsers = state => state.config.personalMutedUsers || [];
-
-export const selectCourseWideMutedUsers = state => state.config.courseWideMutedUsers || [];
 
 export function selectAreThreadsFiltered(state) {
   const { filters } = state.threads;

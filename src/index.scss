@@ -970,11 +970,6 @@ th, td {
   width: 16px;
   height: 16px;
   margin-right: 4px;
-
-}
-// Hide scrollbar but allow scrolling in learners view
-.d-flex.flex-column.border-right.border-light-400::-webkit-scrollbar {
-  display: none;
 }
 
 // Banned user styles - disable only Add Post, Add Response, and Add Comment components

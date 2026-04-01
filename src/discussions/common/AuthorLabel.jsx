@@ -2,9 +2,8 @@ import React, { useCallback, useContext, useMemo } from 'react';
 import PropTypes from 'prop-types';
 
 import { Icon, OverlayTrigger, Tooltip } from '@openedx/paragon';
-import { Block, RemoveCircleOutline } from '@openedx/paragon/icons';
+import { Block } from '@openedx/paragon/icons';
 import classNames from 'classnames';
-import { useSelector } from 'react-redux';
 import { generatePath, Link } from 'react-router-dom';
 import * as timeago from 'timeago.js';
 
@@ -42,14 +41,6 @@ const AuthorLabel = ({
     author,
     authorLabel,
   );
-
-  // Check if the author is muted by the current user
-  const personalMutedUsers = useSelector(state => state.learners?.mutedUsers?.personal || []);
-  const courseWideMutedUsers = useSelector(state => state.learners?.mutedUsers?.course || []);
-  const isMuted = useMemo(() => {
-    if (!author) { return false; }
-    return personalMutedUsers.includes(author) || courseWideMutedUsers.includes(author);
-  }, [author, personalMutedUsers, courseWideMutedUsers]);
 
   const isRetiredUser = author ? author.startsWith('retired__user') : false;
   const showTextPrimary = !authorLabelMessage && !isRetiredUser && !alert;
@@ -105,55 +96,14 @@ const AuthorLabel = ({
   );
 
   const learnerMessageComponent = useMemo(() => {
-    let learnerMessage = null;
-
     if (isNewLearner) {
-      learnerMessage = createLearnerMessage('newLearnerMessage');
-    } else if (isRegularLearner) {
-      learnerMessage = createLearnerMessage('learnerMessage');
+      return createLearnerMessage('newLearnerMessage');
     }
-
-    if (!learnerMessage && !isMuted) {
-      return null;
+    if (isRegularLearner) {
+      return createLearnerMessage('learnerMessage');
     }
-
-    return (
-      <div className="d-flex align-items-center mt-0.5">
-        {learnerMessage}
-        {isMuted && (
-          <OverlayTrigger
-            placement="top"
-            overlay={(
-              <Tooltip id={`muted-${author}-tooltip`}>
-                {intl.formatMessage(messages.mutedUser)}
-              </Tooltip>
-            )}
-            trigger={['hover', 'focus']}
-          >
-            <div className="d-flex align-items-center ml-1.5">
-              <Icon
-                style={{
-                  width: '0.75rem',
-                  height: '0.75rem',
-                  fill: 'currentColor',
-                  stroke: 'currentColor',
-                }}
-                src={RemoveCircleOutline}
-                className="text-gray-600"
-                data-testid="muted-badge-icon"
-              />
-              <span
-                className="text-gray-600 ml-0.5"
-                style={{ fontSize: '12px', fontWeight: '400', lineHeight: '16px' }}
-              >
-                {intl.formatMessage(messages.muted)}
-              </span>
-            </div>
-          </OverlayTrigger>
-        )}
-      </div>
-    );
-  }, [isNewLearner, isRegularLearner, isMuted, createLearnerMessage, author, intl]);
+    return null;
+  }, [isNewLearner, isRegularLearner, createLearnerMessage]);
 
   // Banned indicator - shown for all users (learners and staff)
   const bannedIndicator = useMemo(

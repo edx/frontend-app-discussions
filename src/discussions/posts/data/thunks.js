@@ -114,7 +114,6 @@ export function fetchThreads(courseId, {
   page = 1,
   isFilterChanged,
   countFlagged,
-  includeMuted,
 } = {}) {
   const options = {
     orderBy,
@@ -122,7 +121,6 @@ export function fetchThreads(courseId, {
     page,
     author,
     countFlagged,
-    includeMuted,
   };
   if (filters.status === PostsStatusFilter.FOLLOWING) {
     options.following = true;
@@ -174,22 +172,12 @@ export function fetchThreads(courseId, {
   };
 }
 
-/**
- * Fetches a single thread by ID.
- * @param {string} threadId The ID of the thread to fetch.
- * @param {?string} courseId The course ID. If not provided, it will be derived from Redux state.
- * @param {boolean} isDirectLinkPost Whether this is a direct link to a post.
- * @param {boolean} includeMuted Whether to include muted content.
- * @returns {function(*): Promise<void>}
- */
-export function fetchThread(threadId, courseId, isDirectLinkPost = false, includeMuted = false) {
+export function fetchThread(threadId, courseId, isDirectLinkPost = false) {
   return async (dispatch, getState) => {
     try {
       dispatch(fetchThreadRequest({ threadId }));
-      // Maintain backward compatibility: derive courseId from state if not provided
-      const actualCourseId = courseId || getState().config.courseId;
       const enableDiscussionBan = selectEnableDiscussionBan(getState());
-      const data = await getThread(threadId, actualCourseId, enableDiscussionBan, includeMuted);
+      const data = await getThread(threadId, courseId, enableDiscussionBan);
       if (isDirectLinkPost) {
         dispatch(fetchThreadByDirectLinkSuccess({ ...normaliseThreads(camelCaseObject(data)), page: 1 }));
       } else {

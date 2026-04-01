@@ -224,41 +224,6 @@ const messages = defineMessages({
     defaultMessage: 'Unreport',
     description: 'Action to unreport a post or comment',
   },
-  muteAction: {
-    id: 'discussions.actions.mute',
-    defaultMessage: 'Mute',
-    description: 'Action to mute a user',
-  },
-  unmuteAction: {
-    id: 'discussions.actions.unmute',
-    defaultMessage: 'Unmute',
-    description: 'Action to unmute a user',
-  },
-  mutePersonal: {
-    id: 'discussions.actions.mutePersonal',
-    defaultMessage: 'Mute for me',
-    description: 'Action to mute user personally (not course-wide)',
-  },
-  muteCoursewide: {
-    id: 'discussions.actions.muteCoursewide',
-    defaultMessage: 'Mute course-wide',
-    description: 'Action to mute user course-wide for all learners',
-  },
-  muteAndReport: {
-    id: 'discussions.actions.muteAndReport',
-    defaultMessage: 'Mute & Report',
-    description: 'Action to mute and report a user',
-  },
-  unmutePersonal: {
-    id: 'discussions.actions.unmutePersonal',
-    defaultMessage: 'Unmute for me',
-    description: 'Action to unmute user personally (not course-wide)',
-  },
-  unmuteCoursewide: {
-    id: 'discussions.actions.unmuteCoursewide',
-    defaultMessage: 'Unmute course-wide',
-    description: 'Action to unmute user course-wide for all learners',
-  },
   endorseAction: {
     id: 'discussions.actions.endorse',
     defaultMessage: 'Endorse',
@@ -535,26 +500,6 @@ const messages = defineMessages({
     id: 'discussions.autoSpamModalIconAlt',
     defaultMessage: 'Show more information about automatic flagging',
     description: 'Alt text for the icon that opens the automatic spam explanation modal',
-  },
-  muteUser: {
-    id: 'discussions.actions.muteUser',
-    defaultMessage: 'Mute user',
-    description: 'Action to mute a user in discussions',
-  },
-  unmuteUser: {
-    id: 'discussions.actions.unmuteUser',
-    defaultMessage: 'Unmute user',
-    description: 'Action to unmute a user in discussions',
-  },
-  muted: {
-    id: 'discussions.badge.muted',
-    defaultMessage: 'Muted',
-    description: 'Badge label shown when a user is muted',
-  },
-  mutedUser: {
-    id: 'discussions.badge.mutedUser',
-    defaultMessage: 'This user is muted',
-    description: 'Tooltip message shown when hovering over the muted badge',
   },
 });
 

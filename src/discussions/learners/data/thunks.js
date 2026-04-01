@@ -21,12 +21,8 @@ import { getHttpErrorStatus } from '../../utils';
 import {
   deleteUserPostsApi,
   getBannedUsers,
-  getForumMutedUsers,
   getLearners,
-  getMutedPostsByScope,
   getUserProfiles,
-  muteUser,
-  unmuteUser,
 } from './api';
 import {
   banUserFailed,
@@ -45,9 +41,6 @@ import {
   fetchLearnersFailed,
   fetchLearnersRequest,
   fetchLearnersSuccess,
-  fetchMutedUsersFailed,
-  fetchMutedUsersRequest,
-  fetchMutedUsersSuccess,
   unbanUserFailed,
   unbanUserRequest,
   unbanUserSuccess,
@@ -59,44 +52,62 @@ import {
   undeleteUserPostsSuccess,
 } from './slices';
 
+/**
+ * Fetches the learners for the course courseId.
+ * @param {string} courseId The course ID for the course to fetch data for.
+ * @param {string} orderBy
+ * @param {number} page
+ * @param {usernameSearch} username
+ * @returns {(function(*): Promise<void>)|*}
+ */
+export function fetchLearners(courseId, {
+  orderBy,
+  page = 1,
+  usernameSearch = null,
+} = {}) {
+  return async (dispatch) => {
+    try {
+      const params = snakeCaseObject({ orderBy, page });
+      if (usernameSearch) {
+        params.username = usernameSearch;
+      }
+      dispatch(fetchLearnersRequest({ courseId }));
+      const learnerStats = await getLearners(courseId, params);
+      const learnerProfilesData = await getUserProfiles(learnerStats.results.map((l) => l.username));
+      const learnerProfiles = {};
+      learnerProfilesData.forEach(
+        learnerProfile => {
+          learnerProfiles[learnerProfile.username] = camelCaseObject(learnerProfile);
+        },
+      );
+      dispatch(fetchLearnersSuccess({ ...camelCaseObject(learnerStats), learnerProfiles, page }));
+    } catch (error) {
+      if (getHttpErrorStatus(error) === 403) {
+        dispatch(fetchLearnersDenied());
+      } else {
+        dispatch(fetchLearnersFailed());
+      }
+      logError(error);
+    }
+  };
+}
+
+/**
+ * Fetch the posts of a user for the specified course and update the
+ * redux state
+ *
+ * @param {string} courseId Course ID of the course eg., course-v1:X+Y+Z
+ * @param {string} username name of the learner
+ * @param page
+ * @returns a promise that will update the state with the learner's posts
+ */
 export function fetchUserPosts(courseId, {
   orderBy,
   filters = {},
   page = 1,
   author = null,
   countFlagged,
-  includeMuted,
 } = {}) {
-  const options = {
-    orderBy,
-    page,
-    author,
-    countFlagged,
-    includeMuted,
-  };
-
-  if (filters.status === PostsStatusFilter.UNREAD) {
-    options.status = 'unread';
-  }
-  if (filters.status === PostsStatusFilter.UNANSWERED) {
-    options.status = 'unanswered';
-  }
-  if (filters.status === PostsStatusFilter.REPORTED) {
-    options.status = 'flagged';
-  }
-  if (filters.status === PostsStatusFilter.UNRESPONDED) {
-    options.status = 'unresponded';
-  }
-  if (filters.postType !== ThreadType.ALL) {
-    options.threadType = filters.postType;
-  }
-  if (filters.search) {
-    options.textSearch = filters.search;
-  }
-  if (filters.cohort) {
-    options.cohort = filters.cohort;
-  }
-
   return async (dispatch) => {
     try {
       dispatch(fetchLearnerThreadsRequest({ courseId, author }));
@@ -114,6 +125,12 @@ export function fetchUserPosts(courseId, {
       } else {
         // Use regular learner posts endpoint for active content
         const { getUserPosts } = await import('./api');
+        const options = {
+          orderBy,
+          page,
+          author,
+          countFlagged,
+        };
 
         // Only show active content (not deleted)
         if (filters.contentStatus === PostsStatusFilter.ACTIVE) {
@@ -161,124 +178,14 @@ export function fetchUserPosts(courseId, {
   };
 }
 
-// export const deleteUserPosts = (
-//   courseId,
-//   username,
-//   courseOrOrg,
-//   execute,
-// ) => async (dispatch) => {
-//   try {
-//     dispatch(deleteUserPostsRequest({ courseId, username }));
-//     const response = await deleteUserPostsApi(
-//       courseId,
-//       username,
-//       courseOrOrg,
-//       execute,
-//     );
-//     dispatch(deleteUserPostsSuccess(camelCaseObject(response)));
-//   } catch (error) {
-//     dispatch(deleteUserPostsFailed());
-//     logError(error);
-//   }
-// };
-
-/**
- * Fetches the learners for the course courseId.
- * @param {string} courseId The course ID for the course to fetch data for.
- * @param {string} orderBy
- * @param {number} page
- * @param {usernameSearch} username
- * @returns {(function(*): Promise<void>)|*}
- */
-export function fetchLearners(courseId, {
-  orderBy,
-  page = 1,
-  usernameSearch = null,
-} = {}) {
-  return async (dispatch, getState) => {
+export function deleteUserPosts(courseId, username, courseOrOrg, execute) {
+  return async (dispatch) => {
     try {
-      const params = snakeCaseObject({ orderBy, page });
-      if (usernameSearch) {
-        params.username = usernameSearch;
-      }
-
-      dispatch(fetchLearnersRequest({ courseId }));
-
-      const learnerStats = await getLearners(courseId, params);
-      const learnerProfilesData = await getUserProfiles(
-        learnerStats.results.map(l => l.username),
-      );
-
-      const learnerProfiles = {};
-      learnerProfilesData.forEach(profile => {
-        learnerProfiles[profile.username] = camelCaseObject(profile);
-      });
-
-      // 🔍 Include muted users in username search
-      if (usernameSearch && page === 1) {
-        try {
-          const state = getState();
-          const personalMutedUsers = state.learners.mutedUsers.personal || [];
-          const courseWideMutedUsers = state.learners.mutedUsers.course || [];
-
-          const allMutedUsers = [...personalMutedUsers, ...courseWideMutedUsers];
-
-          // ✅ FIX: muted users should now be strings (usernames) after processing in fetchMutedUsersThunk
-          const matchingMutedUsers = allMutedUsers
-            .filter(username => username.toLowerCase().includes(usernameSearch.toLowerCase()));
-
-          const existingUsernames = new Set(
-            learnerStats.results.map(l => l.username),
-          );
-
-          const additionalMutedLearners = [];
-
-          for (const username of matchingMutedUsers) {
-            if (!existingUsernames.has(username)) {
-              additionalMutedLearners.push({
-                username,
-                abuseFlagged: 0,
-                replies: 0,
-                threads: 0,
-                lastActivityAt: '',
-                isMuted: true,
-              });
-
-              if (!learnerProfiles[username]) {
-                try {
-                  // eslint-disable-next-line no-await-in-loop
-                  const mutedProfile = await getUserProfiles([username]);
-                  if (mutedProfile?.length) {
-                    learnerProfiles[username] = camelCaseObject(mutedProfile[0]);
-                  }
-                } catch {
-                  learnerProfiles[username] = { username };
-                }
-              }
-            }
-          }
-
-          learnerStats.results = [
-            ...learnerStats.results,
-            ...additionalMutedLearners,
-          ];
-          learnerStats.count += additionalMutedLearners.length;
-        } catch (e) {
-          // Silently handle error
-        }
-      }
-
-      dispatch(fetchLearnersSuccess({
-        ...camelCaseObject(learnerStats),
-        learnerProfiles,
-        page,
-      }));
+      dispatch(deleteUserPostsRequest({ courseId, username }));
+      const response = await deleteUserPostsApi(courseId, username, courseOrOrg, execute);
+      dispatch(deleteUserPostsSuccess(camelCaseObject(response)));
     } catch (error) {
-      if (getHttpErrorStatus(error) === 403) {
-        dispatch(fetchLearnersDenied());
-      } else {
-        dispatch(fetchLearnersFailed());
-      }
+      dispatch(deleteUserPostsFailed());
       logError(error);
     }
   };
@@ -327,155 +234,6 @@ export function fetchBannedUsers(courseId) {
     }
   };
 }
-/*
- * Fetch the posts of a user for the specified course and update the
- * redux state
- *
- * @param {string} courseId Course ID of the course eg., course-v1:X+Y+Z
- * @param {string} username name of the learner
- * @param page
- * @returns a promise that will update the state with the learner's posts
- */
-// export function fetchUserPosts(courseId, {
-//   orderBy,
-//   filters = {},
-//   page = 1,
-//   author = null,
-//   countFlagged,
-//   includeMuted,
-// } = {}) {
-//   const options = {
-//     orderBy,
-//     page,
-//     author,
-//     countFlagged,
-//     includeMuted,
-//   };
-
-//   if (filters.status === PostsStatusFilter.UNREAD) {
-//     options.status = 'unread';
-//   }
-//   if (filters.status === PostsStatusFilter.UNANSWERED) {
-//     options.status = 'unanswered';
-//   }
-//   if (filters.status === PostsStatusFilter.REPORTED) {
-//     options.status = 'flagged';
-//   }
-//   if (filters.status === PostsStatusFilter.UNRESPONDED) {
-//     options.status = 'unresponded';
-//   }
-//   if (filters.postType !== ThreadType.ALL) {
-//     options.threadType = filters.postType;
-//   }
-//   if (filters.search) {
-//     options.textSearch = filters.search;
-//   }
-//   if (filters.cohort) {
-//     options.cohort = filters.cohort;
-//   }
-
-//   return async (dispatch) => {
-//     try {
-//       dispatch(fetchLearnerThreadsRequest({ courseId, author }));
-
-//       const data = await getUserPosts(courseId, options);
-//       const normalisedData = normaliseThreads(camelCaseObject(data));
-
-//       dispatch(fetchThreadsSuccess({ ...normalisedData, page, author }));
-//     } catch (error) {
-//       if (getHttpErrorStatus(error) === 403) {
-//         dispatch(fetchThreadsDenied());
-//       } else {
-//         dispatch(fetchThreadsFailed());
-//       }
-//       logError(error);
-//     }
-//   };
-// }
-
-export const deleteUserPosts = (
-  courseId,
-  username,
-  courseOrOrg,
-  execute,
-) => async (dispatch) => {
-  try {
-    dispatch(deleteUserPostsRequest({ courseId, username }));
-    const response = await deleteUserPostsApi(
-      courseId,
-      username,
-      courseOrOrg,
-      execute,
-    );
-    dispatch(deleteUserPostsSuccess(camelCaseObject(response)));
-  } catch (error) {
-    dispatch(deleteUserPostsFailed());
-    logError(error);
-  }
-};
-
-/**
- * Fetch muted posts (unchanged – correct)
- */
-export function fetchMutedPosts(courseId) {
-  return async () => {
-    try {
-      await getMutedPostsByScope(courseId, 'personal');
-      await getMutedPostsByScope(courseId, 'course');
-      // Data fetched successfully - could dispatch to store if needed
-    } catch (error) {
-      logError(error);
-    }
-  };
-}
-
-/**
- * Fetch muted USERS (personal + course-wide)
- */
-
-export function fetchMutedUsersThunk(courseId) {
-  return async (dispatch, getState) => {
-    try {
-      dispatch(fetchMutedUsersRequest());
-
-      const response = await getForumMutedUsers(courseId);
-      const state = getState();
-
-      const currentUserId = String(state.config.userId);
-      const isStaff = state.config.userIsStaff;
-      const { hasModerationPrivileges } = state.config;
-      const isStaffOrModerator = isStaff || hasModerationPrivileges;
-
-      const mutedUsers = response.results || response.muted_users || [];
-      const activeMutedUsers = mutedUsers.filter(
-        u => u.is_active,
-      );
-
-      // Staff/moderators can see ALL muted users so they can unmute any user
-      // Non-staff only see their own personal mutes
-      const personalMutedUsers = activeMutedUsers.filter(
-        u => u.scope === 'personal'
-          && String(u.muted_by_id) === currentUserId,
-      );
-
-      // For staff: show ALL course-wide mutes (not just ones they created)
-      // For non-staff: show none (they can't unmute course-wide mutes)
-      const courseWideMutedUsers = isStaffOrModerator
-        ? activeMutedUsers.filter(u => u.scope === 'course')
-        : [];
-
-      // Combine and send as array for the slice to process
-      const allMutedUsers = [...personalMutedUsers, ...courseWideMutedUsers];
-
-      dispatch(fetchMutedUsersSuccess({
-        mutedUsers: allMutedUsers,
-      }));
-    } catch (error) {
-      dispatch(fetchMutedUsersFailed(error));
-      logError(error);
-    }
-  };
-}
 
 /**
  * Bans a user from discussions in a course or organization
@@ -495,27 +253,6 @@ export function banUser(courseId, username, scope) {
     } catch (error) {
       dispatch(banUserFailed());
       logError(error);
-    }
-  };
-}
-
-/**
- * Mutes a user in discussions for a course
- * @param {string} courseId Course ID
- * @param {string} username Username of the user to mute
- * @param {boolean} isCourseWide Whether to apply the mute course-wide (true) or just for the current user (false)
- * @param {string} reason Optional reason for muting the user
- * @returns {(function(*): Promise<void>)|*}
- */
-export function muteUserThunk(courseId, username, isCourseWide = false, reason = '') {
-  return async (dispatch) => {
-    try {
-      const result = await muteUser(courseId, username, isCourseWide, reason);
-      dispatch(fetchMutedUsersThunk(courseId));
-      return result;
-    } catch (error) {
-      logError(error);
-      throw error;
     }
   };
 }
@@ -583,26 +320,6 @@ export function undeleteUserActivity(courseId, username, scope) {
     } catch (error) {
       dispatch(undeleteUserActivityFailed());
       logError(error);
-    }
-  };
-}
-
-/**
- * Unmutes a user in discussions for a course
- * @param {string} courseId Course ID
- * @param {string} username Username of the user to unmute
- * @param {boolean} isCourseWide Whether to remove a course-wide mute (true) or just a personal mute (false)
- * @returns {(function(*): Promise<void>)|*}
- */
-export function unmuteUserThunk(courseId, username, isCourseWide = false) {
-  return async (dispatch) => {
-    try {
-      const result = await unmuteUser(courseId, username, isCourseWide);
-      dispatch(fetchMutedUsersThunk(courseId));
-      return result;
-    } catch (error) {
-      logError(error);
-      throw error;
     }
   };
 }

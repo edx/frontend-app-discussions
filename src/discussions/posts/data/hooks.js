@@ -4,8 +4,8 @@ import { useSelector } from 'react-redux';
 
 import { selectThreadsByIds } from './selectors';
 
-const usePostList = (ids, viewingUsername = null) => {
-  const posts = useSelector(selectThreadsByIds(ids, viewingUsername));
+const usePostList = (ids) => {
+  const posts = useSelector(selectThreadsByIds(ids));
   const pinnedPostsIds = [];
   const unpinnedPostsIds = [];
 

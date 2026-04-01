@@ -8,7 +8,7 @@ import { useSelector } from 'react-redux';
 import { useIntl } from '@edx/frontend-platform/i18n';
 
 import { ContentActions, PostsStatusFilter } from '../../data/constants';
-import { selectEnableDiscussionBan, selectUserHasModerationPrivileges } from '../data/selectors';
+import { selectEnableDiscussionBan } from '../data/selectors';
 import { checkBanActionDisabled } from '../utils/banUtils';
 import { BAN_SCOPES } from './data/constants';
 import messages from './messages';
@@ -111,12 +111,9 @@ export function useLearnerActions(
 ) {
   const intl = useIntl();
   const enableDiscussionBan = useSelector(selectEnableDiscussionBan);
-  const userHasModerationPrivileges = useSelector(selectUserHasModerationPrivileges);
 
   const actions = useMemo(() => {
-    // Only allow bulk actions if user has both bulk delete privileges AND moderation privileges
-    // This excludes Course Staff/Admin who may have bulk delete but not moderation privileges
-    if (!userHasBulkDeletePrivileges || !userHasModerationPrivileges) {
+    if (!userHasBulkDeletePrivileges) {
       return [];
     }
 
@@ -186,14 +183,7 @@ export function useLearnerActions(
         },
       };
     }).filter(Boolean); // Remove null entries (actions with empty submenus)
-  }, [
-    userHasBulkDeletePrivileges,
-    userHasModerationPrivileges,
-    learnerBanInfo,
-    contentStatus,
-    enableDiscussionBan,
-    intl,
-  ]);
+  }, [userHasBulkDeletePrivileges, learnerBanInfo, contentStatus, enableDiscussionBan, intl]);
 
   return actions;
 }

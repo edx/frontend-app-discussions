@@ -2,7 +2,6 @@ import React, { useCallback, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import { Avatar, useToggle } from '@openedx/paragon';
-import { DeleteOutline } from '@openedx/paragon/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import * as timeago from 'timeago.js';
 
@@ -15,25 +14,19 @@ import {
 } from '../../../../data/api/moderation';
 import { AvatarOutlineAndLabelColors, ContentActions } from '../../../../data/constants';
 import {
-  ActionsDropdown, AlertBanner, AuthorLabel, AutoSpamAlertBanner, Confirmation, MuteModalManager,
+  ActionsDropdown, AlertBanner, AuthorLabel, AutoSpamAlertBanner, Confirmation, DeletedByBanner,
 } from '../../../common';
 import DiscussionContext from '../../../common/context';
 import timeLocale from '../../../common/time-locale';
 import { ContentTypes } from '../../../data/constants';
 import { useAlertBannerVisible } from '../../../data/hooks';
-import {
-  selectIsUserBanned,
-} from '../../../data/selectors';
-import { muteUserThunk, unmuteUserThunk } from '../../../data/thunks';
+import { selectIsUserBanned } from '../../../data/selectors';
 import discussionMessages from '../../../messages';
 import { selectAuthorAvatar } from '../../../posts/data/selectors';
 import { fetchThread } from '../../../posts/data/thunks';
 import DeleteWithBanConfirmation from '../../../posts/post/DeleteWithBanConfirmation';
-import postMessages from '../../../posts/post/messages';
-import {
-  selectCommentOrResponseById,
-} from '../../data/selectors';
-import { editComment, removeComment } from '../../data/thunks';
+import { selectCommentOrResponseById } from '../../data/selectors';
+import { editComment, performRestoreComment, removeComment } from '../../data/thunks';
 import messages from '../../messages';
 import CommentEditor from './CommentEditor';
 
@@ -59,13 +52,8 @@ const Reply = ({ responseId }) => {
   const [isUnbanningOrg, showUnbanOrgConfirmation, hideUnbanOrgConfirmation] = useToggle(false);
   const [isReporting, showReportConfirmation, hideReportConfirmation] = useToggle(false);
   const isUserBanned = useSelector(selectIsUserBanned);
-  const [isLearnerMuting, showLearnerMuteModal, hideLearnerMuteModal] = useToggle(false);
-  const [isLearnerUnmuting, showLearnerUnmuteModal, hideLearnerUnmuteModal] = useToggle(false);
-  const [isMutingPersonal, showMutePersonalConfirmation, hideMutePersonalConfirmation] = useToggle(false);
-  const [isMutingCoursewide, showMuteCourseConfirmation, hideMuteCourseConfirmation] = useToggle(false);
-  const [isUnmutingPersonal, showUnmutePersonalConfirmation, hideUnmutePersonalConfirmation] = useToggle(false);
-  const [isUnmutingCoursewide, showUnmuteCourseConfirmation, hideUnmuteCourseConfirmation] = useToggle(false);
   const colorClass = AvatarOutlineAndLabelColors[authorLabel];
+  // If isSpam is not provided in the API response, default to false
   const isSpamFlagged = isSpam || false;
   const hasAnyAlert = useAlertBannerVisible({
     author,
@@ -98,18 +86,12 @@ const Reply = ({ responseId }) => {
   }, [showRestoreConfirmation]);
 
   const handleRestoreConfirmation = useCallback(async () => {
-    try {
-      const { performRestoreComment } = await import('../../data/thunks');
-      const result = await dispatch(performRestoreComment(id, courseId));
-      // Check if restore failed and log the error
-      if (result && !result.success) {
-        logError(`Failed to restore comment: ${result.error || 'Unknown error'}`);
-      }
-    } catch (error) {
-      logError(error);
+    const result = await dispatch(performRestoreComment(id, courseId));
+    if (result && !result.success) {
+      logError(`Failed to restore comment: ${result.error || 'Unknown error'}`);
     }
     hideRestoreConfirmation();
-  }, [id, courseId, threadId, dispatch, hideRestoreConfirmation]);
+  }, [dispatch, id, courseId, hideRestoreConfirmation]);
 
   const handleAbusedFlag = useCallback(() => {
     if (abuseFlagged) {
@@ -185,53 +167,6 @@ const Reply = ({ responseId }) => {
     }
   }, [author, courseId, threadId, dispatch, hideUnbanOrgConfirmation]);
 
-  // Mute modal handler - only for learners (staff use submenu)
-  const showMuteModal = useCallback(() => {
-    showLearnerMuteModal();
-  }, [showLearnerMuteModal]);
-
-  const showUnmuteModalHandler = useCallback(() => {
-    showLearnerUnmuteModal();
-  }, [showLearnerUnmuteModal]);
-
-  // Staff submenu action handlers - show confirmation modals like ban/delete
-  const handleMutePersonal = useCallback(() => {
-    showMutePersonalConfirmation();
-  }, [showMutePersonalConfirmation]);
-
-  const handleMuteCoursewide = useCallback(() => {
-    showMuteCourseConfirmation();
-  }, [showMuteCourseConfirmation]);
-
-  const handleUnmutePersonal = useCallback(() => {
-    showUnmutePersonalConfirmation();
-  }, [showUnmutePersonalConfirmation]);
-
-  const handleUnmuteCoursewide = useCallback(() => {
-    showUnmuteCourseConfirmation();
-  }, [showUnmuteCourseConfirmation]);
-
-  // Mute/Unmute confirmation handlers
-  const handleMutePersonalConfirmation = useCallback(() => {
-    dispatch(muteUserThunk(author, false));
-    hideMutePersonalConfirmation();
-  }, [dispatch, author, hideMutePersonalConfirmation]);
-
-  const handleMuteCourseConfirmation = useCallback(() => {
-    dispatch(muteUserThunk(author, true));
-    hideMuteCourseConfirmation();
-  }, [dispatch, author, hideMuteCourseConfirmation]);
-
-  const handleUnmutePersonalConfirmation = useCallback(() => {
-    dispatch(unmuteUserThunk(author, false));
-    hideUnmutePersonalConfirmation();
-  }, [dispatch, author, hideUnmutePersonalConfirmation]);
-
-  const handleUnmuteCourseConfirmation = useCallback(() => {
-    dispatch(unmuteUserThunk(author, true));
-    hideUnmuteCourseConfirmation();
-  }, [dispatch, author, hideUnmuteCourseConfirmation]);
-
   const actionHandlers = useMemo(() => ({
     [ContentActions.EDIT_CONTENT]: handleEditContent,
     [ContentActions.ENDORSE]: handleReplyEndorse,
@@ -245,12 +180,6 @@ const Reply = ({ responseId }) => {
     [ContentActions.UNBAN_COURSE]: showUnbanCourseConfirmation,
     [ContentActions.UNBAN_ORG]: showUnbanOrgConfirmation,
     [ContentActions.REPORT]: handleAbusedFlag,
-    [ContentActions.MUTE_USER]: showMuteModal,
-    [ContentActions.UNMUTE_USER]: showUnmuteModalHandler,
-    [ContentActions.MUTE_PERSONAL]: handleMutePersonal,
-    [ContentActions.MUTE_COURSEWIDE]: handleMuteCoursewide,
-    [ContentActions.UNMUTE_PERSONAL]: handleUnmutePersonal,
-    [ContentActions.UNMUTE_COURSEWIDE]: handleUnmuteCoursewide,
   }), [
     handleEditContent,
     handleReplyEndorse,
@@ -263,12 +192,6 @@ const Reply = ({ responseId }) => {
     showUnbanCourseConfirmation,
     showUnbanOrgConfirmation,
     handleAbusedFlag,
-    showMuteModal,
-    showUnmuteModalHandler,
-    handleMutePersonal,
-    handleMuteCoursewide,
-    handleUnmutePersonal,
-    handleUnmuteCoursewide,
   ]);
 
   return (
@@ -354,120 +277,48 @@ const Reply = ({ responseId }) => {
         confirmButtonVariant="primary"
         confirmButtonText={intl.formatMessage(discussionMessages.unbanButtonText)}
       />
-      {/* Mute Modal Manager - handles learner mute modal only */}
-      <MuteModalManager
-        showLearnerMuteModal={isLearnerMuting}
-        showUnmuteModal={isLearnerUnmuting}
-        onCloseLearnerMuteModal={hideLearnerMuteModal}
-        onCloseUnmuteModal={hideLearnerUnmuteModal}
-        username={author}
-        contentId={id}
-        messages={postMessages}
-      />
-      {/* Staff Mute Confirmation Modals */}
-      <Confirmation
-        isOpen={isMutingPersonal}
-        title={intl.formatMessage(discussionMessages.mutePersonal)}
-        description={intl.formatMessage(
-          { id: 'discussions.mute.personal.confirm', defaultMessage: 'Are you sure you want to mute {username}? Their discussion activity will be hidden from you.' },
-          { username: author },
-        )}
-        onClose={hideMutePersonalConfirmation}
-        confirmAction={handleMutePersonalConfirmation}
-        confirmButtonVariant="danger"
-        confirmButtonText={intl.formatMessage(discussionMessages.muteAction)}
-      />
-      <Confirmation
-        isOpen={isMutingCoursewide}
-        title={intl.formatMessage(discussionMessages.muteCoursewide)}
-        description={intl.formatMessage(
-          { id: 'discussions.mute.coursewide.confirm', defaultMessage: 'Are you sure you want to mute {username} course-wide? Their discussion activity will be hidden from all learners.' },
-          { username: author },
-        )}
-        onClose={hideMuteCourseConfirmation}
-        confirmAction={handleMuteCourseConfirmation}
-        confirmButtonVariant="danger"
-        confirmButtonText={intl.formatMessage(discussionMessages.muteAction)}
-      />
-      <Confirmation
-        isOpen={isUnmutingPersonal}
-        title={intl.formatMessage(discussionMessages.unmutePersonal)}
-        description={intl.formatMessage(
-          { id: 'discussions.unmute.personal.confirm', defaultMessage: 'Are you sure you want to unmute {username}? Their discussion activity will become visible to you.' },
-          { username: author },
-        )}
-        onClose={hideUnmutePersonalConfirmation}
-        confirmAction={handleUnmutePersonalConfirmation}
-        confirmButtonVariant="primary"
-        confirmButtonText={intl.formatMessage(discussionMessages.unmuteAction)}
-      />
-      <Confirmation
-        isOpen={isUnmutingCoursewide}
-        title={intl.formatMessage(discussionMessages.unmuteCoursewide)}
-        description={intl.formatMessage(
-          { id: 'discussions.unmute.coursewide.confirm', defaultMessage: 'Are you sure you want to unmute {username} course-wide? Their discussion activity will become visible to all learners.' },
-          { username: author },
-        )}
-        onClose={hideUnmuteCourseConfirmation}
-        confirmAction={handleUnmuteCourseConfirmation}
-        confirmButtonVariant="primary"
-        confirmButtonText={intl.formatMessage(discussionMessages.unmuteAction)}
-      />
-      {
-        hasAnyAlert && (
-          <div className="d-flex">
-            <div className="d-flex invisible">
-              <Avatar />
-            </div>
-            <div className="w-100">
-              <AlertBanner
-                author={author}
-                abuseFlagged={abuseFlagged}
-                closed={closed}
-                closedBy={closedBy}
-                closeReason={closeReason}
-                lastEdit={lastEdit}
-                editByLabel={editByLabel}
-                closedByLabel={closedByLabel}
-                postData={commentData}
-              />
-            </div>
+      {hasAnyAlert && (
+        <div className="d-flex">
+          <div className="d-flex invisible">
+            <Avatar />
           </div>
-        )
-      }
-      {
-        isSpamFlagged && (
-          <div className="d-flex">
-            <div className="d-flex invisible">
-              <Avatar />
-            </div>
-            <div className="w-100">
-              <AutoSpamAlertBanner autoSpamFlagged={isSpamFlagged} />
-            </div>
+          <div className="w-100">
+            <AlertBanner
+              author={author}
+              abuseFlagged={abuseFlagged}
+              closed={closed}
+              closedBy={closedBy}
+              closeReason={closeReason}
+              lastEdit={lastEdit}
+              editByLabel={editByLabel}
+              closedByLabel={closedByLabel}
+              postData={commentData}
+            />
           </div>
-        )
-      }
+        </div>
+      )}
+      {isSpamFlagged && (
+        <div className="d-flex">
+          <div className="d-flex invisible">
+            <Avatar />
+          </div>
+          <div className="w-100">
+            <AutoSpamAlertBanner autoSpamFlagged={isSpamFlagged} />
+          </div>
+        </div>
+      )}
       {isDeleted && deletedBy && (
         <div className="d-flex">
           <div className="d-flex invisible">
             <Avatar />
           </div>
           <div className="w-100">
-            <div className="alert alert-info px-3 shadow-none mb-1 py-10px bg-light-200 d-flex align-items-start">
-              <DeleteOutline className="mr-2 text-dark-500 flex-shrink-0 deleted-content-icon" />
-              <div className="d-flex align-items-center flex-wrap text-gray-700 font-style">
-                {intl.formatMessage(messages.deletedBy)}
-                <span className="ml-1">
-                  <AuthorLabel
-                    author={deletedBy}
-                    authorLabel={deletedByLabel}
-                    labelColor={AvatarOutlineAndLabelColors[deletedByLabel] && `text-${AvatarOutlineAndLabelColors[deletedByLabel]}`}
-                    linkToProfile
-                    postOrComment
-                  />
-                </span>
-              </div>
-            </div>
+            <DeletedByBanner
+              deletedBy={deletedBy}
+              deletedByLabel={deletedByLabel}
+              message={intl.formatMessage(messages.deletedBy)}
+              postData={commentData}
+            />
           </div>
         </div>
       )}

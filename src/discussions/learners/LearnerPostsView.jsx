@@ -40,13 +40,7 @@ import { PostLink } from '../posts/post';
 import DeleteWithBanConfirmation from '../posts/post/DeleteWithBanConfirmation';
 import { discussionsPath } from '../utils';
 import { BAN_SCOPES, BulkDeleteType } from './data/constants';
-import {
-  learnersLoadingStatus,
-  selectBannedUsers,
-  selectBulkDeleteStats,
-  selectCourseWideMutedUsers,
-  selectPersonalMutedUsers,
-} from './data/selectors';
+import { learnersLoadingStatus, selectBannedUsers, selectBulkDeleteStats } from './data/selectors';
 import {
   banUser,
   deleteUserActivity,
@@ -88,13 +82,11 @@ const LearnerPostsView = () => {
   const userHasModerationPrivileges = useSelector(selectUserHasModerationPrivileges);
   const userIsStaff = useSelector(selectUserIsStaff);
   const userHasBulkDeletePrivileges = useSelector(selectUserHasBulkDeletePrivileges);
-  // Only show bulk actions to users with actual moderation privileges (not Course Staff/Admin)
-  const canAccessBulkActions = userHasModerationPrivileges && userHasBulkDeletePrivileges;
-  const personalMutedUsers = useSelector(selectPersonalMutedUsers());
-  const courseWideMutedUsers = useSelector(selectCourseWideMutedUsers());
   const bulkDeleteStats = useSelector(selectBulkDeleteStats());
   const bannedUsers = useSelector(selectBannedUsers);
-  const sortedPostsIds = usePostList(postsIds, username);
+  const sortedPostsIds = usePostList(postsIds);
+
+  // Consolidated modal state management
   const [activeModal, setActiveModal] = useState({ type: null, scope: null });
   const [isDeletingCourseOrOrg, setIsDeletingCourseOrOrg] = useState(BulkDeleteType.COURSE);
   const [isRestoringCourseOrOrg, setIsRestoringCourseOrOrg] = useState(BulkDeleteType.COURSE);
@@ -125,27 +117,16 @@ const LearnerPostsView = () => {
   );
 
   const loadMorePosts = useCallback((pageNum = undefined) => {
-    // Check if the specific learner whose posts we're viewing is muted
-    const personalMutedUsernames = personalMutedUsers.map(user => (typeof user === 'string' ? user : (user.username || user.mutedUser?.username))).filter(Boolean);
-    const courseWideMutedUsernames = courseWideMutedUsers.map(user => (typeof user === 'string' ? user : (user.username || user.mutedUser?.username))).filter(Boolean);
-
-    const isUserMuted = personalMutedUsernames.includes(username)
-      || courseWideMutedUsernames.includes(username);
-
     const params = {
       author: username,
       page: pageNum,
       filters: postFilter,
       orderBy: postFilter.orderBy,
       countFlagged: (userHasModerationPrivileges || userIsStaff) || undefined,
-      includeMuted: isUserMuted, // Only include muted content if viewing a muted user's posts
     };
 
     dispatch(fetchUserPosts(courseId, params));
-  }, [
-    courseId, postFilter, username, userHasModerationPrivileges, userIsStaff,
-    personalMutedUsers, courseWideMutedUsers,
-  ]);
+  }, [courseId, postFilter, username, userHasModerationPrivileges, userIsStaff]);
 
   const handleShowDeleteConfirmation = useCallback(async (courseOrOrg) => {
     setIsDeletingCourseOrOrg(courseOrOrg);
@@ -294,7 +275,6 @@ const LearnerPostsView = () => {
             <span className="text-danger font-weight-bold learner-ban-banner-text">
               {intl.formatMessage(messages.auditTrailBanScope, { scope: learnerBanInfo.authorBanScope })}
             </span>
-
             {learnerBanInfo.bannedByUsername && (
               <>
                 <span className="text-danger font-weight-bold learner-ban-banner-by">
@@ -310,7 +290,6 @@ const LearnerPostsView = () => {
               </>
             )}
           </div>
-
           <div className="text-muted small mt-1">
             {learnerBanInfo.bannedAt && new Date(learnerBanInfo.bannedAt).toLocaleString('en-US', {
               month: '2-digit',
@@ -323,154 +302,150 @@ const LearnerPostsView = () => {
           </div>
         </div>
       )}
-
-      <div className="discussion-posts d-flex flex-column">
-        <div className="row d-flex align-items-center justify-content-between px-2.5">
-          <div className="col-1">
-            <IconButton
-              src={ArrowBack}
-              iconAs={Icon}
-              style={{ padding: '18px' }}
-              size="inline"
-              onClick={() => navigate({ ...discussionsPath(Routes.LEARNERS.PATH, { courseId })(location) })}
-              alt={intl.formatMessage(messages.back)}
+      <div className="row d-flex align-items-center justify-content-between px-2.5">
+        <div className="col-1">
+          <IconButton
+            src={ArrowBack}
+            iconAs={Icon}
+            style={{ padding: '18px' }}
+            size="inline"
+            onClick={() => navigate({ ...discussionsPath(Routes.LEARNERS.PATH, { courseId })(location) })}
+            alt={intl.formatMessage(messages.back)}
+          />
+        </div>
+        <div className=" col-auto text-primary-500 font-style font-weight-bold py-2.5">
+          {intl.formatMessage(messages.activityForLearner, { username: capitalize(username) })}
+        </div>
+        {userHasBulkDeletePrivileges && username !== authenticatedUser?.username ? (
+          <div className="col-2">
+            <LearnerActionsDropdown
+              id={username}
+              actionHandlers={actionHandlers}
+              userHasBulkDeletePrivileges={userHasBulkDeletePrivileges}
+              learnerBanInfo={learnerBanInfo}
+              contentStatus={postFilter?.contentStatus}
+              dropDownIconSize
             />
           </div>
-          <div className=" col-auto text-primary-500 font-style font-weight-bold py-2.5">
-            {intl.formatMessage(messages.activityForLearner, { username: capitalize(username) })}
-          </div>
-          {canAccessBulkActions && username !== authenticatedUser?.username ? (
-            <div className="col-2">
-              <LearnerActionsDropdown
-                id={username}
-                actionHandlers={actionHandlers}
-                userHasBulkDeletePrivileges={canAccessBulkActions}
-                learnerBanInfo={learnerBanInfo}
-                contentStatus={postFilter?.contentStatus}
-                dropDownIconSize
-              />
-            </div>
-          )
-            : (<div style={{ padding: '18px' }} />)}
-        </div>
-        <div className="bg-light-400 border border-light-300" />
-        <LearnerPostFilterBar />
-        <div className="border-bottom border-light-400" />
-        <div className="list-group list-group-flush">
-          {postInstances}
-          {loadingStatus !== RequestStatus.IN_PROGRESS && sortedPostsIds?.length === 0 && <NoResults />}
-          {loadingStatus === RequestStatus.IN_PROGRESS ? (
-            <div className="d-flex justify-content-center p-4">
-              <Spinner animation="border" variant="primary" size="lg" />
-            </div>
-          ) : (
-            nextPage && loadingStatus === RequestStatus.SUCCESSFUL && (
-              <Button onClick={() => loadMorePosts(nextPage)} variant="primary" size="md" data-testid="load-more-posts">
-                {intl.formatMessage(messages.loadMore)}
-              </Button>
-            )
-          )}
-        </div>
-        <Confirmation
-          isOpen={isDeleting}
-          title={intl.formatMessage(messages.deletePostsTitle)}
-          description={intl.formatMessage(messages.deletePostsDescription, {
-            count: bulkDeleteStats.threadCount + bulkDeleteStats.commentCount,
-            bulkType: isDeletingCourseOrOrg,
-          })}
-          onClose={hideModal}
-          confirmAction={() => handleDeletePosts(isDeletingCourseOrOrg)}
-          confirmButtonText={intl.formatMessage(messages.deletePostsConfirm)}
-          confirmButtonVariant="danger"
-          isDataLoading={!(learnerLoadingStatus === RequestStatus.SUCCESSFUL)}
-          isConfirmButtonPending={bulkDeleting}
-          pendingConfirmButtonText={intl.formatMessage(messages.deletePostConfirmPending)}
-        />
-        <Confirmation
-          isOpen={isRestoring}
-          title={intl.formatMessage(messages.restorePostsTitle)}
-          description={intl.formatMessage(messages.restorePostsDescription, {
-            count: bulkDeleteStats.threadCount + bulkDeleteStats.commentCount,
-            bulkType: isRestoringCourseOrOrg,
-          })}
-          onClose={hideModal}
-          confirmAction={() => handleRestorePosts(isRestoringCourseOrOrg)}
-          confirmButtonText={intl.formatMessage(messages.restorePostsConfirm)}
-          confirmButtonVariant="primary"
-          isDataLoading={isLoadingRestoreData}
-        />
-        <DeleteWithBanConfirmation
-          isOpen={isDeletingUserCourse}
-          title={intl.formatMessage(discussionMessages.deleteUserCourseTitle)}
-          description={intl.formatMessage(discussionMessages.deleteUserCourseDescription, { username })}
-          onClose={hideModal}
-          confirmAction={(shouldBan) => handleDeleteActivity(BAN_SCOPES.COURSE, shouldBan)}
-          closeButtonVariant="tertiary"
-          confirmButtonVariant="danger"
-          confirmButtonText={intl.formatMessage(messages.deleteConfirmationDelete)}
-          showBanCheckbox={enableDiscussionBan}
-          banCheckboxLabel={intl.formatMessage(discussionMessages.banUserCheckbox)}
-          isConfirmButtonPending={isProcessing}
-        />
-        <DeleteWithBanConfirmation
-          isOpen={isDeletingUserOrg}
-          title={intl.formatMessage(discussionMessages.deleteUserOrgTitle)}
-          description={intl.formatMessage(discussionMessages.deleteUserOrgDescription, { username })}
-          onClose={hideModal}
-          confirmAction={(shouldBan) => handleDeleteActivity(BAN_SCOPES.ORGANIZATION, shouldBan)}
-          closeButtonVariant="tertiary"
-          confirmButtonVariant="danger"
-          confirmButtonText={intl.formatMessage(messages.deleteConfirmationDelete)}
-          showBanCheckbox={enableDiscussionBan}
-          banCheckboxLabel={intl.formatMessage(discussionMessages.banUserOrgCheckbox)}
-          isConfirmButtonPending={isProcessing}
-        />
-        <Confirmation
-          isOpen={isBanningCourse}
-          title={intl.formatMessage(discussionMessages.banUserCourseTitle)}
-          description={intl.formatMessage(discussionMessages.banUserCourseDescription, { username })}
-          onClose={hideModal}
-          confirmAction={() => handleBanUser(BAN_SCOPES.COURSE)}
-          closeButtonVariant="tertiary"
-          confirmButtonVariant="danger"
-          confirmButtonText={intl.formatMessage(discussionMessages.banButtonText)}
-          isConfirmButtonPending={isProcessing}
-        />
-        <Confirmation
-          isOpen={isBanningOrg}
-          title={intl.formatMessage(discussionMessages.banUserOrgTitle)}
-          description={intl.formatMessage(discussionMessages.banUserOrgDescription, { username })}
-          onClose={hideModal}
-          confirmAction={() => handleBanUser(BAN_SCOPES.ORGANIZATION)}
-          closeButtonVariant="tertiary"
-          confirmButtonVariant="danger"
-          confirmButtonText={intl.formatMessage(discussionMessages.banButtonText)}
-          isConfirmButtonPending={isProcessing}
-        />
-        <Confirmation
-          isOpen={isUnbanningCourse}
-          title={intl.formatMessage(discussionMessages.unbanUserCourseTitle)}
-          description={intl.formatMessage(discussionMessages.unbanUserCourseDescription, { username })}
-          onClose={hideModal}
-          confirmAction={() => handleUnbanUser(BAN_SCOPES.COURSE)}
-          closeButtonVariant="tertiary"
-          confirmButtonVariant="primary"
-          confirmButtonText={intl.formatMessage(discussionMessages.unbanButtonText)}
-          isConfirmButtonPending={isProcessing}
-        />
-        <Confirmation
-          isOpen={isUnbanningOrg}
-          title={intl.formatMessage(discussionMessages.unbanUserOrgTitle)}
-          description={intl.formatMessage(discussionMessages.unbanUserOrgDescription, { username })}
-          onClose={hideModal}
-          confirmAction={() => handleUnbanUser(BAN_SCOPES.ORGANIZATION)}
-          closeButtonVariant="tertiary"
-          confirmButtonVariant="primary"
-          confirmButtonText={intl.formatMessage(discussionMessages.unbanButtonText)}
-          isConfirmButtonPending={isProcessing}
-        />
+        )
+          : (<div style={{ padding: '18px' }} />)}
       </div>
-
+      <div className="bg-light-400 border border-light-300" />
+      <LearnerPostFilterBar />
+      <div className="border-bottom border-light-400" />
+      <div className="list-group list-group-flush">
+        {postInstances}
+        {loadingStatus !== RequestStatus.IN_PROGRESS && sortedPostsIds?.length === 0 && <NoResults />}
+        {loadingStatus === RequestStatus.IN_PROGRESS ? (
+          <div className="d-flex justify-content-center p-4">
+            <Spinner animation="border" variant="primary" size="lg" />
+          </div>
+        ) : (
+          nextPage && loadingStatus === RequestStatus.SUCCESSFUL && (
+            <Button onClick={() => loadMorePosts(nextPage)} variant="primary" size="md" data-testid="load-more-posts">
+              {intl.formatMessage(messages.loadMore)}
+            </Button>
+          )
+        )}
+      </div>
+      <Confirmation
+        isOpen={isDeleting}
+        title={intl.formatMessage(messages.deletePostsTitle)}
+        description={intl.formatMessage(messages.deletePostsDescription, {
+          count: bulkDeleteStats.threadCount + bulkDeleteStats.commentCount,
+          bulkType: isDeletingCourseOrOrg,
+        })}
+        onClose={hideModal}
+        confirmAction={() => handleDeletePosts(isDeletingCourseOrOrg)}
+        confirmButtonText={intl.formatMessage(messages.deletePostsConfirm)}
+        confirmButtonVariant="danger"
+        isDataLoading={!(learnerLoadingStatus === RequestStatus.SUCCESSFUL)}
+        isConfirmButtonPending={bulkDeleting}
+        pendingConfirmButtonText={intl.formatMessage(messages.deletePostConfirmPending)}
+      />
+      <Confirmation
+        isOpen={isRestoring}
+        title={intl.formatMessage(messages.restorePostsTitle)}
+        description={intl.formatMessage(messages.restorePostsDescription, {
+          count: bulkDeleteStats.threadCount + bulkDeleteStats.commentCount,
+          bulkType: isRestoringCourseOrOrg,
+        })}
+        onClose={hideModal}
+        confirmAction={() => handleRestorePosts(isRestoringCourseOrOrg)}
+        confirmButtonText={intl.formatMessage(messages.restorePostsConfirm)}
+        confirmButtonVariant="primary"
+        isDataLoading={isLoadingRestoreData}
+      />
+      <DeleteWithBanConfirmation
+        isOpen={isDeletingUserCourse}
+        title={intl.formatMessage(discussionMessages.deleteUserCourseTitle)}
+        description={intl.formatMessage(discussionMessages.deleteUserCourseDescription, { username })}
+        onClose={hideModal}
+        confirmAction={(shouldBan) => handleDeleteActivity(BAN_SCOPES.COURSE, shouldBan)}
+        closeButtonVariant="tertiary"
+        confirmButtonVariant="danger"
+        confirmButtonText={intl.formatMessage(messages.deleteConfirmationDelete)}
+        showBanCheckbox={enableDiscussionBan}
+        banCheckboxLabel={intl.formatMessage(discussionMessages.banUserCheckbox)}
+        isConfirmButtonPending={isProcessing}
+      />
+      <DeleteWithBanConfirmation
+        isOpen={isDeletingUserOrg}
+        title={intl.formatMessage(discussionMessages.deleteUserOrgTitle)}
+        description={intl.formatMessage(discussionMessages.deleteUserOrgDescription, { username })}
+        onClose={hideModal}
+        confirmAction={(shouldBan) => handleDeleteActivity(BAN_SCOPES.ORGANIZATION, shouldBan)}
+        closeButtonVariant="tertiary"
+        confirmButtonVariant="danger"
+        confirmButtonText={intl.formatMessage(messages.deleteConfirmationDelete)}
+        showBanCheckbox={enableDiscussionBan}
+        banCheckboxLabel={intl.formatMessage(discussionMessages.banUserOrgCheckbox)}
+        isConfirmButtonPending={isProcessing}
+      />
+      <Confirmation
+        isOpen={isBanningCourse}
+        title={intl.formatMessage(discussionMessages.banUserCourseTitle)}
+        description={intl.formatMessage(discussionMessages.banUserCourseDescription, { username })}
+        onClose={hideModal}
+        confirmAction={() => handleBanUser(BAN_SCOPES.COURSE)}
+        closeButtonVariant="tertiary"
+        confirmButtonVariant="danger"
+        confirmButtonText={intl.formatMessage(discussionMessages.banButtonText)}
+        isConfirmButtonPending={isProcessing}
+      />
+      <Confirmation
+        isOpen={isBanningOrg}
+        title={intl.formatMessage(discussionMessages.banUserOrgTitle)}
+        description={intl.formatMessage(discussionMessages.banUserOrgDescription, { username })}
+        onClose={hideModal}
+        confirmAction={() => handleBanUser(BAN_SCOPES.ORGANIZATION)}
+        closeButtonVariant="tertiary"
+        confirmButtonVariant="danger"
+        confirmButtonText={intl.formatMessage(discussionMessages.banButtonText)}
+        isConfirmButtonPending={isProcessing}
+      />
+      <Confirmation
+        isOpen={isUnbanningCourse}
+        title={intl.formatMessage(discussionMessages.unbanUserCourseTitle)}
+        description={intl.formatMessage(discussionMessages.unbanUserCourseDescription, { username })}
+        onClose={hideModal}
+        confirmAction={() => handleUnbanUser(BAN_SCOPES.COURSE)}
+        closeButtonVariant="tertiary"
+        confirmButtonVariant="primary"
+        confirmButtonText={intl.formatMessage(discussionMessages.unbanButtonText)}
+        isConfirmButtonPending={isProcessing}
+      />
+      <Confirmation
+        isOpen={isUnbanningOrg}
+        title={intl.formatMessage(discussionMessages.unbanUserOrgTitle)}
+        description={intl.formatMessage(discussionMessages.unbanUserOrgDescription, { username })}
+        onClose={hideModal}
+        confirmAction={() => handleUnbanUser(BAN_SCOPES.ORGANIZATION)}
+        closeButtonVariant="tertiary"
+        confirmButtonVariant="primary"
+        confirmButtonText={intl.formatMessage(discussionMessages.unbanButtonText)}
+        isConfirmButtonPending={isProcessing}
+      />
     </div>
   );
 };

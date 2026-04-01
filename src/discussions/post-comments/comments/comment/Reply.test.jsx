@@ -33,7 +33,6 @@ jest.mock('../../../common', () => ({
   AutoSpamAlertBanner: 'AutoSpamAlertBanner',
   Confirmation: 'Confirmation',
   DeletedByBanner: () => <div className="deleted-content-icon" />,
-  MuteModalManager: 'MuteModalManager',
 }));
 
 jest.mock('../../../posts/post/DeleteWithBanConfirmation', () => 'DeleteWithBanConfirmation');

@@ -39,7 +39,6 @@ jest.mock('../../../common', () => ({
   Confirmation: 'Confirmation',
   DeletedByBanner: () => <div className="deleted-content-icon" />,
   EndorsedAlertBanner: 'EndorsedAlertBanner',
-  MuteModalManager: 'MuteModalManager',
 }));
 
 jest.mock('../../../common/withPostingRestrictions', () => Component => Component);
@@ -179,7 +178,6 @@ describe('Comment deleted-by banner', () => {
 
     await waitFor(() => {
       expect(fetchCommentResponses).toHaveBeenCalledWith('comment-1', {
-        includeMuted: false,
         page: 1,
         reverseOrder: false,
         showDeleted: true,

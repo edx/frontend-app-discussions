@@ -156,10 +156,46 @@ const messages = defineMessages({
     defaultMessage: 'Restoring',
     description: 'Pending state of confirm button text for restore posts',
   },
+  bannedUsers: {
+    id: 'discussions.learner.bannedUsers',
+    defaultMessage: 'Banned',
+    description: 'Section title for banned users',
+  },
+  bannedUsersTooltip: {
+    id: 'discussions.learner.bannedUsersTooltip',
+    defaultMessage: 'Discussion activity is disabled for these learners',
+    description: 'Tooltip text for banned users info icon',
+  },
+  bannedUsersOrgWide: {
+    id: 'discussions.learner.bannedUsersOrgWide',
+    defaultMessage: 'Banned (Org-wide)',
+    description: 'Section title for organization-wide banned users',
+  },
+  mutedCourseWide: {
+    id: 'discussions.learner.mutedCourseWide',
+    defaultMessage: 'Muted course-wide',
+    description: 'Section title for course-wide muted users',
+  },
+  mutedForMe: {
+    id: 'discussions.learner.mutedForMe',
+    defaultMessage: 'Muted (for me)',
+    description: 'Section title for personally muted users',
+  },
   allOtherLearners: {
     id: 'discussions.learner.allOtherLearners',
     defaultMessage: 'All other learners',
-    description: 'Heading text for the list of all other learners',
+    description: 'Section title for all other learners not in special categories',
+  },
+  // Action menu items
+  muteUser: {
+    id: 'discussions.learner.actions.mute',
+    defaultMessage: 'Mute',
+    description: 'Action to mute a user',
+  },
+  unmuteUser: {
+    id: 'discussions.learner.actions.unmute',
+    defaultMessage: 'Unmute',
+    description: 'Action to unmute a user',
   },
   banUser: {
     id: 'discussions.learner.actions.ban',
@@ -260,21 +296,6 @@ const messages = defineMessages({
     id: 'discussions.learner.auditTrail.staffOnly',
     defaultMessage: 'Visible to staff only',
     description: 'Note that audit trail is only visible to staff',
-  },
-  mutedCourseWide: {
-    id: 'discussions.learner.mutedCourseWide',
-    defaultMessage: 'Muted course-wide',
-    description: 'Heading text for the list of course-wide muted learners',
-  },
-  mutedForMe: {
-    id: 'discussions.learner.mutedForMe',
-    defaultMessage: 'Muted (for me)',
-    description: 'Heading text for the list of personally muted learners',
-  },
-  muted: {
-    id: 'discussions.learners.muted',
-    defaultMessage: 'Muted',
-    description: 'Text for muted section header for learners',
   },
 });
 

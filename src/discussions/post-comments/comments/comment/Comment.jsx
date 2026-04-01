@@ -8,7 +8,6 @@ import React, {
 import PropTypes from 'prop-types';
 
 import { Button, useToggle } from '@openedx/paragon';
-import { DeleteOutline } from '@openedx/paragon/icons';
 import classNames from 'classnames';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -20,17 +19,15 @@ import {
   banUser, bulkDeleteUserPosts, unbanUser,
 } from '../../../../data/api/moderation';
 import {
-  AvatarOutlineAndLabelColors,
-  ContentActions, EndorsementStatus, getFullUrl, PostsStatusFilter,
+  ContentActions, EndorsementStatus,
 } from '../../../../data/constants';
 import {
   AlertBanner,
-  AuthorLabel,
   AutoSpamAlertBanner,
   BanModerationModals,
   Confirmation,
+  DeletedByBanner,
   EndorsedAlertBanner,
-  MuteModalManager,
 } from '../../../common';
 import DiscussionContext from '../../../common/context';
 import HoverCard from '../../../common/HoverCard';
@@ -41,15 +38,12 @@ import {
   selectContentCreationRateLimited,
   selectIsUserBanned,
   selectShouldShowEmailConfirmation,
+  selectUserHasModerationPrivileges,
 } from '../../../data/selectors';
-import { muteUserThunk, unmuteUserThunk } from '../../../data/thunks';
-import discussionMessages from '../../../messages';
-// import { selectThread } from '../../../posts/data/selectors';
 import { fetchThread } from '../../../posts/data/thunks';
 import LikeButton from '../../../posts/post/LikeButton';
-import postMessages from '../../../posts/post/messages';
 import { useActions } from '../../../utils';
-// import { useShowDeletedContent } from '../../data/hooks';
+import { useShowDeletedContent } from '../../data/hooks';
 import {
   selectCommentCurrentPage,
   selectCommentHasMorePages,
@@ -61,6 +55,7 @@ import {
 import {
   editComment,
   fetchCommentResponses,
+  performRestoreComment,
   removeComment,
 } from '../../data/thunks';
 import messages from '../../messages';
@@ -85,41 +80,10 @@ const Comment = ({
   const hasChildren = childCount > 0;
   const isNested = Boolean(parentId);
   const dispatch = useDispatch();
-  const { courseId, enableDiscussionBan, learnerUsername } = useContext(DiscussionContext);
-  const { isClosed, includeMuted: includeMutedFromContext } = useContext(PostCommentsContext);
-  // const post = useSelector(selectThread(threadId));
-  // const postIsDeleted = post?.isDeleted || false;
+  const { courseId, enableDiscussionBan } = useContext(DiscussionContext);
+  const { isClosed } = useContext(PostCommentsContext);
   const [isEditing, setEditing] = useState(false);
   const [isReplying, setReplying] = useState(false);
-  const [isDeleting, showDeleteConfirmation, hideDeleteConfirmation] = useToggle(false);
-  const [isRestoring, showRestoreConfirmation, hideRestoreConfirmation] = useToggle(false);
-  const [isReporting, showReportConfirmation, hideReportConfirmation] = useToggle(false);
-  const [isLearnerMuting, showLearnerMuteModal, hideLearnerMuteModal] = useToggle(false);
-  const [isLearnerUnmuting, showLearnerUnmuteModal, hideLearnerUnmuteModal] = useToggle(false);
-  const inlineReplies = useSelector(selectCommentResponses(id, learnerUsername));
-  const inlineRepliesIds = useSelector(selectCommentResponsesIds(id));
-  const hasMorePages = useSelector(selectCommentHasMorePages(id));
-  const currentPage = useSelector(selectCommentCurrentPage(id));
-  const sortedOrder = useSelector(selectCommentSortOrder);
-  const actions = useActions(ContentTypes.COMMENT, id);
-  const isUserPrivilegedInPostingRestriction = useUserPostingEnabled();
-  const shouldShowEmailConfirmation = useSelector(selectShouldShowEmailConfirmation);
-  const contentCreationRateLimited = useSelector(selectContentCreationRateLimited);
-  const isUserBanned = useSelector(selectIsUserBanned);
-  const postFilter = useSelector(state => state.learners?.postFilter);
-  const showDeleted = Boolean(
-    learnerUsername && postFilter?.contentStatus === PostsStatusFilter.DELETED,
-  );
-
-  // Check if comment author is muted by current user
-  const personalMutedUsers = useSelector(state => state.learners?.mutedUsers?.personal || []);
-  const courseWideMutedUsers = useSelector(state => state.learners?.mutedUsers?.course || []);
-  const isAuthorMuted = author
-    ? (personalMutedUsers.includes(author) || courseWideMutedUsers.includes(author))
-    : false;
-
-  // Include muted content if explicitly requested from context or if author is muted
-  const shouldIncludeMuted = includeMutedFromContext || isAuthorMuted;
 
   // Modal type constants
   const MODAL_TYPES = {
@@ -128,8 +92,6 @@ const Comment = ({
     BAN: 'ban',
     UNBAN: 'unban',
     REPORT: 'report',
-    MUTE: 'mute',
-    UNMUTE: 'unmute',
   };
 
   // Scope constants
@@ -150,6 +112,11 @@ const Comment = ({
     setActiveModal({ type: null, scope: null });
   }, []);
 
+  // Keep separate toggles for delete/report modals (not handled by BanModerationModals)
+  const [isDeleting, showDeleteConfirmation, hideDeleteConfirmation] = useToggle(false);
+  const [isRestoring, showRestoreConfirmation, hideRestoreConfirmation] = useToggle(false);
+  const [isReporting, showReportConfirmation, hideReportConfirmation] = useToggle(false);
+
   // Compute modal state string for BanModerationModals component
   const getActiveModalString = () => {
     if (activeModal.type === MODAL_TYPES.DELETE_USER) {
@@ -164,6 +131,18 @@ const Comment = ({
     return null;
   };
 
+  const inlineReplies = useSelector(selectCommentResponses(id));
+  const inlineRepliesIds = useSelector(selectCommentResponsesIds(id));
+  const hasMorePages = useSelector(selectCommentHasMorePages(id));
+  const currentPage = useSelector(selectCommentCurrentPage(id));
+  const sortedOrder = useSelector(selectCommentSortOrder);
+  const hasModerationPrivileges = useSelector(selectUserHasModerationPrivileges);
+  const actions = useActions(ContentTypes.COMMENT, id, hasModerationPrivileges);
+  const isUserPrivilegedInPostingRestriction = useUserPostingEnabled();
+  const shouldShowEmailConfirmation = useSelector(selectShouldShowEmailConfirmation);
+  const contentCreationRateLimited = useSelector(selectContentCreationRateLimited);
+  const isUserBanned = useSelector(selectIsUserBanned);
+  const showDeleted = useShowDeletedContent();
   // If isSpam is not provided in the API response, default to false
   const isSpamFlagged = isSpam || false;
   useEffect(() => {
@@ -172,11 +151,10 @@ const Comment = ({
       dispatch(fetchCommentResponses(id, {
         page: 1,
         reverseOrder: sortedOrder,
-        includeMuted: shouldIncludeMuted,
         showDeleted,
       }));
     }
-  }, [id, sortedOrder, showDeleted, shouldIncludeMuted]);
+  }, [id, sortedOrder, showDeleted]);
 
   const endorseIcons = useMemo(() => (
     actions.find(({ action }) => action === EndorsementStatus.ENDORSED)
@@ -189,8 +167,7 @@ const Comment = ({
   const handleCommentEndorse = useCallback(async () => {
     // Optimistic update - instant UI feedback
     await dispatch(editComment(id, { endorsed: !endorsed }));
-    await dispatch(fetchThread(threadId, courseId));
-  }, [id, endorsed, threadId, courseId, dispatch]);
+  }, [id, endorsed]);
 
   const handleAbusedFlag = useCallback(() => {
     if (abuseFlagged) {
@@ -212,24 +189,19 @@ const Comment = ({
 
   const handleCommentLike = useCallback(async () => {
     await dispatch(editComment(id, { voted: !voted }));
-  }, [id, voted, dispatch]);
+  }, [id, voted]);
 
   const handleRestore = useCallback(() => {
     showRestoreConfirmation();
   }, [showRestoreConfirmation]);
 
   const handleRestoreConfirmation = useCallback(async () => {
-    try {
-      const { performRestoreComment } = await import('../../data/thunks');
-      const result = await dispatch(performRestoreComment(id, courseId));
-      if (result && !result.success) {
-        logError(`Failed to restore comment: ${result.error || 'Unknown error'}`);
-      }
-    } catch (error) {
-      logError(error);
+    const result = await dispatch(performRestoreComment(id, courseId));
+    if (result && !result.success) {
+      logError(`Failed to restore comment: ${result.error || 'Unknown error'}`);
     }
     hideRestoreConfirmation();
-  }, [id, courseId, threadId, dispatch, hideRestoreConfirmation]);
+  }, [id, courseId, dispatch, hideRestoreConfirmation]);
 
   // Bulk delete/ban handlers
   const handleDeleteUserCourseConfirmation = useCallback(async (shouldBan) => {
@@ -360,46 +332,6 @@ const Comment = ({
     }
   }, [author, courseId, threadId, dispatch, hideModal, enableDiscussionBan]);
 
-  // Mute modal handler - only for learners (staff use submenu)
-  const showMuteModal = useCallback(() => {
-    showLearnerMuteModal();
-  }, [showLearnerMuteModal]);
-
-  // Staff submenu action handlers - show confirmation modals like ban/delete
-  const handleMutePersonal = useCallback(() => {
-    showModal(MODAL_TYPES.MUTE, false);
-  }, [showModal]);
-
-  const handleMuteCoursewide = useCallback(() => {
-    showModal(MODAL_TYPES.MUTE, true);
-  }, [showModal]);
-
-  const handleUnmutePersonal = useCallback(() => {
-    showModal(MODAL_TYPES.UNMUTE, false);
-  }, [showModal]);
-
-  const handleUnmuteCoursewide = useCallback(() => {
-    showModal(MODAL_TYPES.UNMUTE, true);
-  }, [showModal]);
-
-  // Mute/Unmute confirmation handlers
-  const handleMuteConfirmation = useCallback(() => {
-    const isCourseWide = activeModal.scope === true;
-    dispatch(muteUserThunk(author, isCourseWide));
-    hideModal();
-  }, [dispatch, author, activeModal.scope, hideModal]);
-
-  const handleUnmuteConfirmation = useCallback(() => {
-    const isCourseWide = activeModal.scope === true;
-    dispatch(unmuteUserThunk(author, isCourseWide));
-    hideModal();
-  }, [dispatch, author, activeModal.scope, hideModal]);
-
-  // Comment copy link handler
-  const handleCommentCopyLink = useCallback(() => {
-    navigator.clipboard.writeText(getFullUrl(`${courseId}/posts/${threadId}#comment-${id}`));
-  }, [courseId, threadId, id]);
-
   const actionHandlers = useMemo(() => ({
     [ContentActions.EDIT_CONTENT]: handleEditContent,
     [ContentActions.ENDORSE]: handleCommentEndorse,
@@ -412,38 +344,23 @@ const Comment = ({
     [ContentActions.BAN_ORG]: () => showModal(MODAL_TYPES.BAN, SCOPES.ORGANIZATION),
     [ContentActions.UNBAN_COURSE]: () => showModal(MODAL_TYPES.UNBAN, SCOPES.COURSE),
     [ContentActions.UNBAN_ORG]: () => showModal(MODAL_TYPES.UNBAN, SCOPES.ORGANIZATION),
-    [ContentActions.COPY_LINK]: handleCommentCopyLink,
     [ContentActions.REPORT]: handleAbusedFlag,
-    [ContentActions.MUTE_USER]: showMuteModal,
-    [ContentActions.UNMUTE_USER]: showLearnerUnmuteModal,
-    [ContentActions.MUTE_PERSONAL]: handleMutePersonal,
-    [ContentActions.MUTE_COURSEWIDE]: handleMuteCoursewide,
-    [ContentActions.UNMUTE_PERSONAL]: handleUnmutePersonal,
-    [ContentActions.UNMUTE_COURSEWIDE]: handleUnmuteCoursewide,
   }), [
     handleEditContent,
     handleCommentEndorse,
     showDeleteConfirmation,
     handleRestore,
     showModal,
-    handleCommentCopyLink,
     handleAbusedFlag,
-    showMuteModal,
-    showLearnerUnmuteModal,
-    handleMutePersonal,
-    handleMuteCoursewide,
-    handleUnmutePersonal,
-    handleUnmuteCoursewide,
   ]);
 
   const handleLoadMoreComments = useCallback(() => (
     dispatch(fetchCommentResponses(id, {
       page: currentPage + 1,
       reverseOrder: sortedOrder,
-      includeMuted: shouldIncludeMuted,
       showDeleted,
     }))
-  ), [id, currentPage, sortedOrder, showDeleted, shouldIncludeMuted]);
+  ), [id, currentPage, sortedOrder, showDeleted]);
 
   const handleAddCommentButton = useCallback(() => {
     if (isUserPrivilegedInPostingRestriction) {
@@ -516,58 +433,6 @@ const Comment = ({
           enableDiscussionBan={enableDiscussionBan}
           showBanCheckboxOnDelete={false}
         />
-        {/* Learner Mute Modal */}
-        <MuteModalManager
-          showLearnerMuteModal={isLearnerMuting}
-          showUnmuteModal={isLearnerUnmuting}
-          onCloseLearnerMuteModal={hideLearnerMuteModal}
-          onCloseUnmuteModal={hideLearnerUnmuteModal}
-          username={author}
-          contentId={id}
-          messages={postMessages}
-        />
-        {/* Staff Mute Confirmation Modal */}
-        {activeModal.type === MODAL_TYPES.MUTE && (
-          <Confirmation
-            isOpen={activeModal.type === MODAL_TYPES.MUTE}
-            title={intl.formatMessage(
-              activeModal.scope === true
-                ? discussionMessages.muteCoursewide
-                : discussionMessages.mutePersonal,
-            )}
-            description={intl.formatMessage(
-              activeModal.scope === true
-                ? { id: 'discussions.mute.coursewide.confirm', defaultMessage: 'Are you sure you want to mute {username} course-wide? Their discussion activity will be hidden from all learners.' }
-                : { id: 'discussions.mute.personal.confirm', defaultMessage: 'Are you sure you want to mute {username}? Their discussion activity will be hidden from you.' },
-              { username: author },
-            )}
-            onClose={hideModal}
-            confirmAction={handleMuteConfirmation}
-            confirmButtonVariant="danger"
-            confirmButtonText={intl.formatMessage(discussionMessages.muteAction)}
-          />
-        )}
-        {/* Staff Unmute Confirmation Modal */}
-        {activeModal.type === MODAL_TYPES.UNMUTE && (
-          <Confirmation
-            isOpen={activeModal.type === MODAL_TYPES.UNMUTE}
-            title={intl.formatMessage(
-              activeModal.scope === true
-                ? discussionMessages.unmuteCoursewide
-                : discussionMessages.unmutePersonal,
-            )}
-            description={intl.formatMessage(
-              activeModal.scope === true
-                ? { id: 'discussions.unmute.coursewide.confirm', defaultMessage: 'Are you sure you want to unmute {username} course-wide? Their discussion activity will become visible to all learners.' }
-                : { id: 'discussions.unmute.personal.confirm', defaultMessage: 'Are you sure you want to unmute {username}? Their discussion activity will become visible to you.' },
-              { username: author },
-            )}
-            onClose={hideModal}
-            confirmAction={handleUnmuteConfirmation}
-            confirmButtonVariant="primary"
-            confirmButtonText={intl.formatMessage(discussionMessages.unmuteAction)}
-          />
-        )}
         <EndorsedAlertBanner
           endorsed={endorsed}
           endorsedAt={endorsedAt}
@@ -588,24 +453,14 @@ const Comment = ({
             endorseIcons={endorseIcons}
             isDeleted={isDeleted}
             isUserBanned={isUserBanned}
-            username={author}
           />
           {isDeleted && deletedBy && (
-            <div className="alert alert-info px-3 shadow-none mb-1 py-10px bg-light-200 d-flex align-items-start">
-              <DeleteOutline className="mr-2 text-dark-500 flex-shrink-0 deleted-content-icon" />
-              <div className="d-flex align-items-center flex-wrap text-gray-700 font-style">
-                {intl.formatMessage(messages.deletedBy)}
-                <span className="ml-1">
-                  <AuthorLabel
-                    author={deletedBy}
-                    authorLabel={deletedByLabel}
-                    labelColor={AvatarOutlineAndLabelColors[deletedByLabel] && `text-${AvatarOutlineAndLabelColors[deletedByLabel]}`}
-                    linkToProfile
-                    postOrComment
-                  />
-                </span>
-              </div>
-            </div>
+            <DeletedByBanner
+              deletedBy={deletedBy}
+              deletedByLabel={deletedByLabel}
+              message={intl.formatMessage(messages.deletedBy)}
+              postData={comment}
+            />
           )}
           <AlertBanner
             author={author}

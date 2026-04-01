@@ -14,7 +14,6 @@ import { ContentActions, PostsStatusFilter } from '../../data/constants';
 import { initializeStore } from '../../store';
 import executeThunk from '../../test-utils';
 import { getCourseConfigApiUrl } from '../data/api';
-import { fetchConfigSuccess } from '../data/slices';
 import fetchCourseConfig from '../data/thunks';
 import LearnerActionsDropdown from './LearnerActionsDropdown';
 
@@ -65,11 +64,6 @@ describe('LearnerActionsDropdown', () => {
       .reply(200, { isPostingEnabled: true });
 
     await executeThunk(fetchCourseConfig(courseId), store.dispatch, store.getState);
-
-    // Set moderation privileges so learner actions are available
-    store.dispatch(fetchConfigSuccess({
-      hasModerationPrivileges: true,
-    }));
   });
 
   it('can open dropdown if enabled', async () => {

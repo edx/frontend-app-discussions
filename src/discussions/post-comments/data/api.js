@@ -40,7 +40,6 @@ export const getThreadComments = async (threadId, {
   enableInContextSidebar = false,
   showDeleted = false,
   enableDiscussionBan = false,
-  includeMuted = false,
   signal,
 } = {}) => {
   const params = snakeCaseObject({
@@ -52,7 +51,6 @@ export const getThreadComments = async (threadId, {
     enableInContextSidebar,
     mergeQuestionTypeResponses: threadType === ThreadType.QUESTION ? true : null,
     showDeleted,
-    includeMuted,
   });
 
   const { data } = await getAuthenticatedHttpClient().get(getCommentsApiUrl(), { params: { ...params, signal } });
@@ -72,22 +70,20 @@ export const getCommentResponses = async (commentId, {
   reverseOrder,
   showDeleted = false,
   enableDiscussionBan = false,
-  includeMuted,
 } = {}) => {
   const url = `${getCommentsApiUrl()}${commentId}/`;
-
   const params = snakeCaseObject({
     page,
     pageSize,
     requestedFields: buildRequestedFields(enableDiscussionBan),
-    includeMuted,
     reverseOrder,
     showDeleted,
   });
-
-  const { data } = await getAuthenticatedHttpClient().get(url, { params });
+  const { data } = await getAuthenticatedHttpClient()
+    .get(url, { params });
   return data;
 };
+
 /**
  * Posts a comment.
  * @param {string} comment Raw comment data to post.

@@ -173,26 +173,20 @@ describe('InContext Topics View', () => {
   it('A section group should have only a title and required subsections.', async () => {
     await setupMockResponse();
     renderComponent();
-    // const sectionGroups = await screen.getAllByTestId('section-group');
+    const sectionGroups = await screen.getAllByTestId('section-group');
 
     // Run assertions in parallel - each topic's assertions are independent
     await Promise.all(
-      coursewareTopics.map(() => waitFor(() => {
-        // Find all icon-size elements in the section group
-        // const allIconElements = sectionGroups[index].querySelectorAll('.icon-size');
+      coursewareTopics.map((topic, index) => waitFor(() => {
+        const allStats = sectionGroups[index].querySelectorAll('.icon-size');
+        const stats = Array.from(allStats).filter(
+          el => !el.closest('[data-testid="subsection-group"]'),
+        );
+        const subsectionGroups = within(sectionGroups[index]).getAllByTestId('subsection-group');
 
-        // Find icon-size elements that are inside subsection groups
-        // const subsectionIconElements = sectionGroups[index]
-        //   .querySelectorAll('[data-testid=\"subsection-group\"] .icon-size');
-
-        // Stats should be icons that are NOT inside subsection groups
-        // const stats = Array.from(allIconElements).filter(
-        //   icon => !Array.from(subsectionIconElements).includes(icon),
-        // );
-
-        // const subsectionGroups = within(sectionGroups[index]).getAllByTestId('subsection-group');
-
-        // (rest of your existing assertions remain unchanged here)
+        expect(within(sectionGroups[index]).queryByText(topic.displayName)).toBeInTheDocument();
+        expect(stats).toHaveLength(0);
+        expect(subsectionGroups).toHaveLength(2);
       })),
     );
   });

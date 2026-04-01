@@ -80,7 +80,6 @@ async function mockAxiosReturnPagedCommentsResponses() {
     page_size: undefined,
     requested_fields: 'profile_image',
     reverse_order: true,
-    include_muted: false,
     show_deleted: false,
   };
 
@@ -93,7 +92,7 @@ async function mockAxiosReturnPagedCommentsResponses() {
         endorsed: false,
         page,
         pageSize: 1,
-        count: 3,
+        count: 2,
       }),
     );
   });
@@ -237,7 +236,6 @@ describe('ThreadView', () => {
     });
     axiosMock.onGet(`${courseConfigApiUrl}${courseId}/`).reply(200, {
       isPostingEnabled: true,
-      hasModerationPrivileges: true,
       captchaSettings: {
         enabled: true,
         siteKey: 'test-key',
@@ -434,48 +432,13 @@ describe('ThreadView', () => {
       await setupCourseConfig();
       await waitFor(() => renderComponent(discussionPostId));
 
-      // First wait for the initial comments to load
-      await waitFor(() => {
-        const mainPost = screen.queryByTestId('post-thread-1');
-        const anyComment = screen.queryByTestId('comment-comment-1') || screen.queryByTestId('comment-comment-2');
-        // Check if either main post is available for commenting OR if comments exist
-        return mainPost || anyComment;
-      }, { timeout: 10000 });
-
-      const post = await screen.findByTestId('post-thread-1');
-      const hoverCard = within(post).getByTestId('hover-card-thread-1');
-      const addResponseButton = within(hoverCard).getByRole('button', { name: /Add response/i });
-      await act(async () => { fireEvent.click(addResponseButton); });
+      const comment = await waitFor(() => screen.findByTestId('comment-comment-1'));
+      const hoverCard = within(comment).getByTestId('hover-card-comment-1');
+      await act(async () => { fireEvent.click(within(hoverCard).getByRole('button', { name: /Add comment/i })); });
       await act(async () => { fireEvent.change(screen.getByTestId('tinymce-editor'), { target: { value: 'testing123' } }); });
       await act(async () => { fireEvent.click(screen.getByText(/submit/i)); });
 
-      // After posting, wait for ANY new comment to appear
-      // The new comment could have various IDs depending on the current state
-      await waitFor(async () => {
-        const allComments = [
-          screen.queryByTestId('comment-comment-1'),
-          screen.queryByTestId('comment-comment-2'),
-          screen.queryByTestId('comment-comment-3'),
-          screen.queryByTestId('reply-comment-1'),
-          screen.queryByTestId('reply-comment-2'),
-          screen.queryByTestId('reply-comment-3'),
-        ].filter(Boolean);
-
-        if (allComments.length > 0) {
-          expect(allComments[0]).toBeInTheDocument();
-          return true;
-        }
-
-        // If no specific comment elements, check if content was posted successfully
-        // by looking for the text we submitted
-        const submittedText = screen.queryByText('testing123');
-        if (submittedText) {
-          expect(submittedText).toBeInTheDocument();
-          return true;
-        }
-
-        throw new Error('No comment found after posting');
-      }, { timeout: 15000 });
+      await waitFor(async () => expect(await screen.findByTestId('reply-comment-2')).toBeInTheDocument());
     });
 
     it('should allow editing an existing comment', async () => {
@@ -813,20 +776,13 @@ describe('ThreadView', () => {
   });
 
   describe('for comments replies', () => {
-    const findLoadMoreCommentsResponsesButton = () => screen.queryByTestId('load-more-comments-responses');
+    const findLoadMoreCommentsResponsesButton = () => screen.findByTestId('load-more-comments-responses');
 
     it('initially loads only the first page', async () => {
       await waitFor(() => renderComponent(discussionPostId));
 
-      await waitFor(() => screen.findByTestId('comment-comment-1'));
-      // Wait for the comment to load first, then check for replies
-      const comment = await screen.findByTestId('comment-comment-1');
-      if (comment) {
-        await waitFor(() => {
-          const reply = screen.queryByTestId('reply-comment-3') || screen.queryByTestId('reply-comment-2');
-          return reply;
-        }, { timeout: 5000 });
-      }
+      await waitFor(() => screen.findByTestId('reply-comment-2'));
+      expect(screen.queryByTestId('reply-comment-3')).not.toBeInTheDocument();
     });
 
     it('successfully added comment in the draft.', async () => {
@@ -855,11 +811,7 @@ describe('ThreadView', () => {
     it('successfully updated comment in the draft.', async () => {
       await waitFor(() => renderComponent(discussionPostId));
 
-      const comment = screen.queryByTestId('reply-comment-3') || screen.queryByTestId('comment-comment-3');
-      if (!comment) {
-        // Skip test if no comment found
-        return;
-      }
+      const comment = screen.queryByTestId('reply-comment-2');
       const actionBtn = comment.querySelector('button[aria-label="Actions menu"]');
 
       await act(async () => {
@@ -986,52 +938,35 @@ describe('ThreadView', () => {
     it('pressing load more button will load next page of replies', async () => {
       await waitFor(() => renderComponent(discussionPostId));
 
-      const loadMoreButton = findLoadMoreCommentsResponsesButton();
-      if (loadMoreButton) {
-        await act(async () => {
-          fireEvent.click(loadMoreButton);
-        });
-        await waitFor(() => {
-          const reply = screen.queryByTestId('reply-comment-4') || screen.queryByTestId('reply-comment-3');
-          return reply;
-        }, { timeout: 5000 });
-      }
+      const loadMoreButton = await findLoadMoreCommentsResponsesButton();
+      await act(async () => {
+        fireEvent.click(loadMoreButton);
+      });
+      await screen.findByTestId('reply-comment-3');
     });
 
     it('newly loaded replies are appended to the old ones', async () => {
       await waitFor(() => renderComponent(discussionPostId));
 
-      const loadMoreButton = findLoadMoreCommentsResponsesButton();
-      if (loadMoreButton) {
-        await act(async () => {
-          fireEvent.click(loadMoreButton);
-        });
+      const loadMoreButton = await findLoadMoreCommentsResponsesButton();
+      await act(async () => {
+        fireEvent.click(loadMoreButton);
+      });
 
-        await waitFor(() => {
-          const laterReply = screen.queryByTestId('reply-comment-4') || screen.queryByTestId('reply-comment-3');
-          return laterReply;
-        }, { timeout: 5000 });
-
-        // check that comments from the first page are also displayed
-        const firstReply = screen.queryByTestId('reply-comment-3') || screen.queryByTestId('reply-comment-2');
-        expect(firstReply).toBeInTheDocument();
-      }
+      await screen.findByTestId('reply-comment-3');
+      // check that comments from the first page are also displayed
+      expect(screen.queryByTestId('reply-comment-2')).toBeInTheDocument();
     });
 
     it('load more button is hidden when no more replies pages to load', async () => {
       await waitFor(() => renderComponent(discussionPostId));
 
-      const loadMoreButton = findLoadMoreCommentsResponsesButton();
-      if (loadMoreButton) {
-        await act(async () => {
-          fireEvent.click(loadMoreButton);
-        });
+      const loadMoreButton = await findLoadMoreCommentsResponsesButton();
+      await act(async () => {
+        fireEvent.click(loadMoreButton);
+      });
 
-        await waitFor(() => {
-          const reply = screen.queryByTestId('reply-comment-4') || screen.queryByTestId('reply-comment-3');
-          return reply;
-        }, { timeout: 5000 });
-      }
+      await screen.findByTestId('reply-comment-3');
     });
   });
 
@@ -1054,14 +989,8 @@ describe('ThreadView', () => {
           within(hoverCard).getByRole('button', { name: /actions menu/i }),
         );
       });
-      // With moderation privileges, delete is a submenu - click parent then child
       await act(async () => {
-        const deleteButton = await screen.findByTestId('delete');
-        fireEvent.click(deleteButton);
-      });
-      await act(async () => {
-        const deletePostButton = await screen.findByTestId('delete-post');
-        fireEvent.click(deletePostButton);
+        fireEvent.click(screen.queryByRole('button', { name: /Delete/i }));
       });
       expect(screen.queryByRole('dialog', { name: /Delete/i, exact: false })).toBeInTheDocument();
     });
@@ -1071,91 +1000,23 @@ describe('ThreadView', () => {
     it('shows action dropdown for replies', async () => {
       await waitFor(() => renderComponent(discussionPostId));
 
-      // First ensure comments are loaded
-      await waitFor(() => {
-        const anyComment = screen.queryByTestId('comment-comment-1')
-                          || screen.queryByTestId('comment-comment-2')
-                          || screen.queryByTestId('reply-comment-2')
-                          || screen.queryByTestId('reply-comment-3');
-        if (!anyComment) {
-          throw new Error('No comments found');
-        }
-        return anyComment;
-      }, { timeout: 10000 });
-
-      // Then look for a specific reply/comment with actions
-      const reply = await waitFor(() => {
-        const candidates = [
-          screen.queryByTestId('reply-comment-3'),
-          screen.queryByTestId('reply-comment-2'),
-          screen.queryByTestId('comment-comment-2'),
-          screen.queryByTestId('comment-comment-1'),
-        ];
-        const foundReply = candidates.find(el => el !== null);
-        if (!foundReply) {
-          throw new Error('No reply/comment elements found');
-        }
-        return foundReply;
-      }, { timeout: 5000 });
-
-      const actionsButton = within(reply).queryByRole('button', { name: /actions menu/i });
-      expect(actionsButton).toBeInTheDocument();
+      const reply = await waitFor(() => screen.findByTestId('reply-comment-2'));
+      expect(within(reply).getByRole('button', { name: /actions menu/i })).toBeInTheDocument();
     });
 
     it('should display reply content', async () => {
       await waitFor(() => renderComponent(discussionPostId));
 
-      const reply = await waitFor(() => {
-        const candidates = [
-          screen.queryByTestId('reply-comment-3'),
-          screen.queryByTestId('reply-comment-2'),
-          screen.queryByTestId('comment-comment-2'),
-          screen.queryByTestId('comment-comment-1'),
-        ];
-        const foundReply = candidates.find(el => el !== null);
-        if (!foundReply) {
-          throw new Error('No reply/comment elements found');
-        }
-        return foundReply;
-      }, { timeout: 10000 });
-
-      expect(reply).toBeInTheDocument();
-      // Verify the element has some content
-      expect(reply).not.toBeEmptyDOMElement();
+      const reply = await waitFor(() => screen.findByTestId('reply-comment-2'));
+      expect(within(reply).queryByTestId('comment-2')).toBeInTheDocument();
     });
 
     it('shows delete confirmation modal', async () => {
       await waitFor(() => renderComponent(discussionPostId));
 
-      const reply = await waitFor(() => {
-        const candidates = [
-          screen.queryByTestId('reply-comment-3'),
-          screen.queryByTestId('reply-comment-2'),
-          screen.queryByTestId('comment-comment-2'),
-          screen.queryByTestId('comment-comment-1'),
-        ];
-        const foundReply = candidates.find(el => el !== null);
-        if (!foundReply) {
-          throw new Error('No reply/comment elements found');
-        }
-        return foundReply;
-      }, { timeout: 10000 });
-
-      const actionsButton = within(reply).queryByRole('button', { name: /actions menu/i });
-      if (actionsButton) {
-        await act(async () => { fireEvent.click(actionsButton); });
-
-        // With moderation privileges, delete is a submenu - click parent then child
-        await act(async () => {
-          const deleteMenuItem = await screen.findByTestId('delete');
-          fireEvent.click(deleteMenuItem);
-        });
-
-        await act(async () => {
-          const deletePostButton = await screen.findByTestId('delete-post');
-          fireEvent.click(deletePostButton);
-        });
-      }
+      const reply = await waitFor(() => screen.findByTestId('reply-comment-2'));
+      await act(async () => { fireEvent.click(within(reply).getByRole('button', { name: /actions menu/i })); });
+      await act(async () => { fireEvent.click(screen.queryByRole('button', { name: /Delete/i })); });
 
       expect(screen.queryByRole('dialog', { name: /Delete/i, exact: false })).toBeInTheDocument();
     });

@@ -86,7 +86,6 @@ export function fetchThreadComments(
     enableInContextSidebar,
     showDeleted = false,
     signal,
-    includeMuted,
   } = {},
 ) {
   return async (dispatch, getState) => {
@@ -94,7 +93,7 @@ export function fetchThreadComments(
       dispatch(fetchCommentsRequest());
       const enableDiscussionBan = selectEnableDiscussionBan(getState());
       const data = await getThreadComments(threadId, {
-        page, reverseOrder, threadType, enableInContextSidebar, showDeleted, enableDiscussionBan, signal, includeMuted,
+        page, reverseOrder, threadType, enableInContextSidebar, showDeleted, enableDiscussionBan, signal,
       });
       dispatch(fetchCommentsSuccess({
         ...normaliseComments(camelCaseObject(data)),
@@ -112,15 +111,13 @@ export function fetchThreadComments(
   };
 }
 
-export function fetchCommentResponses(commentId, {
-  page = 1, reverseOrder = true, showDeleted = false, includeMuted,
-} = {}) {
+export function fetchCommentResponses(commentId, { page = 1, reverseOrder = true, showDeleted = false } = {}) {
   return async (dispatch, getState) => {
     try {
       dispatch(fetchCommentResponsesRequest({ commentId }));
       const enableDiscussionBan = selectEnableDiscussionBan(getState());
       const data = await getCommentResponses(commentId, {
-        page, reverseOrder, showDeleted, enableDiscussionBan, includeMuted,
+        page, reverseOrder, showDeleted, enableDiscussionBan,
       });
       dispatch(fetchCommentResponsesSuccess({
         ...normaliseComments(camelCaseObject(data)),

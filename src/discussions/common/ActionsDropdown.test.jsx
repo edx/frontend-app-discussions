@@ -15,7 +15,6 @@ import { ContentActions } from '../../data/constants';
 import { initializeStore } from '../../store';
 import executeThunk from '../../test-utils';
 import { getCourseConfigApiUrl } from '../data/api';
-import { fetchConfigSuccess } from '../data/slices';
 import fetchCourseConfig from '../data/thunks';
 import messages from '../messages';
 import { getCommentsApiUrl } from '../post-comments/data/api';
@@ -33,25 +32,6 @@ jest.mock('@edx/frontend-platform/logging', () => ({
   ...jest.requireActual('@edx/frontend-platform/logging'),
   logError: jest.fn(),
 }));
-
-let originalConsoleWarn;
-beforeAll(() => {
-  // Preserve the original console.warn so we can forward non-locale warnings.
-  // eslint-disable-next-line no-console
-  originalConsoleWarn = console.warn;
-  jest.spyOn(console, 'warn').mockImplementation((msg, ...args) => {
-    if (msg?.includes?.('Missing locale')) {
-      // Suppress only the known, noisy locale warning.
-      return undefined;
-    }
-    // Forward all other warnings to the original console.warn.
-    return originalConsoleWarn.call(console, msg, ...args);
-  });
-});
-
-afterAll(() => {
-  jest.restoreAllMocks();
-});
 
 let store;
 let axiosMock;
@@ -277,7 +257,6 @@ describe('ActionsDropdown', () => {
       editable_fields: ['copy_link', 'delete', 'raw_body'],
       is_deleted: true,
       can_delete: true,
-      author: 'abc123', // Match authenticated user so they can delete their own content
     }).discussion;
 
     await mockThreadAndComment(deletedDiscussion);
@@ -305,7 +284,6 @@ describe('ActionsDropdown', () => {
       editable_fields: ['delete', 'raw_body'],
       is_deleted: true,
       can_delete: true,
-      author: 'abc123', // Match authenticated user so they can delete their own content
     }).comment;
 
     await mockThreadAndComment(deletedComment);
@@ -324,94 +302,6 @@ describe('ActionsDropdown', () => {
       expect(screen.queryByTestId('edit')).toBeDisabled();
       expect(screen.queryByTestId('delete-post')).toBeInTheDocument();
       expect(screen.queryByTestId('delete-post')).toBeDisabled();
-    });
-  });
-
-  it('shows all staff mute submenu options and enables only mute actions for unmuted user', async () => {
-    store.dispatch(fetchConfigSuccess({
-      isCourseStaff: true,
-      hasModerationPrivileges: true,
-    }));
-
-    const discussionObject = buildTestContent({
-      editable_fields: ['copy_link'],
-      author: 'mute-target-user',
-      author_label: null,
-    }).discussion;
-
-    await mockThreadAndComment(discussionObject);
-    renderComponent({ ...camelCaseObject(discussionObject) });
-
-    const openButton = await findOpenActionsDropdownButton();
-    await act(async () => {
-      fireEvent.click(openButton);
-    });
-
-    const muteParentAction = await screen.findByTestId('mute');
-    await act(async () => {
-      fireEvent.click(muteParentAction);
-    });
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('mute-personal')).toBeInTheDocument();
-      expect(screen.queryByTestId('mute-coursewide')).toBeInTheDocument();
-      expect(screen.queryByTestId('unmute-personal')).toBeInTheDocument();
-      expect(screen.queryByTestId('unmute-coursewide')).toBeInTheDocument();
-
-      expect(screen.queryByTestId('mute-personal')).not.toBeDisabled();
-      expect(screen.queryByTestId('mute-coursewide')).not.toBeDisabled();
-      expect(screen.queryByTestId('unmute-personal')).toBeDisabled();
-      expect(screen.queryByTestId('unmute-coursewide')).toBeDisabled();
-    });
-  });
-
-  it('shows all staff mute submenu options and enables only matching unmute scope', async () => {
-    store.dispatch(fetchConfigSuccess({
-      isCourseStaff: true,
-      hasModerationPrivileges: true,
-    }));
-
-    const discussionObject = buildTestContent({
-      editable_fields: ['copy_link'],
-      author: 'personal-muted-user',
-      author_label: null,
-    }).discussion;
-
-    store.dispatch({
-      type: 'learner/fetchMutedUsersSuccess',
-      payload: {
-        mutedUsers: [
-          {
-            username: discussionObject.author,
-            scope: 'personal',
-          },
-        ],
-      },
-    });
-
-    await mockThreadAndComment(discussionObject);
-    renderComponent({ ...camelCaseObject(discussionObject) });
-
-    const openButton = await findOpenActionsDropdownButton();
-    await act(async () => {
-      fireEvent.click(openButton);
-    });
-
-    const muteParentAction = await screen.findByTestId('mute');
-    await act(async () => {
-      fireEvent.click(muteParentAction);
-    });
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('mute-personal')).toBeInTheDocument();
-      expect(screen.queryByTestId('mute-coursewide')).toBeInTheDocument();
-      expect(screen.queryByTestId('unmute-personal')).toBeInTheDocument();
-      expect(screen.queryByTestId('unmute-coursewide')).toBeInTheDocument();
-
-      expect(screen.queryByTestId('mute-personal')).toBeDisabled();
-      expect(screen.queryByTestId('mute-coursewide')).not.toBeDisabled();
-      expect(screen.queryByTestId('unmute-personal')).not.toBeDisabled();
-      expect(screen.queryByTestId('unmute-coursewide')).toBeDisabled();
     });
   });
 
@@ -439,29 +329,9 @@ describe('ActionsDropdown', () => {
   }) => {
     describe(`for ${testFor}`, () => {
       it(`can "${label}" when allowed`, async () => {
-        const updatedCommentOrPost = action === 'mute_user' || action === 'unmute_user'
-          ? { ...commentOrPost, authorLabel: null }
-          : commentOrPost;
-
-        // For unmute tests, add the post author to muted users
-        if (action === 'unmute_user') {
-          store.dispatch({
-            type: 'learner/fetchMutedUsersSuccess',
-            payload: {
-              mutedUsers: [
-                {
-                  username: updatedCommentOrPost.author,
-                  scope: 'personal',
-                },
-              ],
-            },
-          });
-        }
-
-        await mockThreadAndComment(updatedCommentOrPost);
-
+        await mockThreadAndComment(commentOrPost);
         const mockHandler = jest.fn();
-        renderComponent({ ...updatedCommentOrPost, actionHandlers: { [action]: mockHandler } });
+        renderComponent({ ...commentOrPost, actionHandlers: { [action]: mockHandler } });
 
         const openButton = await findOpenActionsDropdownButton();
         await act(async () => {

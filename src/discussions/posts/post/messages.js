@@ -143,59 +143,6 @@ const messages = defineMessages({
     defaultMessage: 'The discussion moderation team will review this content and take appropriate action.',
     description: 'Text displayed in confirmation dialog when deleting a post',
   },
-  // Learner Mute Modal
-  learnerMuteTitle: {
-    id: 'discussions.post.learner.mute.title',
-    defaultMessage: 'Mute this user?',
-    description: 'Title for learner mute modal',
-  },
-  learnerMuteDescription: {
-    id: 'discussions.post.learner.mute.description',
-    defaultMessage: 'Are you sure you want to mute {username}? Their discussion activity will be hidden from your view, but still visible to other learners and staff.',
-    description: 'Description for learner mute modal',
-  },
-  learnerMuteButton: {
-    id: 'discussions.post.learner.mute.button',
-    defaultMessage: 'Mute',
-    description: 'Mute button for learner',
-  },
-  learnerMuteAndReportButton: {
-    id: 'discussions.post.learner.mute.and.report.button',
-    defaultMessage: 'Mute and report post',
-    description: 'Mute and report button for learner',
-  },
-  // Staff Mute Modal
-  staffMuteTitle: {
-    id: 'discussions.post.staff.mute.title',
-    defaultMessage: 'Mute this user?',
-    description: 'Title for staff mute modal',
-  },
-  staffMuteDescription: {
-    id: 'discussions.post.staff.mute.description',
-    defaultMessage: 'Are you sure you want to mute {username}? Their discussion activity will be hidden from your view, but still visible to other learners and staff.',
-    description: 'Description for staff mute modal',
-  },
-  staffMuteButton: {
-    id: 'discussions.post.staff.mute.button',
-    defaultMessage: 'Mute',
-    description: 'Mute button for staff',
-  },
-  // Unmute Modal
-  unmuteTitle: {
-    id: 'discussions.post.unmute.title',
-    defaultMessage: 'Unmute this user?',
-    description: 'Title for unmute modal',
-  },
-  unmuteDescription: {
-    id: 'discussions.post.unmute.description',
-    defaultMessage: 'Are you sure you want to unmute {username}? You will be able to see their discussion activity again.',
-    description: 'Description for unmute modal',
-  },
-  unmuteButton: {
-    id: 'discussions.post.unmute.button',
-    defaultMessage: 'Unmute',
-    description: 'Unmute button',
-  },
   closePostModalTitle: {
     id: 'discussions.post.closePostModal.title',
     defaultMessage: 'Close post',

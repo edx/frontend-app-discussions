@@ -6,4 +6,3 @@ export { default as BanModerationModals } from './BanModerationModals';
 export { default as Confirmation } from './Confirmation';
 export { default as DeletedByBanner } from './DeletedByBanner';
 export { default as EndorsedAlertBanner } from './EndorsedAlertBanner';
-export { default as MuteModalManager } from './MuteModalManager';

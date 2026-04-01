@@ -80,17 +80,6 @@ const PostLink = ({
   const isPostRead = read || (!read && commentCount !== unreadCommentCount);
   const shouldUseSingleLineAuthorRole = ['learners', 'posts', 'my-posts'].includes(page);
 
-  // Check if viewing a muted user's activity and if this post is from non-muted author
-  const personalMutedUsers = useSelector(state => state.learners?.mutedUsers?.personal || []);
-  const courseWideMutedUsers = useSelector(state => state.learners?.mutedUsers?.course || []);
-  const allMutedUsers = [...personalMutedUsers, ...courseWideMutedUsers];
-
-  // If learnerUsername exists, we're viewing a specific user's activity
-  // Show icon if: learnerUsername is muted AND post author is NOT the muted user (so post contains muted comments)
-  const isViewingMutedUser = learnerUsername && allMutedUsers.includes(learnerUsername);
-  const isPostAuthorNotMuted = author && author !== learnerUsername;
-  const showMutedContentIcon = isViewingMutedUser && isPostAuthorNotMuted;
-
   const checkIsSelected = useMemo(
     () => (
       window.location.pathname.includes(postId)),
@@ -100,10 +89,10 @@ const PostLink = ({
   return (
     <Link
       className={
-        classNames('discussion-post p-0 text-decoration-none text-gray-900', {
-          'border-bottom border-light-400': showDivider,
-        })
-      }
+          classNames('discussion-post p-0 text-decoration-none text-gray-900', {
+            'border-bottom border-light-400': showDivider,
+          })
+        }
       to={`${pathname}${enableInContextSidebar ? search : ''}`}
       aria-current={checkIsSelected ? 'page' : undefined}
       role="option"
@@ -111,13 +100,13 @@ const PostLink = ({
     >
       <div
         className={
-          classNames(
-            'd-flex flex-row pt-2 pb-2 px-4 border-primary-500 position-relative',
-            { 'bg-light-300': isPostRead },
-            { 'post-summary-card-selected': id === selectedPostId },
-            { 'bg-light-200': isDeleted }, // Gray background for deleted threads
-          )
-        }
+            classNames(
+              'd-flex flex-row pt-2 pb-2 px-4 border-primary-500 position-relative',
+              { 'bg-light-300': isPostRead },
+              { 'post-summary-card-selected': id === selectedPostId },
+              { 'bg-light-200': isDeleted }, // Gray background for deleted threads
+            )
+          }
         style={isDeleted ? { opacity: 0.7 } : {}} // Slightly faded for deleted threads
       >
         <PostAvatar
@@ -149,12 +138,6 @@ const PostLink = ({
                   { 'text-decoration-line-through': isDeleted }, // Line-through for deleted threads
                 )}
                 >
-                  {showMutedContentIcon && (
-                    <Icon
-                      src={SubdirectoryArrowRight}
-                      className="text-gray-700 align-bottom subdirectory-arrow-icon"
-                    />
-                  )}
                   {displayTitle}
                 </span>
                 <span className="text-gray-700 font-weight-normal  font-style align-bottom">
