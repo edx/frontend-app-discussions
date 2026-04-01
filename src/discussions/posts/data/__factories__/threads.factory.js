@@ -29,7 +29,7 @@ Factory.define('thread')
       'copy_link',
     ],
     author: 'test_user',
-    author_label: 'Staff',
+    author_label: null,
     abuse_flagged: false,
     can_delete: true,
     voted: false,

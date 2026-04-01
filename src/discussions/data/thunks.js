@@ -6,11 +6,32 @@ import {
   PostsStatusFilter,
 } from '../../data/constants';
 import { setSortedBy } from '../learners/data';
-import { setStatusFilter } from '../posts/data';
-import { getHttpErrorStatus } from '../utils';
-import { getDiscussionsConfig, getDiscussionsSettings } from './api';
 import {
-  fetchConfigDenied, fetchConfigFailed, fetchConfigRequest, fetchConfigSuccess,
+  fetchMutedUsersFailed,
+  fetchMutedUsersRequest,
+  fetchMutedUsersSuccess,
+} from '../learners/data/slices';
+import { setStatusFilter } from '../posts/data';
+import { fetchThreads } from '../posts/data/thunks';
+import { getHttpErrorStatus } from '../utils';
+import {
+  getDiscussionsConfig,
+  getDiscussionsSettings,
+  getMutedUsers,
+  muteAndReportUser,
+  muteUser,
+  unmuteUser,
+} from './api';
+import {
+  fetchConfigDenied,
+  fetchConfigFailed,
+  fetchConfigRequest,
+  fetchConfigSuccess,
+  muteUserFailed,
+  muteUserRequest,
+  muteUserSuccess,
+  unmuteUserFailed,
+  unmuteUserRequest,
 } from './slices';
 
 /**
@@ -37,6 +58,7 @@ export default function fetchCourseConfig(courseId) {
 
       dispatch(fetchConfigSuccess(camelCaseObject({
         ...config,
+        courseId,
         enable_in_context: config.provider === DiscussionProvider.OPEN_EDX,
       })));
       dispatch(setSortedBy(learnerSort));
@@ -51,3 +73,120 @@ export default function fetchCourseConfig(courseId) {
     }
   };
 }
+
+/**
+ * Fetch list of muted users
+ * @param {string} courseId
+ * @returns {(function(*): Promise<void>)|*}
+ */
+export function fetchMutedUsersThunk(courseId) {
+  return async (dispatch, getState) => {
+    try {
+      dispatch(fetchMutedUsersRequest());
+
+      const state = getState();
+      const currentUserId = state.config.userId;
+
+      const response = await getMutedUsers(courseId, {
+        muted_by: currentUserId,
+        include_usernames: 'true',
+      });
+
+      dispatch(fetchMutedUsersSuccess({
+        mutedUsers: response.muted_users || [],
+        personalMutedUsers: (response.personal_muted_users || []).map(u => u.username).filter(Boolean),
+        courseWideMutedUsers: (response.course_wide_muted_users || []).map(u => u.username).filter(Boolean),
+      }));
+    } catch (error) {
+      dispatch(fetchMutedUsersFailed(error.message));
+      logError(error);
+    }
+  };
+}
+
+/**
+ * Mute a user in discussions
+ * @param {string} username
+ * @param {boolean} isCourseWide
+ * @returns {(function(*): Promise<void>)|*}
+ */
+export function muteUserThunk(username, isCourseWide = false) {
+  return async (dispatch, getState) => {
+    const { courseId } = getState().config;
+    try {
+      dispatch(muteUserRequest());
+      await muteUser(courseId, username, isCourseWide);
+      dispatch(fetchMutedUsersThunk(courseId));
+      dispatch(fetchThreads(courseId, {
+        orderBy: 'last_activity_at',
+        page: 1,
+        pageSize: 20,
+      }));
+    } catch (error) {
+      dispatch(muteUserFailed(error.message));
+      logError(error);
+    }
+  };
+}
+
+/**
+ * Unmute a user in discussions
+ * @param {string} username
+ * @param {boolean} isCourseWide
+ * @returns {(function(*): Promise<void>)|*}
+ */
+export function unmuteUserThunk(username, isCourseWide = false) {
+  return async (dispatch, getState) => {
+    const { courseId } = getState().config;
+    try {
+      dispatch(unmuteUserRequest());
+      await unmuteUser(courseId, username, isCourseWide);
+      dispatch(fetchMutedUsersThunk(courseId));
+      dispatch(fetchThreads(courseId, {
+        orderBy: 'last_activity_at',
+        page: 1,
+        pageSize: 20,
+      }));
+    } catch (error) {
+      dispatch(unmuteUserFailed(error.message));
+      logError(error);
+    }
+  };
+}
+
+/**
+ * Mute and report a user in discussions
+ * @param {string} username
+ * @param {string} postId
+ * @returns {(function(*): Promise<void>)|*}
+ */
+export function muteAndReportUserThunk(username, postId) {
+  return async (dispatch, getState) => {
+    const { courseId } = getState().config;
+    try {
+      dispatch(muteUserRequest());
+      const response = await muteAndReportUser(courseId, username, postId);
+      dispatch(muteUserSuccess({
+        username,
+        isCourseWide: false,
+        mutedUsers: response.muted_users,
+      }));
+
+      dispatch(fetchMutedUsersThunk(courseId));
+      dispatch(fetchThreads(courseId, {
+        orderBy: 'last_activity_at',
+        page: 1,
+        pageSize: 20,
+      }));
+    } catch (error) {
+      dispatch(muteUserFailed(error.message));
+      logError(error);
+    }
+  };
+}
+
+/**
+ * Fetch list of muted users
+ * @param {string} courseId
+ * @returns {(function(*): Promise<void>)|*}
+ */

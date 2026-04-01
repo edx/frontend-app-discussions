@@ -13,7 +13,7 @@ import { useAlertBannerVisible } from '../../data/hooks';
 import PostHeader, { PostAvatar } from './PostHeader';
 
 jest.mock('react-redux', () => ({ useSelector: jest.fn() }));
-jest.mock('@edx/frontend-platform', () => ({ getConfig: jest.fn() }));
+jest.mock('@edx/frontend-platform', () => ({ getConfig: jest.fn(), ensureConfig: jest.fn() }));
 jest.mock('../../data/hooks', () => ({ useAlertBannerVisible: jest.fn() }));
 
 const defaultPostUsers = {
@@ -39,10 +39,31 @@ function renderWithContext(ui) {
 describe('PostAvatar', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    useSelector.mockReturnValue({ imageUrlSmall: 'http://redux-avatar.png' });
+    useSelector.mockImplementation((selector) => {
+      const state = {
+        learners: {
+          mutedUsers: {
+            personal: [],
+            course: [],
+          },
+        },
+        threads: {
+          avatars: {
+            testUser: {
+              profile: {
+                image: {
+                  imageUrlSmall: 'http://redux-avatar.png',
+                },
+              },
+            },
+          },
+        },
+      };
+      return selector(state);
+    });
     getConfig.mockReturnValue({ ENABLE_PROFILE_IMAGE: 'true' });
+    useAlertBannerVisible.mockReturnValue(false);
   });
-
   it('renders avatar with profile image when ENABLE_PROFILE_IMAGE=true', () => {
     renderWithContext(
       <PostAvatar
@@ -102,7 +123,28 @@ describe('PostAvatar', () => {
 describe('PostHeader', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    useSelector.mockReturnValue({ imageUrlSmall: 'http://redux-avatar.png' });
+    useSelector.mockImplementation((selector) => {
+      const state = {
+        learners: {
+          mutedUsers: {
+            personal: [],
+            course: [],
+          },
+        },
+        threads: {
+          avatars: {
+            testUser: {
+              profile: {
+                image: {
+                  imageUrlSmall: 'http://redux-avatar.png',
+                },
+              },
+            },
+          },
+        },
+      };
+      return selector(state);
+    });
     getConfig.mockReturnValue({ ENABLE_PROFILE_IMAGE: 'true' });
     useAlertBannerVisible.mockReturnValue(false);
   });

@@ -55,6 +55,7 @@ export const getThreads = async (courseId, {
   cohort,
   isDeleted,
   enableDiscussionBan = false,
+  includeMuted,
 } = {}) => {
   const params = snakeCaseObject({
     courseId,
@@ -72,6 +73,7 @@ export const getThreads = async (courseId, {
     countFlagged,
     groupId: cohort,
     isDeleted,
+    includeMuted,
   });
   const { data } = await getAuthenticatedHttpClient().get(getThreadsApiUrl(), { params });
   return data;
@@ -84,8 +86,18 @@ export const getThreads = async (courseId, {
  * @param {boolean} enableDiscussionBan
  * @returns {Promise<{}>}
  */
-export const getThread = async (threadId, courseId, enableDiscussionBan = false) => {
-  const params = { requested_fields: buildRequestedFields(enableDiscussionBan), course_id: courseId };
+export const getThread = async (
+  threadId,
+  courseId,
+  enableDiscussionBan = false,
+  includeMuted = false,
+) => {
+  const params = {
+    requested_fields: buildRequestedFields(enableDiscussionBan),
+    course_id: courseId,
+    include_muted: includeMuted,
+  };
+
   const url = `${getThreadsApiUrl()}${threadId}/`;
   const { data } = await getAuthenticatedHttpClient().get(url, { params });
   return data;

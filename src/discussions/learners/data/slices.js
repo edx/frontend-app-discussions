@@ -34,6 +34,18 @@ const learnersSlice = createSlice({
       status: RequestStatus.IDLE,
       list: [],
     },
+    mutedPosts: {
+      status: RequestStatus.IDLE,
+      personalMutedPosts: [],
+      courseWideMutedPosts: [],
+      muteStatus: RequestStatus.IDLE,
+    },
+    mutedUsers: {
+      status: RequestStatus.IDLE,
+      byUsername: {},
+      personal: [],
+      course: [],
+    },
   },
   reducers: {
     fetchLearnersSuccess: (state, { payload }) => (
@@ -164,6 +176,40 @@ const learnersSlice = createSlice({
         },
       }
     ),
+
+    fetchMutedPostsRequest: (state) => (
+      {
+        ...state,
+        mutedPosts: {
+          ...state.mutedPosts,
+          status: RequestStatus.IN_PROGRESS,
+        },
+      }
+    ),
+    fetchMutedPostsSuccess: (state, { payload }) => ({
+      ...state,
+      mutedPosts: {
+        status: RequestStatus.SUCCESSFUL,
+
+        // // 🔥 USERS (only muted by current user – already filtered in thunk)
+        // personalMutedUsers: payload.personalMutedUsers || [],
+        // courseWideMutedUsers: payload.courseWideMutedUsers || [],
+
+        // POSTS
+        personalMutedPosts: payload.personalMutedPosts || [],
+        courseWideMutedPosts: payload.courseWideMutedPosts || [],
+      },
+    }),
+
+    fetchMutedPostsFailed: (state) => (
+      {
+        ...state,
+        mutedPosts: {
+          ...state.mutedPosts,
+          status: RequestStatus.FAILED,
+        },
+      }
+    ),
     banUserRequest: (state) => ({
       ...state,
       status: RequestStatus.IN_PROGRESS,
@@ -216,6 +262,54 @@ const learnersSlice = createSlice({
       ...state,
       status: RequestStatus.FAILED,
     }),
+    // Add muted users actions
+    fetchMutedUsersRequest: (state) => ({
+      ...state,
+      mutedUsers: {
+        ...state.mutedUsers,
+        status: RequestStatus.IN_PROGRESS,
+      },
+    }),
+
+    fetchMutedUsersSuccess: (state, { payload }) => {
+      const { mutedUsers } = payload;
+
+      const byUsername = {};
+      const personal = [];
+      const course = [];
+
+      mutedUsers.forEach(user => {
+        if (!user.username) { return; }
+
+        byUsername[user.username] = user;
+
+        if (user.scope === 'personal') {
+          personal.push(user.username);
+        }
+        if (user.scope === 'course') {
+          course.push(user.username);
+        }
+      });
+
+      return {
+        ...state,
+        mutedUsers: {
+          status: RequestStatus.SUCCESSFUL,
+          byUsername,
+          personal,
+          course,
+        },
+      };
+    },
+
+    fetchMutedUsersFailed: (state) => ({
+      ...state,
+      mutedUsers: {
+        ...state.mutedUsers,
+        status: RequestStatus.FAILED,
+      },
+    }),
+
   },
 });
 
@@ -248,6 +342,12 @@ export const {
   undeleteUserActivityRequest,
   undeleteUserActivitySuccess,
   undeleteUserActivityFailed,
+  fetchMutedPostsRequest,
+  fetchMutedPostsSuccess,
+  fetchMutedPostsFailed,
+  fetchMutedUsersRequest,
+  fetchMutedUsersSuccess,
+  fetchMutedUsersFailed,
 } = learnersSlice.actions;
 
 export const learnersReducer = learnersSlice.reducer;

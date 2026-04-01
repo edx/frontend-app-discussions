@@ -1,5 +1,5 @@
 import React, {
-  useCallback, useEffect, useMemo, useRef, useState,
+  useCallback, useMemo, useRef, useState,
 } from 'react';
 import PropTypes from 'prop-types';
 
@@ -99,6 +99,9 @@ const ActionsDropdown = ({
       {action.hasSubmenu && (
         <Icon src={ChevronRight} className="icon-size-20 ml-2" />
       )}
+      {action.hasChevron && (
+        <Icon src={ChevronRight} className="icon-size-20 ml-auto" />
+      )}
     </Dropdown.Item>
   ), [close, handleActions, intl]);
 
@@ -148,49 +151,18 @@ const ActionsDropdown = ({
     activeSubmenu ? actions.find(action => action.id === activeSubmenu) : null
   ), [actions, activeSubmenu]);
 
-  useEffect(() => {
-    if (activeSubmenu && !activeParentAction) {
-      setActiveSubmenu(null);
-    }
-  }, [activeSubmenu, activeParentAction]);
-
   const dropdownContent = (
     <div
       className="bg-white shadow d-flex flex-column mt-1"
       data-testid="actions-dropdown-modal-popup"
     >
-      {activeSubmenu && activeParentAction ? (
+      {activeParentAction ? (
         renderSubmenu(activeParentAction)
       ) : (
         actions.map(action => (
           <React.Fragment key={action.id}>
-            {(action.id === 'ban' || action.id === 'delete') && <Dropdown.Divider />}
-            {action.hasSubmenu ? (
-              renderMenuItem(action)
-            ) : (
-              <Dropdown.Item
-                as={Button}
-                variant="tertiary"
-                size="inline"
-                onClick={() => {
-                  close();
-                  if (!action.disabled) {
-                    handleActions(action.action);
-                  }
-                }}
-                className="d-flex justify-content-start actions-dropdown-item"
-                data-testid={action.id}
-                disabled={action.disabled}
-              >
-                <Icon
-                  src={action.icon}
-                  className="icon-size-24"
-                />
-                <span className="font-weight-normal ml-2">
-                  {intl.formatMessage(action.label)}
-                </span>
-              </Dropdown.Item>
-            )}
+            {(action.id === 'delete') && <Dropdown.Divider />}
+            {renderMenuItem(action)}
           </React.Fragment>
         ))
       )}

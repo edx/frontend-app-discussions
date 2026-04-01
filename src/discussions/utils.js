@@ -2,7 +2,7 @@ import { useCallback, useContext, useMemo } from 'react';
 
 import {
   Block, CheckCircle, CheckCircleOutline, Delete, Edit, InsertLink,
-  Institution, Lock, LockOpen, Pin, Report, School,
+  Institution, Lock, LockOpen, Pin, RemoveCircleOutline, Report, School,
   Verified, VerifiedOutline,
 } from '@openedx/paragon/icons';
 import { getIn } from 'formik';
@@ -24,6 +24,8 @@ import { ContentSelectors } from './data/constants';
 import PostCommentsContext from './post-comments/postCommentsContext';
 import { checkBanActionDisabled } from './utils/banUtils';
 import messages from './messages';
+
+export const isCourseStatusValid = (courseStatus) => [DENIED, LOADED].includes(courseStatus);
 
 /**
  * Get HTTP Error status from generic error.
@@ -61,9 +63,17 @@ export function useCommentsPagePath() {
  * @param {{editableFields:[string]}} content
  * @param {ContentActions} action
  * @param {boolean} hasModerationPrivileges - Whether user has moderation privileges
+ * @param {string|null} contentType - Type of content (POST, COMMENT, etc.)
+ * @param {boolean} isOwnContent - Whether current user is the author
  * @returns {boolean}
  */
-export function checkPermissions(content, action, hasModerationPrivileges = false) {
+export function checkPermissions(
+  content,
+  action,
+  hasModerationPrivileges = false,
+  contentType = null,
+  isOwnContent = false,
+) {
   // Handle both camelCase and snake_case from API
   const editableFields = content.editableFields || content.editable_fields || [];
   const canDelete = content.canDelete ?? content.can_delete ?? false;
@@ -73,30 +83,67 @@ export function checkPermissions(content, action, hasModerationPrivileges = fals
     return true;
   }
   // Both delete and restore actions check `content.canDelete`
+  // BUT: only allow if user has moderation privileges OR is deleting their own content
   if (action === ContentActions.DELETE || action === ContentActions.RESTORE) {
-    return canDelete;
+    if (hasModerationPrivileges) {
+      return canDelete;
+    }
+    // Non-moderators (including Course Staff/Admin) can only delete/restore their own content
+    return canDelete && isOwnContent;
   }
-  // Regular delete post - own content OR moderator can delete any content
+  // Regular delete post - moderators can delete any content, others only their own
   if (action === ContentActions.DELETE_POST) {
-    return hasModerationPrivileges || canDelete;
+    if (hasModerationPrivileges) {
+      return true;
+    }
+    // Non-moderators (including Course Staff/Admin) can only delete their own posts
+    return canDelete && isOwnContent;
   }
   // Ban/unban actions: require moderation privileges AND prevent self-banning
   if (action === ContentActions.BAN_COURSE
-      || action === ContentActions.BAN_ORG
-      || action === ContentActions.UNBAN_COURSE
-      || action === ContentActions.UNBAN_ORG) {
+    || action === ContentActions.BAN_ORG
+    || action === ContentActions.UNBAN_COURSE
+    || action === ContentActions.UNBAN_ORG) {
     const currentUser = getAuthenticatedUser()?.username;
     const isSelf = currentUser && author && currentUser === author;
     return hasModerationPrivileges && !isSelf;
   }
-  // Bulk delete actions require moderation privileges AND prevent self-targeting
+  // Bulk delete actions ONLY for users with moderation privileges (NOT Course Staff/Admin)
   if (action === ContentActions.DELETE_USER_COURSE
-      || action === ContentActions.DELETE_USER_ORG
-      || action === ContentActions.UNDELETE_USER_COURSE
-      || action === ContentActions.UNDELETE_USER_ORG) {
+    || action === ContentActions.DELETE_USER_ORG
+    || action === ContentActions.UNDELETE_USER_COURSE
+    || action === ContentActions.UNDELETE_USER_ORG) {
+    if (!hasModerationPrivileges) {
+      return false; // Course Staff/Admin cannot bulk delete
+    }
     const currentUser = getAuthenticatedUser()?.username;
     const isSelf = currentUser && author && currentUser === author;
-    return hasModerationPrivileges && !isSelf;
+    return !isSelf; // Moderators can bulk delete but not themselves
+  }
+  // For mute actions we check `content.canMute`
+  if (action === ContentActions.MUTE_USER || action === ContentActions.UNMUTE_USER
+      || action === ContentActions.MUTE_PERSONAL || action === ContentActions.MUTE_COURSEWIDE
+      || action === ContentActions.MUTE_AND_REPORT || action === ContentActions.UNMUTE_PERSONAL
+      || action === ContentActions.UNMUTE_COURSEWIDE) {
+    return Boolean(content.canMute);
+  }
+  // Copy link action is only available for posts, not comments, and must be in editable fields
+  if (action === ContentActions.COPY_LINK) {
+    return contentType !== 'COMMENT' && editableFields.includes('copy_link');
+  }
+  // Report/unreport actions are available to everyone except self
+  if (action === ContentActions.REPORT) {
+    const currentUser = getAuthenticatedUser()?.username;
+    const isSelf = currentUser && author && currentUser === author;
+    return !isSelf;
+  }
+  // Pin/unpin actions are available to moderators and only for posts
+  if (action === ContentActions.PIN) {
+    return hasModerationPrivileges;
+  }
+  // Close/reopen actions are available to moderators and only for posts
+  if (action === ContentActions.CLOSE) {
+    return hasModerationPrivileges;
   }
   return false;
 }
@@ -241,6 +288,39 @@ export const ACTIONS_LIST = [
     ],
   },
   {
+    id: 'mute',
+    icon: RemoveCircleOutline,
+    label: messages.muteAction,
+    hasSubmenu: true,
+    conditions: { canMute: true },
+    submenu: [
+      {
+        id: 'mute-personal',
+        action: ContentActions.MUTE_PERSONAL,
+        label: messages.mutePersonal,
+        disabledConditions: { isMutedPersonal: true },
+      },
+      {
+        id: 'mute-coursewide',
+        action: ContentActions.MUTE_COURSEWIDE,
+        label: messages.muteCoursewide,
+        disabledConditions: { isMutedCourseWide: true },
+      },
+      {
+        id: 'unmute-personal',
+        action: ContentActions.UNMUTE_PERSONAL,
+        label: messages.unmutePersonal,
+        disabledConditions: { isMutedPersonal: false },
+      },
+      {
+        id: 'unmute-coursewide',
+        action: ContentActions.UNMUTE_COURSEWIDE,
+        label: messages.unmuteCoursewide,
+        disabledConditions: { isMutedCourseWide: false },
+      },
+    ],
+  },
+  {
     id: 'delete',
     icon: Delete,
     label: messages.deleteAction,
@@ -274,8 +354,89 @@ export const ACTIONS_LIST = [
 
 export function useActions(contentType, id, hasModerationPrivileges) {
   const { postType } = useContext(PostCommentsContext);
-  const content = { ...useSelector(ContentSelectors[contentType](id)), postType };
+  const baseContent = useSelector(ContentSelectors[contentType](id));
   const enableDiscussionBan = useSelector(state => state.config.enableDiscussionBan);
+  // Global Staff - has all permissions
+  const isGlobalStaff = useSelector(state => state.config.isUserAdmin);
+  // Discussion Admin/Moderator - has all discussion permissions
+  const hasDiscussionModeratorPrivileges = useSelector(state => state.config.hasModerationPrivileges);
+  // Group TA - has limited permissions within their group
+  const isUserGroupTA = useSelector(state => state.config.isGroupTa);
+  // Course Staff/Admin - NO discussion privileges (treated as learners)
+  const currentUser = getAuthenticatedUser()?.username;
+  const personalMutedUsers = useSelector(state => state.learners?.mutedUsers?.personal || []);
+  const courseWideMutedUsers = useSelector(state => state.learners?.mutedUsers?.course || []);
+
+  // Calculate if current user can mute the post author
+  const canMute = useMemo(() => {
+    // If canMute is already explicitly set in baseContent, use that value
+    if (typeof baseContent?.canMute === 'boolean') {
+      return baseContent.canMute;
+    }
+
+    if (!baseContent?.author) {
+      return false;
+    }
+
+    // Users cannot mute themselves
+    if (currentUser === baseContent.author) {
+      return false;
+    }
+
+    // Only Global Staff, Discussion Moderators, and Group TAs can mute users
+    // Course Staff/Admin are excluded
+    if (isGlobalStaff || hasDiscussionModeratorPrivileges || isUserGroupTA) {
+      // Check if post author is staff (this would need to come from post data)
+      // For now, assume non-staff authors can be muted by privileged users
+      return !baseContent.authorLabel
+        || !['Staff', 'Moderator', 'Community TA'].includes(baseContent.authorLabel);
+    }
+
+    // Learners can mute other learners but not staff
+    if (baseContent.authorLabel
+      && ['Staff', 'Moderator', 'Community TA'].includes(baseContent.authorLabel)) {
+      return false;
+    }
+
+    return true;
+  }, [baseContent, isGlobalStaff, hasDiscussionModeratorPrivileges, isUserGroupTA, currentUser]);
+
+  // Check if user is muted by the CURRENT logged-in user ONLY
+  const muteState = useMemo(() => {
+    if (!baseContent?.author) {
+      return {
+        isMuted: false,
+        isMutedPersonal: false,
+        isMutedCourseWide: false,
+      };
+    }
+
+    // personalMutedUsers and courseWideMutedUsers are already scoped to the current viewer's permissions
+    const isMutedInPersonal = personalMutedUsers.includes(baseContent.author);
+    const isMutedInCourseWide = courseWideMutedUsers.includes(baseContent.author);
+    const hasScopedMuteState = isMutedInPersonal || isMutedInCourseWide;
+
+    // Fallback: if legacy isMuted exists but scoped arrays are empty, treat as both scopes
+    // so unmute options are still accessible and no action is accidentally hidden.
+    const isMutedFromContent = typeof baseContent?.isMuted === 'boolean' ? baseContent.isMuted : false;
+    const shouldFallbackToUnknownScope = isMutedFromContent && !hasScopedMuteState;
+
+    const isMutedPersonal = isMutedInPersonal || shouldFallbackToUnknownScope;
+    const isMutedCourseWide = isMutedInCourseWide || shouldFallbackToUnknownScope;
+
+    return {
+      isMuted: isMutedPersonal || isMutedCourseWide,
+      isMutedPersonal,
+      isMutedCourseWide,
+    };
+  }, [baseContent, personalMutedUsers, courseWideMutedUsers]);
+
+  const content = {
+    ...baseContent,
+    postType,
+    canMute,
+    ...muteState,
+  };
 
   const checkConditions = useCallback((item, conditions) => (
     conditions
@@ -307,6 +468,9 @@ export function useActions(contentType, id, hasModerationPrivileges) {
   }, []);
 
   const actions = useMemo(() => {
+    // Check if current user is the content author
+    const isOwnContent = currentUser && baseContent?.author && currentUser === baseContent.author;
+
     const filteredActions = ACTIONS_LIST.filter(
       ({
         action,
@@ -319,12 +483,55 @@ export function useActions(contentType, id, hasModerationPrivileges) {
           return false;
         }
         // For items with submenus, skip permission check on parent item
-        const hasPermission = hasSubmenu ? true : checkPermissions(content, action, hasModerationPrivileges);
+        const hasPermission = hasSubmenu
+          ? true
+          : checkPermissions(content, action, hasModerationPrivileges, contentType, isOwnContent);
         const meetsConditions = checkConditions(content, conditions);
 
         return hasPermission && meetsConditions;
       },
     ).map(action => {
+      // Special handling for mute action based on user privileges
+      if (action.id === 'mute') {
+        // Only Global Staff, Discussion Moderators, and Group TAs get submenu
+        // Course Staff/Admin are excluded - they behave like learners
+        const hasStaffMutePrivileges = isGlobalStaff || hasDiscussionModeratorPrivileges || isUserGroupTA;
+
+        if (hasStaffMutePrivileges) {
+          // For privileged users, keep all submenu options visible and use disabled states.
+          const filteredSubmenu = action.submenu
+            .filter(subAction => checkPermissions(
+              content,
+              subAction.action,
+              hasModerationPrivileges,
+              contentType,
+              isOwnContent,
+            ))
+            .map(subAction => ({
+              ...subAction,
+              disabled: (
+                checkDisabled(content, subAction.disabledConditions)
+                || isActionDisabled(subAction.id, content.isDeleted)
+              ),
+            }));
+
+          return {
+            ...action,
+            submenu: filteredSubmenu,
+            disabled: isActionDisabled(action.id, content.isDeleted) || filteredSubmenu.length === 0,
+          };
+        }
+        // For regular users (including Course Staff/Admin), remove submenu and use direct MUTE_USER/UNMUTE_USER actions
+        return {
+          ...action,
+          hasSubmenu: false,
+          submenu: undefined,
+          action: content.isMuted ? ContentActions.UNMUTE_USER : ContentActions.MUTE_USER,
+          label: content.isMuted ? messages.unmuteAction : messages.muteAction,
+          disabled: isActionDisabled(action.id, content.isDeleted),
+        };
+      }
+
       // For actions with submenus, filter submenu items and check permissions
       if (action.submenu) {
         const filteredSubmenu = action.submenu
@@ -338,7 +545,7 @@ export function useActions(contentType, id, hasModerationPrivileges) {
             )) {
               return false;
             }
-            return checkPermissions(content, subAction.action, hasModerationPrivileges);
+            return checkPermissions(content, subAction.action, hasModerationPrivileges, contentType, isOwnContent);
           })
           .map(subAction => ({
             ...subAction,
@@ -385,8 +592,12 @@ export function useActions(contentType, id, hasModerationPrivileges) {
     enableDiscussionBan,
     checkConditions,
     checkDisabled,
-    checkPermissions,
     isActionDisabled,
+    currentUser,
+    isGlobalStaff,
+    hasDiscussionModeratorPrivileges,
+    isUserGroupTA,
+    contentType,
   ]);
 
   return actions;
@@ -498,8 +709,6 @@ export function getAuthorLabel(intl, authorLabel) {
 
   return authorLabelMappings[authorLabel] || {};
 }
-
-export const isCourseStatusValid = (courseStatus) => [DENIED, LOADED].includes(courseStatus);
 
 export const extractContent = (content) => {
   if (typeof content === 'object') {
