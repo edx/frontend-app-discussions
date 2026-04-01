@@ -4,6 +4,7 @@ import React, {
 
 import { Button, Icon, IconButton } from '@openedx/paragon';
 import { ArrowBack } from '@openedx/paragon/icons';
+import { useSelector } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useIntl } from '@edx/frontend-platform/i18n';
@@ -35,21 +36,48 @@ const PostCommentsView = () => {
   const {
     courseId, learnerUsername, category, topicId, page, enableInContextSidebar, postId,
   } = useContext(DiscussionContext);
+
+  // Check if we should include muted content (when viewing from muted section)
+  const searchParams = new URLSearchParams(location.search);
+  const shouldIncludeMuted = searchParams.get('includeMuted') === 'true';
+
   const commentsCount = useCommentsCount(postId);
-  const { closed, id: threadId, type } = usePost(postId);
+  const {
+    closed, id: threadId, type, author,
+  } = usePost(postId);
   const redirectUrl = discussionsPath(PostsPages[page], {
     courseId, learnerUsername, category, topicId,
   })(location);
 
+  // Check if viewing a muted user's post
+  const personalMutedUsers = useSelector(
+    state => state.learners?.mutedUsers?.personal || [],
+  );
+  const courseWideMutedUsers = useSelector(
+    state => state.learners?.mutedUsers?.course || [],
+  );
+  const isAuthorMuted = (
+    learnerUsername
+    && (personalMutedUsers.includes(learnerUsername)
+      || courseWideMutedUsers.includes(learnerUsername))
+  ) || (
+    author
+    && (personalMutedUsers.includes(author)
+      || courseWideMutedUsers.includes(author))
+  );
+
+  // Include muted content if viewing from muted section OR if author is muted
+  const shouldFetchMutedContent = shouldIncludeMuted || isAuthorMuted;
+
   useEffect(() => {
     if (!threadId) {
-      submitDispatch(fetchThread(postId, courseId, true));
+      submitDispatch(fetchThread(postId, courseId, true, shouldFetchMutedContent));
     }
 
     return () => {
       setAddingResponse(false);
     };
-  }, [postId]);
+  }, [postId, shouldFetchMutedContent]);
 
   const handleAddResponseButton = useCallback(() => {
     setAddingResponse(true);
@@ -63,7 +91,8 @@ const PostCommentsView = () => {
     isClosed: closed,
     postType: type,
     postId,
-  }));
+    includeMuted: shouldIncludeMuted || isAuthorMuted,
+  }), [closed, type, postId, shouldIncludeMuted, isAuthorMuted]);
 
   if (!threadId) {
     if (!isLoading) {

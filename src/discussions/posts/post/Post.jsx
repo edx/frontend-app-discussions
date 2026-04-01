@@ -3,7 +3,7 @@ import React, {
 } from 'react';
 import PropTypes from 'prop-types';
 
-import { Hyperlink } from '@openedx/paragon';
+import { Hyperlink, useToggle } from '@openedx/paragon';
 import classNames from 'classnames';
 import { toString } from 'lodash';
 import { useDispatch, useSelector } from 'react-redux';
@@ -20,7 +20,7 @@ import {
 import { ContentActions, getFullUrl } from '../../../data/constants';
 import { selectorForUnitSubsection, selectTopicContext } from '../../../data/selectors';
 import {
-  AlertBanner, AutoSpamAlertBanner, BanModerationModals, Confirmation, DeletedByBanner,
+  AlertBanner, AutoSpamAlertBanner, BanModerationModals, Confirmation, DeletedByBanner, MuteModalManager,
 } from '../../common';
 import DiscussionContext from '../../common/context';
 import HoverCard from '../../common/HoverCard';
@@ -32,12 +32,13 @@ import {
   selectShouldShowEmailConfirmation,
   selectUserHasModerationPrivileges,
 } from '../../data/selectors';
+import { muteUserThunk, unmuteUserThunk } from '../../data/thunks';
+import discussionMessages from '../../messages';
 import { selectTopic } from '../../topics/data/selectors';
 import { truncatePath } from '../../utils';
 import { selectThread } from '../data/selectors';
 import {
   fetchThread,
-  performRestoreThread,
   removeThread,
   updateExistingThread,
 } from '../data/thunks';
@@ -56,6 +57,8 @@ const MODAL_TYPES = {
   RESTORE: 'restore',
   REPORT: 'report',
   CLOSE: 'close',
+  MUTE: 'mute',
+  UNMUTE: 'unmute',
 };
 
 // Scope constants
@@ -65,44 +68,32 @@ const SCOPES = {
 };
 
 const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
-  const { enableInContextSidebar, postId } = useContext(DiscussionContext);
+  const { enableInContextSidebar, postId, courseId } = useContext(DiscussionContext);
+
   const threadData = useSelector(selectThread(postId));
   const {
-    topicId,
-    abuseFlagged,
-    closed,
-    pinned,
-    voted,
-    hasEndorsed,
-    following,
-    closedBy,
-    voteCount,
-    groupId,
-    groupName,
-    closeReason,
-    authorLabel,
-    type: postType,
-    author,
-    title,
-    createdAt,
-    renderedBody,
-    lastEdit,
-    editByLabel,
-    closedByLabel,
-    users: postUsers,
-    isDeleted,
-    deletedBy,
-    deletedByLabel,
-    is_spam: isSpam,
+    topicId, abuseFlagged, closed, pinned, voted, hasEndorsed, following, closedBy, voteCount, groupId, groupName,
+    closeReason, authorLabel, type: postType, author, title, createdAt, renderedBody, lastEdit, editByLabel,
+    closedByLabel, users: postUsers, isDeleted, deletedBy, deletedByLabel, is_spam: isSpam,
   } = threadData;
+
   const intl = useIntl();
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { courseId } = useContext(DiscussionContext);
   const topic = useSelector(selectTopic(topicId));
   const getTopicSubsection = useSelector(selectorForUnitSubsection);
   const topicContext = useSelector(selectTopicContext(topicId));
+  // const [isDeleting, showDeleteConfirmation, hideDeleteConfirmation] = useToggle(false);
+  // const [isRestoring, showRestoreConfirmation, hideRestoreConfirmation] = useToggle(false);
+  // Mute modal states (learner only - staff use submenu with confirmation)
+  const [isLearnerMuting, showLearnerMuteModal, hideLearnerMuteModal] = useToggle(false);
+  const [isLearnerUnmuting, showLearnerUnmuteModal, hideLearnerUnmuteModal] = useToggle(false);
+  const userHasModerationPrivileges = useSelector(selectUserHasModerationPrivileges);
+  const shouldShowEmailConfirmation = useSelector(selectShouldShowEmailConfirmation);
+  const enableDiscussionBan = useSelector(state => state.config.enableDiscussionBan);
+  const contentCreationRateLimited = useSelector(selectContentCreationRateLimited);
+  const isUserBanned = useSelector(selectIsUserBanned);
 
   // Consolidated modal state management
   const [activeModal, setActiveModal] = useState({ type: null, scope: null });
@@ -117,9 +108,51 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
     setActiveModal({ type: null, scope: null });
   }, []);
 
+  // Mute modal handler - only for learners (staff use submenu)
+  const showMuteModal = useCallback(() => {
+    showLearnerMuteModal();
+  }, [showLearnerMuteModal]);
+
+  const showUnmuteModalHandler = useCallback(() => {
+    showLearnerUnmuteModal();
+  }, [showLearnerUnmuteModal]);
+
+  // Staff submenu action handlers - show confirmation modals like ban/delete
+  const handleMutePersonal = useCallback(() => {
+    showModal(MODAL_TYPES.MUTE, false);
+  }, [showModal]);
+
+  const handleMuteCoursewide = useCallback(() => {
+    showModal(MODAL_TYPES.MUTE, true);
+  }, [showModal]);
+
+  const handleUnmutePersonal = useCallback(() => {
+    showModal(MODAL_TYPES.UNMUTE, false);
+  }, [showModal]);
+
+  const handleUnmuteCoursewide = useCallback(() => {
+    showModal(MODAL_TYPES.UNMUTE, true);
+  }, [showModal]);
+
+  // Mute/Unmute confirmation handlers
+  const handleMuteConfirmation = useCallback(() => {
+    const isCourseWide = activeModal.scope === true;
+    dispatch(muteUserThunk(author, isCourseWide));
+    hideModal();
+  }, [dispatch, author, activeModal.scope, hideModal]);
+
+  const handleUnmuteConfirmation = useCallback(() => {
+    const isCourseWide = activeModal.scope === true;
+    dispatch(unmuteUserThunk(author, isCourseWide));
+    hideModal();
+  }, [dispatch, author, activeModal.scope, hideModal]);
+
+  // Computed modal states based on activeModal
+  const isClosing = activeModal.type === MODAL_TYPES.CLOSE;
   const isReporting = activeModal.type === MODAL_TYPES.REPORT;
   const isRestoring = activeModal.type === MODAL_TYPES.RESTORE;
-  const isClosing = activeModal.type === MODAL_TYPES.CLOSE;
+  const isMuting = activeModal.type === MODAL_TYPES.MUTE;
+  const isUnmuting = activeModal.type === MODAL_TYPES.UNMUTE;
 
   // Compute modal state string for BanModerationModals component
   const getActiveModalString = () => {
@@ -139,11 +172,6 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
     return null;
   };
 
-  const userHasModerationPrivileges = useSelector(selectUserHasModerationPrivileges);
-  const enableDiscussionBan = useSelector(state => state.config.enableDiscussionBan);
-  const shouldShowEmailConfirmation = useSelector(selectShouldShowEmailConfirmation);
-  const contentCreationRateLimited = useSelector(selectContentCreationRateLimited);
-  const isUserBanned = useSelector(selectIsUserBanned);
   // If isSpam is not provided in the API response, default to false
   const isSpamFlagged = isSpam || false;
   const displayPostFooter = following || voteCount || closed || (groupId && userHasModerationPrivileges);
@@ -214,12 +242,18 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
   }, [showModal]);
 
   const handleRestoreConfirmation = useCallback(async () => {
-    const result = await dispatch(performRestoreThread(postId, courseId));
-    if (result && !result.success) {
-      logError(`Failed to restore thread: ${result.error || 'Unknown error'}`);
+    try {
+      const { performRestoreThread } = await import('../data/thunks');
+      const result = await dispatch(performRestoreThread(postId, courseId));
+      // Check if restore failed and log the error
+      if (result && !result.success) {
+        logError(`Failed to restore thread: ${result.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      logError(error);
     }
     hideModal();
-  }, [dispatch, postId, courseId, hideModal]);
+  }, [postId, courseId, dispatch, hideModal]);
 
   const handleDeleteUserCourseConfirmation = useCallback(async (shouldBan) => {
     // Defensive check - author must be defined
@@ -395,33 +429,43 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
     }
   }, [courseId, author, postId, dispatch, hideModal, enableDiscussionBan]);
 
-  const actionHandlers = useMemo(() => {
-    const handlers = {
-      [ContentActions.EDIT_CONTENT]: handlePostContentEdit,
-      [ContentActions.DELETE]: () => showModal(MODAL_TYPES.DELETE),
-      [ContentActions.DELETE_POST]: () => showModal(MODAL_TYPES.DELETE),
-      [ContentActions.DELETE_USER_COURSE]: () => showModal(MODAL_TYPES.DELETE_USER, SCOPES.COURSE),
-      [ContentActions.DELETE_USER_ORG]: () => showModal(MODAL_TYPES.DELETE_USER, SCOPES.ORGANIZATION),
-      [ContentActions.UNDELETE_USER_COURSE]: () => showModal(MODAL_TYPES.UNDELETE_USER, SCOPES.COURSE),
-      [ContentActions.UNDELETE_USER_ORG]: () => showModal(MODAL_TYPES.UNDELETE_USER, SCOPES.ORGANIZATION),
-      [ContentActions.BAN_COURSE]: () => showModal(MODAL_TYPES.BAN, SCOPES.COURSE),
-      [ContentActions.BAN_ORG]: () => showModal(MODAL_TYPES.BAN, SCOPES.ORGANIZATION),
-      [ContentActions.UNBAN_COURSE]: () => showModal(MODAL_TYPES.UNBAN, SCOPES.COURSE),
-      [ContentActions.UNBAN_ORG]: () => showModal(MODAL_TYPES.UNBAN, SCOPES.ORGANIZATION),
-      [ContentActions.RESTORE]: handleRestore,
-      [ContentActions.CLOSE]: handlePostClose,
-      [ContentActions.COPY_LINK]: handlePostCopyLink,
-      [ContentActions.PIN]: handlePostPin,
-      [ContentActions.REPORT]: handlePostReport,
-    };
-    return handlers;
-  }, [
+  const actionHandlers = useMemo(() => ({
+    [ContentActions.EDIT_CONTENT]: handlePostContentEdit,
+    [ContentActions.DELETE]: () => showModal(MODAL_TYPES.DELETE),
+    [ContentActions.DELETE_POST]: () => showModal(MODAL_TYPES.DELETE),
+    [ContentActions.DELETE_USER_COURSE]: () => showModal(MODAL_TYPES.DELETE_USER, SCOPES.COURSE),
+    [ContentActions.DELETE_USER_ORG]: () => showModal(MODAL_TYPES.DELETE_USER, SCOPES.ORGANIZATION),
+    [ContentActions.UNDELETE_USER_COURSE]: () => showModal(MODAL_TYPES.UNDELETE_USER, SCOPES.COURSE),
+    [ContentActions.UNDELETE_USER_ORG]: () => showModal(MODAL_TYPES.UNDELETE_USER, SCOPES.ORGANIZATION),
+    [ContentActions.BAN_COURSE]: () => showModal(MODAL_TYPES.BAN, SCOPES.COURSE),
+    [ContentActions.BAN_ORG]: () => showModal(MODAL_TYPES.BAN, SCOPES.ORGANIZATION),
+    [ContentActions.UNBAN_COURSE]: () => showModal(MODAL_TYPES.UNBAN, SCOPES.COURSE),
+    [ContentActions.UNBAN_ORG]: () => showModal(MODAL_TYPES.UNBAN, SCOPES.ORGANIZATION),
+    [ContentActions.RESTORE]: handleRestore,
+    [ContentActions.CLOSE]: handlePostClose,
+    [ContentActions.COPY_LINK]: handlePostCopyLink,
+    [ContentActions.PIN]: handlePostPin,
+    [ContentActions.REPORT]: handlePostReport,
+    [ContentActions.MUTE_USER]: showMuteModal,
+    [ContentActions.UNMUTE_USER]: showUnmuteModalHandler,
+    [ContentActions.MUTE_PERSONAL]: handleMutePersonal,
+    [ContentActions.MUTE_COURSEWIDE]: handleMuteCoursewide,
+    [ContentActions.UNMUTE_PERSONAL]: handleUnmutePersonal,
+    [ContentActions.UNMUTE_COURSEWIDE]: handleUnmuteCoursewide,
+  }), [
     handlePostClose,
     handlePostContentEdit,
     handlePostCopyLink,
     handlePostPin,
     handlePostReport,
+    showMuteModal,
+    showUnmuteModalHandler,
+    handleMutePersonal,
+    handleMuteCoursewide,
+    handleUnmutePersonal,
+    handleUnmuteCoursewide,
     handleRestore,
+    handleRestoreConfirmation,
     showModal,
   ]);
 
@@ -469,6 +513,14 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
         deleteDescription={intl.formatMessage(messages.deletePostDescription)}
         deleteConfirmText={intl.formatMessage(messages.deleteConfirmationDelete)}
       />
+      <Confirmation
+        isOpen={isRestoring}
+        title={intl.formatMessage(messages.undeletePostTitle)}
+        description={intl.formatMessage(messages.undeletePostDescription)}
+        onClose={hideModal}
+        confirmAction={handleRestoreConfirmation}
+        closeButtonVariant="tertiary"
+      />
       {!abuseFlagged && (
         <Confirmation
           isOpen={isReporting}
@@ -479,14 +531,58 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
           confirmButtonVariant="danger"
         />
       )}
-      <Confirmation
-        isOpen={isRestoring}
-        title={intl.formatMessage(messages.undeletePostTitle)}
-        description={intl.formatMessage(messages.undeletePostDescription)}
-        onClose={hideModal}
-        confirmAction={handleRestoreConfirmation}
-        closeButtonVariant="tertiary"
+      {/* Mute Modal Manager - handles learner mute modal only */}
+      <MuteModalManager
+        showLearnerMuteModal={isLearnerMuting}
+        showUnmuteModal={isLearnerUnmuting}
+        onCloseLearnerMuteModal={hideLearnerMuteModal}
+        onCloseUnmuteModal={hideLearnerUnmuteModal}
+        username={author}
+        contentId={postId}
+        messages={messages}
       />
+      {/* Staff Mute Confirmation Modal */}
+      {isMuting && (
+        <Confirmation
+          isOpen={isMuting}
+          title={intl.formatMessage(
+            activeModal.scope === true
+              ? discussionMessages.muteCoursewide
+              : discussionMessages.mutePersonal,
+          )}
+          description={intl.formatMessage(
+            activeModal.scope === true
+              ? { id: 'discussions.mute.coursewide.confirm', defaultMessage: 'Are you sure you want to mute {username} course-wide? Their discussion activity will be hidden from all learners.' }
+              : { id: 'discussions.mute.personal.confirm', defaultMessage: 'Are you sure you want to mute {username}? Their discussion activity will be hidden from you.' },
+            { username: author },
+          )}
+          onClose={hideModal}
+          confirmAction={handleMuteConfirmation}
+          confirmButtonVariant="danger"
+          confirmButtonText={intl.formatMessage(discussionMessages.muteAction)}
+        />
+      )}
+      {/* Staff Unmute Confirmation Modal */}
+      {isUnmuting && (
+        <Confirmation
+          isOpen={isUnmuting}
+          title={intl.formatMessage(
+            activeModal.scope === true
+              ? discussionMessages.unmuteCoursewide
+              : discussionMessages.unmutePersonal,
+          )}
+          description={intl.formatMessage(
+            activeModal.scope === true
+              ? { id: 'discussions.unmute.coursewide.confirm', defaultMessage: 'Are you sure you want to unmute {username} course-wide? Their discussion activity will become visible to all learners.' }
+              : { id: 'discussions.unmute.personal.confirm', defaultMessage: 'Are you sure you want to unmute {username}? Their discussion activity will become visible to you.' },
+            { username: author },
+          )}
+          onClose={hideModal}
+          confirmAction={handleUnmuteConfirmation}
+          confirmButtonVariant="primary"
+          confirmButtonText={intl.formatMessage(discussionMessages.unmuteAction)}
+        />
+      )}
       <HoverCard
         id={postId}
         contentType={ContentTypes.POST}
@@ -501,14 +597,16 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
         isDeleted={isDeleted}
         isUserBanned={isUserBanned}
       />
-      {isDeleted && deletedBy && (
-        <DeletedByBanner
-          deletedBy={deletedBy}
-          deletedByLabel={deletedByLabel}
-          message={intl.formatMessage(messages.deletedBy)}
-          postData={threadData}
-        />
-      )}
+      {
+    isDeleted && deletedBy && (
+      <DeletedByBanner
+        deletedBy={deletedBy}
+        deletedByLabel={deletedByLabel}
+        message={intl.formatMessage(messages.deletedBy)}
+        postData={threadData}
+      />
+    )
+  }
       <AlertBanner
         author={author}
         abuseFlagged={abuseFlagged}
@@ -537,45 +635,49 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
       <div className="d-flex mt-14px text-break font-style text-primary-500">
         <HTMLLoader htmlNode={renderedBody} componentId="post" cssClassName="html-loader w-100" testId={postId} />
       </div>
-      {(topicContext || topic) && (
-        <div
-          className={classNames('mt-14px font-style', { 'w-100': enableInContextSidebar, 'mb-1': !displayPostFooter })}
-          style={{ lineHeight: '20px' }}
+      {
+    (topicContext || topic) && (
+      <div
+        className={classNames('mt-14px font-style', { 'w-100': enableInContextSidebar, 'mb-1': !displayPostFooter })}
+        style={{ lineHeight: '20px' }}
+      >
+        <span className="text-gray-500" style={{ lineHeight: '20px' }}>
+          {intl.formatMessage(messages.relatedTo)}{' '}
+        </span>
+        <Hyperlink
+          target="_top"
+          destination={topicContext ? (
+            topicContext.unitLink
+          ) : (
+            `${getConfig().BASE_URL}/${courseId}/topics/${topicId}`
+          )}
         >
-          <span className="text-gray-500" style={{ lineHeight: '20px' }}>
-            {intl.formatMessage(messages.relatedTo)}{' '}
-          </span>
-          <Hyperlink
-            target="_top"
-            destination={topicContext ? (
-              topicContext.unitLink
-            ) : (
-              `${getConfig().BASE_URL}/${courseId}/topics/${topicId}`
-            )}
-          >
-            {(topicContext && !topic) ? (
-              <span>
-                {topicContext.chapterName} / {topicContext.verticalName} / {topicContext.unitName}
-              </span>
-            ) : (
-              getTopicInfo(topic)
-            )}
-          </Hyperlink>
-        </div>
-      )}
-      {displayPostFooter && (
-        <PostFooter
-          id={postId}
-          voteCount={voteCount}
-          voted={voted}
-          following={following}
-          groupId={toString(groupId)}
-          groupName={groupName}
-          closed={closed}
-          userHasModerationPrivileges={userHasModerationPrivileges}
-          isUserBanned={isUserBanned}
-        />
-      )}
+          {(topicContext && !topic) ? (
+            <span>
+              {topicContext.chapterName} / {topicContext.verticalName} / {topicContext.unitName}
+            </span>
+          ) : (
+            getTopicInfo(topic)
+          )}
+        </Hyperlink>
+      </div>
+    )
+  }
+      {
+    displayPostFooter && (
+      <PostFooter
+        id={postId}
+        voteCount={voteCount}
+        voted={voted}
+        following={following}
+        groupId={toString(groupId)}
+        groupName={groupName}
+        closed={closed}
+        userHasModerationPrivileges={userHasModerationPrivileges}
+        isUserBanned={isUserBanned}
+      />
+    )
+  }
       <ClosePostReasonModal
         isOpen={isClosing}
         onCancel={hideModal}

@@ -7,12 +7,13 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { sendTrackEvent } from '@edx/frontend-platform/analytics';
 
-import { EndorsementStatus, PostsStatusFilter } from '../../../data/constants';
+import { PostsStatusFilter } from '../../../data/constants';
 import useDispatchWithState from '../../../data/hooks';
 import DiscussionContext from '../../common/context';
 import { selectThread } from '../../posts/data/selectors';
 import { markThreadAsRead } from '../../posts/data/thunks';
 import { filterPosts } from '../../utils';
+import PostCommentsContext from '../postCommentsContext';
 import {
   selectCommentSortOrder, selectDraftComments, selectDraftResponses,
   selectThreadComments, selectThreadCurrentPage, selectThreadHasMorePages,
@@ -51,13 +52,25 @@ export const useShowDeletedContent = () => {
 };
 
 export function usePostComments(threadType) {
-  const { enableInContextSidebar, postId } = useContext(DiscussionContext);
+  const { enableInContextSidebar, postId, learnerUsername } = useContext(DiscussionContext);
+  const { includeMuted: includeMutedFromContext } = useContext(PostCommentsContext);
   const [isLoading, dispatch] = useDispatchWithState();
-  const comments = useSelector(selectThreadComments(postId));
+  const comments = useSelector(selectThreadComments(postId, learnerUsername));
   const reverseOrder = useSelector(selectCommentSortOrder);
   const hasMorePages = useSelector(selectThreadHasMorePages(postId));
   const currentPage = useSelector(selectThreadCurrentPage(postId));
   const showDeleted = useShowDeletedContent();
+
+  // Check if the post author is muted by the current user
+  const thread = useSelector(selectThread(postId));
+  const personalMutedUsers = useSelector(state => state.learners?.mutedUsers?.personal || []);
+  const courseWideMutedUsers = useSelector(state => state.learners?.mutedUsers?.course || []);
+  const isAuthorMuted = thread?.author
+    ? (personalMutedUsers.includes(thread.author) || courseWideMutedUsers.includes(thread.author))
+    : false;
+
+  // Include muted content if explicitly requested from context or if author is muted
+  const shouldIncludeMuted = includeMutedFromContext || isAuthorMuted;
 
   const endorsedCommentsIds = useMemo(() => (
     [...filterPosts(comments, 'endorsed')].map(comment => comment.id)
@@ -72,11 +85,12 @@ export function usePostComments(threadType) {
       threadType,
       page: currentPage + 1,
       reverseOrder,
+      includeMuted: shouldIncludeMuted,
       showDeleted,
     };
     await dispatch(fetchThreadComments(postId, params));
     trackLoadMoreEvent(postId, params);
-  }, [currentPage, threadType, postId, reverseOrder, showDeleted]);
+  }, [currentPage, threadType, postId, reverseOrder, showDeleted, shouldIncludeMuted]);
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -88,12 +102,13 @@ export function usePostComments(threadType) {
       enableInContextSidebar,
       showDeleted,
       signal: abortController.signal,
+      includeMuted: shouldIncludeMuted,
     }));
 
     return () => {
       abortController.abort();
     };
-  }, [postId, threadType, reverseOrder, enableInContextSidebar, showDeleted]);
+  }, [postId, threadType, reverseOrder, enableInContextSidebar, showDeleted, shouldIncludeMuted]);
 
   return {
     endorsedCommentsIds,
@@ -105,9 +120,10 @@ export function usePostComments(threadType) {
 }
 
 export function useCommentsCount(postId) {
-  const discussions = useSelector(selectThreadComments(postId, EndorsementStatus.DISCUSSION));
-  const endorsedQuestions = useSelector(selectThreadComments(postId, EndorsementStatus.ENDORSED));
-  const unendorsedQuestions = useSelector(selectThreadComments(postId, EndorsementStatus.UNENDORSED));
+  const { learnerUsername } = useContext(DiscussionContext);
+  const discussions = useSelector(selectThreadComments(postId, learnerUsername));
+  const endorsedQuestions = useSelector(selectThreadComments(postId, learnerUsername));
+  const unendorsedQuestions = useSelector(selectThreadComments(postId, learnerUsername));
 
   const commentsLength = useMemo(() => (
     [...discussions, ...endorsedQuestions, ...unendorsedQuestions].length

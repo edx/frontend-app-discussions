@@ -39,6 +39,7 @@ jest.mock('../../common', () => ({
   BanModerationModals: 'BanModerationModals',
   Confirmation: 'Confirmation',
   DeletedByBanner: () => <div className="deleted-content-icon" />,
+  MuteModalManager: 'MuteModalManager',
 }));
 
 jest.mock('../../common/withPostingRestrictions', () => Component => Component);

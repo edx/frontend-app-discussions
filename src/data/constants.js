@@ -63,10 +63,6 @@ export const ContentActions = {
   DELETE_ORG_POSTS: 'delete-org-posts',
   RESTORE_COURSE_POSTS: 'restore-course-posts',
   RESTORE_ORG_POSTS: 'restore-org-posts',
-  // Mute actions
-  MUTE: 'mute',
-  UNMUTE: 'unmute',
-  // Ban actions
   BAN_COURSE: 'ban-course',
   BAN_ORG: 'ban-org',
   UNBAN_COURSE: 'unban-course',
@@ -77,6 +73,13 @@ export const ContentActions = {
   DELETE_USER_ORG: 'delete-user-org',
   UNDELETE_USER_COURSE: 'undelete-user-course',
   UNDELETE_USER_ORG: 'undelete-user-org',
+  MUTE_USER: 'mute_user',
+  UNMUTE_USER: 'unmute_user',
+  MUTE_AND_REPORT: 'mute_and_report',
+  MUTE_PERSONAL: 'mute-personal',
+  MUTE_COURSEWIDE: 'mute-coursewide',
+  UNMUTE_PERSONAL: 'unmute-personal',
+  UNMUTE_COURSEWIDE: 'unmute-coursewide',
 };
 
 /**
