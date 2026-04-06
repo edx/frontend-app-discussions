@@ -622,13 +622,15 @@ const LearnersView = () => {
                       </div>
                     )}
 
-                    {/* Divider */}
-                    <div style={{
-                      height: '5px',
-                      alignSelf: 'stretch',
-                      background: 'var(--Light-400, #EAE6E5)',
-                    }}
-                    />
+                    {/* Divider - only show if there are no muted users coming after */}
+                    {!hasAnyMutedUsers && (
+                      <div style={{
+                        height: '5px',
+                        alignSelf: 'stretch',
+                        background: 'var(--Light-400, #EAE6E5)',
+                      }}
+                      />
+                    )}
                   </>
                 )}
               </>
@@ -744,8 +746,8 @@ const LearnersView = () => {
               </>
             )}
 
-            {/* Divider - only show if there are muted users */}
-            {hasAnyMutedUsers && (
+            {/* Divider - only show if there are muted or banned users */}
+            {(hasAnyMutedUsers || hasBannedUsers) && (
               <div style={{
                 height: '5px',
                 alignSelf: 'stretch',
@@ -754,8 +756,8 @@ const LearnersView = () => {
               />
             )}
 
-            {/* All other learners section - only show heading if there are any muted users */}
-            {hasAnyMutedUsers && (
+            {/* All other learners section - only show heading if there are any muted or banned users */}
+            {(hasAnyMutedUsers || hasBannedUsers) && (
               <div
                 className="d-flex align-items-center border-bottom border-light-400"
                 style={{
