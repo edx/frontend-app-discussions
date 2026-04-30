@@ -91,7 +91,7 @@ const threadsSlice = createSlice({
       }
 
       const updatedPages = newState.pages.slice();
-      if (!updatedPages[page - 1]) {
+      if (isFilterChanged || page === 1 || !updatedPages[page - 1]) {
         updatedPages[page - 1] = ids;
       } else {
         updatedPages[page - 1] = [...new Set([...updatedPages[page - 1], ...ids])];
@@ -137,20 +137,21 @@ const threadsSlice = createSlice({
         avatars: { ...state.avatars, ...payload.avatars },
       }
     ),
-    fetchThreadByDirectLinkSuccess: (state, { payload }) => (
-      {
+    fetchThreadByDirectLinkSuccess: (state, { payload }) => {
+      const updatedPages = state.pages.slice();
+      if (!updatedPages[payload.page - 1]?.length) {
+        updatedPages[payload.page - 1] = payload.ids;
+      }
+
+      return {
         ...state,
         status: RequestStatus.SUCCESSFUL,
-        pages: [
-          ...state.pages.slice(0, payload.page - 1),
-          payload.ids,
-          ...state.pages.slice(payload.page),
-        ],
+        pages: updatedPages,
         threadsInTopic: { ...payload.threadsInTopic, ...state.threadsInTopic },
-        threadsById: { ...payload.threadsById, ...state.threadsById },
+        threadsById: { ...state.threadsById, ...payload.threadsById },
         avatars: { ...state.avatars, ...payload.avatars },
-      }
-    ),
+      };
+    },
     fetchThreadFailed: (state) => (
       {
         ...state,
