@@ -137,21 +137,15 @@ const threadsSlice = createSlice({
         avatars: { ...state.avatars, ...payload.avatars },
       }
     ),
-    fetchThreadByDirectLinkSuccess: (state, { payload }) => {
-      const updatedPages = state.pages.slice();
-      if (!updatedPages[payload.page - 1]?.length) {
-        updatedPages[payload.page - 1] = payload.ids;
-      }
-
-      return {
+    fetchThreadByDirectLinkSuccess: (state, { payload }) => (
+      {
         ...state,
         status: RequestStatus.SUCCESSFUL,
-        pages: updatedPages,
         threadsInTopic: { ...payload.threadsInTopic, ...state.threadsInTopic },
         threadsById: { ...state.threadsById, ...payload.threadsById },
         avatars: { ...state.avatars, ...payload.avatars },
-      };
-    },
+      }
+    ),
     fetchThreadFailed: (state) => (
       {
         ...state,
