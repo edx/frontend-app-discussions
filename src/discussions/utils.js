@@ -88,6 +88,12 @@ export function checkPermissions(
     if (hasModerationPrivileges) {
       return canDelete;
     }
+    // For anonymous posts (author and authorId are null), trust backend's canDelete
+    // since backend already verifies authorship without exposing identity
+    const isAnonymousPost = !author && !content.authorId;
+    if (isAnonymousPost) {
+      return canDelete;
+    }
     // Non-moderators (including Course Staff/Admin) can only delete/restore their own content
     return canDelete && isOwnContent;
   }
@@ -95,6 +101,11 @@ export function checkPermissions(
   if (action === ContentActions.DELETE_POST) {
     if (hasModerationPrivileges) {
       return true;
+    }
+    // For anonymous posts (author and authorId are null), trust backend's canDelete
+    const isAnonymousPost = !author && !content.authorId;
+    if (isAnonymousPost) {
+      return canDelete;
     }
     // Non-moderators (including Course Staff/Admin) can only delete their own posts
     return canDelete && isOwnContent;
@@ -469,7 +480,10 @@ export function useActions(contentType, id, hasModerationPrivileges) {
 
   const actions = useMemo(() => {
     // Check if current user is the content author
-    const isOwnContent = currentUser && baseContent?.author && currentUser === baseContent.author;
+    // For anonymous posts, author is "anonymous" but authorId contains the real user ID
+    const currentUserId = getAuthenticatedUser()?.userId;
+    const isOwnContent = (currentUser && baseContent?.author && currentUser === baseContent.author)
+      || (currentUserId && baseContent?.authorId && String(currentUserId) === String(baseContent.authorId));
 
     const filteredActions = ACTIONS_LIST.filter(
       ({
