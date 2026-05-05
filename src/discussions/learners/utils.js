@@ -8,7 +8,12 @@ import { useSelector } from 'react-redux';
 import { useIntl } from '@edx/frontend-platform/i18n';
 
 import { ContentActions, PostsStatusFilter } from '../../data/constants';
-import { selectEnableDiscussionBan, selectUserHasModerationPrivileges } from '../data/selectors';
+import {
+  selectEnableDiscussionBan,
+  selectUserCanBanAtCourseLevel,
+  selectUserCanBanAtOrgLevel,
+  selectUserHasModerationPrivileges,
+} from '../data/selectors';
 import { checkBanActionDisabled } from '../utils/banUtils';
 import { BAN_SCOPES } from './data/constants';
 import messages from './messages';
@@ -112,17 +117,17 @@ export function useLearnerActions(
   const intl = useIntl();
   const enableDiscussionBan = useSelector(selectEnableDiscussionBan);
   const userHasModerationPrivileges = useSelector(selectUserHasModerationPrivileges);
+  const userCanBanAtCourseLevel = useSelector(selectUserCanBanAtCourseLevel);
+  const userCanBanAtOrgLevel = useSelector(selectUserCanBanAtOrgLevel);
 
   const actions = useMemo(() => {
-    // Only allow bulk actions if user has both bulk delete privileges AND moderation privileges
-    // This excludes Course Staff/Admin who may have bulk delete but not moderation privileges
     if (!userHasBulkDeletePrivileges || !userHasModerationPrivileges) {
       return [];
     }
 
     return LEARNER_ACTIONS_LIST.filter(action => {
-      // Hide ban menu if feature flag is disabled
-      if (action.id === 'ban' && !enableDiscussionBan) {
+      // Hide ban menu if feature flag is disabled OR user lacks course-level ban permissions
+      if (action.id === 'ban' && (!enableDiscussionBan || !userCanBanAtCourseLevel)) {
         return false;
       }
 
@@ -136,7 +141,49 @@ export function useLearnerActions(
 
       return true;
     }).map(action => {
-      // For actions with submenus, check disabled conditions
+      // Special handling for ban action based on user permissions
+      if (action.id === 'ban') {
+        // Users without org-level permissions: show direct course-level action only
+        if (!userCanBanAtOrgLevel) {
+          const isBanned = learnerBanInfo.isAuthorBanned;
+          const banScope = learnerBanInfo.authorBanScope;
+
+          // Determine which action to show based on ban state
+          // Only show course-level ban/unban for users without org permissions
+          if (isBanned && banScope === BAN_SCOPES.COURSE) {
+            // User is banned at course level, show simple unban option
+            return {
+              id: 'unban-course',
+              icon: Block,
+              action: ContentActions.UNBAN_COURSE,
+              label: {
+                id: messages.unbanUserSimple.id,
+                defaultMessage: intl.formatMessage(messages.unbanUserSimple),
+              },
+              disabled: false,
+            };
+          } if (isBanned && banScope === BAN_SCOPES.ORGANIZATION) {
+            // User is banned at org level, users without org permissions can't unban
+            // Don't show any ban action
+            return null;
+          }
+          // User is not banned, show simple ban option
+          return {
+            id: 'ban-course',
+            icon: Block,
+            action: ContentActions.BAN_COURSE,
+            label: {
+              id: messages.banUserSimple.id,
+              defaultMessage: intl.formatMessage(messages.banUserSimple),
+            },
+            disabled: false,
+          };
+        }
+
+        // Users with org-level permissions: keep the existing submenu with both course and org options
+      }
+
+      // For actions with submenus (including ban action for users with org permissions)
       if (action.submenu) {
         const processedSubmenu = action.submenu
           .filter(subAction => {
@@ -149,6 +196,17 @@ export function useLearnerActions(
             )) {
               return false;
             }
+
+            // For users without org-level permissions, filter out org-level actions
+            if (!userCanBanAtOrgLevel && (
+              subAction.action === ContentActions.BAN_ORG
+              || subAction.action === ContentActions.UNBAN_ORG
+              || subAction.action === ContentActions.DELETE_ORG_POSTS
+              || subAction.action === ContentActions.RESTORE_ORG_POSTS
+            )) {
+              return false;
+            }
+
             return true;
           })
           .map(subAction => {
@@ -189,6 +247,8 @@ export function useLearnerActions(
   }, [
     userHasBulkDeletePrivileges,
     userHasModerationPrivileges,
+    userCanBanAtCourseLevel,
+    userCanBanAtOrgLevel,
     learnerBanInfo,
     contentStatus,
     enableDiscussionBan,

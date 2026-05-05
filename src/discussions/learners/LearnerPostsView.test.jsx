@@ -24,7 +24,7 @@ import { deletePostsApiUrl, learnerPostsApiUrl } from './data/api';
 import { BAN_SCOPES } from './data/constants';
 import { fetchUserPosts } from './data/thunks';
 import LearnerPostsView from './LearnerPostsView';
-import { setUpPrivilages } from './test-utils';
+import { setUpPrivileges } from './test-utils';
 
 import '../cohorts/data/__factories__/cohorts.factory';
 import './data/__factories__';
@@ -90,7 +90,7 @@ describe('Learner Posts View', () => {
   });
 
   test('Reported icon is visible to moderator for post with reported comment', async () => {
-    await setUpPrivilages(axiosMock, store, true);
+    await setUpPrivileges(axiosMock, store, true);
     await waitFor(() => { renderComponent(); });
 
     expect(container.querySelector('[data-testid="reported-post"]')).toBeInTheDocument();
@@ -157,7 +157,7 @@ describe('Learner Posts View', () => {
     { searchBy: 'sort-votes', result: 2 },
     { searchBy: 'sort-activity', result: 2 },
   ])('successfully display learners by %s.', async ({ searchBy, result }) => {
-    await setUpPrivilages(axiosMock, store, true);
+    await setUpPrivileges(axiosMock, store, true);
     await renderComponent();
 
     const filterBar = container.querySelector('.collapsible-trigger');
@@ -183,7 +183,7 @@ describe('Learner Posts View', () => {
     { searchBy: 'type-all', result: 2 },
     { searchBy: 'cohort-1', result: 2 },
   ])('successfully display learners by %s.', async ({ searchBy, result }) => {
-    await setUpPrivilages(axiosMock, store, true);
+    await setUpPrivileges(axiosMock, store, true);
     axiosMock.onGet(getCohortsApiUrl(courseId)).reply(200, Factory.buildList('cohort', 3));
 
     await executeThunk(fetchCourseCohorts(courseId), store.dispatch, store.getState);
@@ -223,19 +223,19 @@ describe('Learner Posts View', () => {
   });
 
   test('should display dropdown menu button for bulk delete user posts for privileged users', async () => {
-    await setUpPrivilages(axiosMock, store, true, true);
+    await setUpPrivileges(axiosMock, store, true, true);
     await renderComponent();
     expect(within(container).queryByRole('button', { name: /actions menu/i })).toBeInTheDocument();
   });
 
   test('should NOT display dropdown menu button for bulk delete user posts for other users', async () => {
-    await setUpPrivilages(axiosMock, store, true, false);
+    await setUpPrivileges(axiosMock, store, true, false);
     await renderComponent();
     expect(within(container).queryByRole('button', { name: /actions menu/i })).not.toBeInTheDocument();
   });
 
   test('should display confirmation dialog when delete course posts is clicked', async () => {
-    await setUpPrivilages(axiosMock, store, true, true);
+    await setUpPrivileges(axiosMock, store, true, true);
     axiosMock.onPost(deletePostsApiUrl(courseId, username, BAN_SCOPES.COURSE, false))
       .reply(202, { thread_count: 2, comment_count: 3 });
     await renderComponent();
@@ -266,7 +266,7 @@ describe('Learner Posts View', () => {
   });
 
   test('should complete delete course posts flow and redirect', async () => {
-    await setUpPrivilages(axiosMock, store, true, true);
+    await setUpPrivileges(axiosMock, store, true, true);
     axiosMock.onPost(deletePostsApiUrl(courseId, username, BAN_SCOPES.COURSE, false))
       .reply(202, { thread_count: 2, comment_count: 3 });
     axiosMock.onPost(deletePostsApiUrl(courseId, username, BAN_SCOPES.COURSE, true))
@@ -305,7 +305,7 @@ describe('Learner Posts View', () => {
   });
 
   test('should close confirmation dialog when cancel is clicked', async () => {
-    await setUpPrivilages(axiosMock, store, true, true);
+    await setUpPrivileges(axiosMock, store, true, true);
     axiosMock.onPost(deletePostsApiUrl(courseId, username, 'course', false))
       .reply(202, { thread_count: 2, comment_count: 3 });
     await renderComponent();
@@ -341,7 +341,7 @@ describe('Learner Posts View', () => {
   });
 
   test('should display confirmation dialog for org posts deletion', async () => {
-    await setUpPrivilages(axiosMock, store, true, true);
+    await setUpPrivileges(axiosMock, store, true, true, true); // Added isUserAdmin=true for org-level permissions
     axiosMock.onPost(deletePostsApiUrl(courseId, username, 'org', false))
       .reply(202, { thread_count: 5, comment_count: 10 });
     await renderComponent();

@@ -62,6 +62,7 @@ const LearnerActionsDropdown = ({
       }}
       className="d-flex justify-content-start actions-dropdown-item"
       data-testid={action.id}
+      disabled={action.disabled}
     >
       <div className="d-flex align-items-center">
         <Icon

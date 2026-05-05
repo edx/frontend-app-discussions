@@ -66,9 +66,10 @@ describe('LearnerActionsDropdown', () => {
 
     await executeThunk(fetchCourseConfig(courseId), store.dispatch, store.getState);
 
-    // Set moderation privileges so learner actions are available
+    // Set moderation privileges and org-level permissions so learner actions are available
     store.dispatch(fetchConfigSuccess({
       hasModerationPrivileges: true,
+      isUserAdmin: true, // Needed for org-level delete permissions
     }));
   });
 

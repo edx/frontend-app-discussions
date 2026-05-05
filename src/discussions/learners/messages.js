@@ -171,6 +171,16 @@ const messages = defineMessages({
     defaultMessage: 'Unban',
     description: 'Action to unban a user',
   },
+  banUserSimple: {
+    id: 'discussions.learner.actions.banSimple',
+    defaultMessage: 'Ban',
+    description: 'Simple ban action for moderators (course-wide only)',
+  },
+  unbanUserSimple: {
+    id: 'discussions.learner.actions.unbanSimple',
+    defaultMessage: 'Unban',
+    description: 'Simple unban action for moderators (course-wide only)',
+  },
   undeleteActivity: {
     id: 'discussions.learner.actions.undeleteActivity',
     defaultMessage: 'Undelete activity',
