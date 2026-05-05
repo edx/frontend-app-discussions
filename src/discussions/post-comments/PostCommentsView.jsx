@@ -101,13 +101,7 @@ const PostCommentsView = () => {
       );
     }
     return (
-      <div style={{
-        position: 'absolute',
-        top: '50%',
-      }}
-      >
-        <Spinner animation="border" variant="primary" data-testid="loading-indicator" />
-      </div>
+      <></>
     );
   }
 
