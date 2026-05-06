@@ -100,9 +100,7 @@ const PostCommentsView = () => {
         <EmptyPage title={intl.formatMessage(messages.noThreadFound)} />
       );
     }
-    return (
-      <></>
-    );
+    return null;
   }
 
   return (
