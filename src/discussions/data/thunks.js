@@ -47,12 +47,12 @@ export default function fetchCourseConfig(courseId) {
       dispatch(fetchConfigRequest());
 
       const config = await getDiscussionsConfig(courseId);
-      if (config.has_moderation_privileges) {
+      if (config.has_moderation_privileges || config.is_user_admin) {
         const settings = await getDiscussionsSettings(courseId);
         Object.assign(config, { settings });
       }
 
-      if ((config.has_moderation_privileges || config.is_group_ta)) {
+      if ((config.has_moderation_privileges || config.is_group_ta || config.is_user_admin)) {
         learnerSort = LearnersOrdering.BY_FLAG;
       }
 
