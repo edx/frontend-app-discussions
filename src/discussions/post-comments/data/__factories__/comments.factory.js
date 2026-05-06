@@ -14,6 +14,7 @@ Factory.define('comment')
   .attr('child_count', ['childCount'], (childCount) => childCount)
   .attrs({
     author: 'edx',
+    author_id: '1',
     author_label: 'Staff',
     can_delete: true,
     created_at: () => (new Date()).toISOString(),
