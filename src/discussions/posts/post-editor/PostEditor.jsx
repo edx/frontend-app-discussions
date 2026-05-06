@@ -37,6 +37,7 @@ import {
   selectIsUserLearner,
   selectModerationSettings,
   selectUserHasModerationPrivileges,
+  selectUserIsCommunityTa,
   selectUserIsGroupTa,
   selectUserIsStaff,
 } from '../../data/selectors';
@@ -82,6 +83,7 @@ const PostEditor = ({
   const post = useSelector(editExisting ? selectThread(postId) : () => ({}));
   const userHasModerationPrivileges = useSelector(selectUserHasModerationPrivileges);
   const userIsGroupTa = useSelector(selectUserIsGroupTa);
+  const userIsCommunityTa = useSelector(selectUserIsCommunityTa);
   const settings = useSelector(selectDivisionSettings);
   const { allowAnonymous, allowAnonymousToPeers } = useSelector(selectAnonymousPostingConfig);
   const { editReasons } = useSelector(selectModerationSettings);
@@ -120,8 +122,8 @@ const PostEditor = ({
 
   const canSelectCohort = useCallback((tId) => {
     // If the user isn't privileged, they can't edit the cohort.
-    // If the topic is being edited the cohort can't be changed.
-    if (!userHasModerationPrivileges) {
+    // Community TAs are excluded from selecting cohort visibility.
+    if (!userHasModerationPrivileges || userIsCommunityTa) {
       return false;
     }
     if (nonCoursewareIds.includes(tId)) {
@@ -129,7 +131,7 @@ const PostEditor = ({
     }
     const isCohorting = settings.alwaysDivideInlineDiscussions || settings.dividedInlineDiscussions.includes(tId);
     return isCohorting;
-  }, [nonCoursewareIds, settings, userHasModerationPrivileges]);
+  }, [nonCoursewareIds, settings, userHasModerationPrivileges, userIsCommunityTa]);
 
   const initialValues = {
     postType: post?.type || 'discussion',

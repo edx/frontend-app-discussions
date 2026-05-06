@@ -21,6 +21,8 @@ export const selectUserIsStaff = state => state.config.isUserAdmin;
 
 export const selectUserIsGroupTa = state => state.config.isGroupTa;
 
+export const selectUserIsCommunityTa = state => state.config.userRoles?.includes('Community TA');
+
 export const selectConfigLoadingStatus = state => state.config.status;
 
 export const selectUserRoles = state => state.config.userRoles;
