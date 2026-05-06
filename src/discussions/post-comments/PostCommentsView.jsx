@@ -100,15 +100,7 @@ const PostCommentsView = () => {
         <EmptyPage title={intl.formatMessage(messages.noThreadFound)} />
       );
     }
-    return (
-      <div style={{
-        position: 'absolute',
-        top: '50%',
-      }}
-      >
-        <Spinner animation="border" variant="primary" data-testid="loading-indicator" />
-      </div>
-    );
+    return null;
   }
 
   return (
