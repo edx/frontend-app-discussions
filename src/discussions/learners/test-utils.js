@@ -75,10 +75,17 @@ export async function setupDeleteUserPostsMockResponse({
   return store.getState().learners;
 }
 
-export async function setUpPrivilages(axiosMock, store, hasModerationPrivileges, hasBulkDeletePrivileges) {
+export async function setUpPrivileges(
+  axiosMock,
+  store,
+  hasModerationPrivileges,
+  hasBulkDeletePrivileges,
+  isUserAdmin = false,
+) {
   axiosMock.onGet(getDiscussionsConfigUrl(courseId)).reply(200, {
     hasModerationPrivileges,
     hasBulkDeletePrivileges,
+    isUserAdmin, // For org-level ban/delete permissions
   });
 
   await executeThunk(fetchCourseConfig(courseId), store.dispatch, store.getState);

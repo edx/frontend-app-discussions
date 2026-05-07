@@ -42,6 +42,11 @@ const messages = defineMessages({
     defaultMessage: 'Ban',
     description: 'Main ban menu item',
   },
+  unbanAction: {
+    id: 'discussions.actions.unban',
+    defaultMessage: 'Unban',
+    description: 'Main unban menu item',
+  },
   banUserCourse: {
     id: 'discussions.actions.ban.course',
     defaultMessage: 'Ban user in this course',

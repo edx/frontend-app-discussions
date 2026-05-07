@@ -1,8 +1,10 @@
 import { createSelector } from '@reduxjs/toolkit';
 
 import selectCourseTabs from '../../components/NavigationBar/data/selectors';
+import { DENIED, LOADED } from '../../components/NavigationBar/data/slice';
 import { PostsStatusFilter, ThreadType } from '../../data/constants';
-import { isCourseStatusValid } from '../utils';
+
+export const isCourseStatusValid = (courseStatus) => [DENIED, LOADED].includes(courseStatus);
 
 export const selectAnonymousPostingConfig = state => ({
   allowAnonymous: state.config.allowAnonymous,
@@ -26,6 +28,31 @@ export const selectUserIsCommunityTa = state => state.config.userRoles?.includes
 export const selectConfigLoadingStatus = state => state.config.status;
 
 export const selectUserRoles = state => state.config.userRoles;
+
+// Course-level permissions: Global Staff, Discussion Admin, Discussion Moderator
+// EXCLUDES: Course Instructor, Course Staff, Group TA, Community TA, Learners
+export const selectUserCanBanAtCourseLevel = createSelector(
+  [
+    state => state.config.isUserAdmin,
+    state => state.config.hasModerationPrivileges,
+  ],
+  (isUserAdmin, hasModerationPrivileges) => (
+    isUserAdmin || hasModerationPrivileges
+  ),
+);
+
+// Org-level permissions: Global Staff, Discussion Admin
+// EXCLUDES: Discussion Moderator, Course Instructor, Course Staff, Group TA, Community TA, Learners
+export const selectUserCanBanAtOrgLevel = createSelector(
+  [
+    state => state.config.isUserAdmin,
+    selectUserRoles,
+  ],
+  (isUserAdmin, userRoles = []) => (
+    isUserAdmin
+      || userRoles.includes('Administrator')
+  ),
+);
 
 export const selectDivisionSettings = state => state.config.settings;
 

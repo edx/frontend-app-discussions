@@ -16,16 +16,14 @@ import { getConfig } from '@edx/frontend-platform';
 import { getAuthenticatedUser } from '@edx/frontend-platform/auth';
 
 import { ReactComponent as RestoreFromTrash } from '../assets/undelete.svg';
-import { DENIED, LOADED } from '../components/NavigationBar/data/slice';
 import {
   ContentActions, Routes, ThreadType,
 } from '../data/constants';
 import { ContentSelectors } from './data/constants';
+import { selectUserCanBanAtCourseLevel, selectUserCanBanAtOrgLevel } from './data/selectors';
 import PostCommentsContext from './post-comments/postCommentsContext';
 import { checkBanActionDisabled } from './utils/banUtils';
 import messages from './messages';
-
-export const isCourseStatusValid = (courseStatus) => [DENIED, LOADED].includes(courseStatus);
 
 /**
  * Get HTTP Error status from generic error.
@@ -110,14 +108,16 @@ export function checkPermissions(
     // Non-moderators (including Course Staff/Admin) can only delete their own posts
     return canDelete && isOwnContent;
   }
-  // Ban/unban actions: require moderation privileges AND prevent self-banning
+  // Ban/unban actions: prevent self-banning/unbanning.
+  // Specific course/org ban permissions are enforced when the action menu is built,
+  // so this check must not narrow that logic back down to `hasModerationPrivileges`.
   if (action === ContentActions.BAN_COURSE
     || action === ContentActions.BAN_ORG
     || action === ContentActions.UNBAN_COURSE
     || action === ContentActions.UNBAN_ORG) {
     const currentUser = getAuthenticatedUser()?.username;
     const isSelf = currentUser && author && currentUser === author;
-    return hasModerationPrivileges && !isSelf;
+    return !isSelf;
   }
   // Bulk delete actions ONLY for users with moderation privileges (NOT Course Staff/Admin)
   if (action === ContentActions.DELETE_USER_COURSE
@@ -371,6 +371,9 @@ export function useActions(contentType, id, hasModerationPrivileges) {
   const isGlobalStaff = useSelector(state => state.config.isUserAdmin);
   // Discussion Admin/Moderator - has all discussion permissions
   const hasDiscussionModeratorPrivileges = useSelector(state => state.config.hasModerationPrivileges);
+  // Check if user can perform course-level and org-level bans
+  const canBanAtCourseLevel = useSelector(selectUserCanBanAtCourseLevel);
+  const canBanAtOrgLevel = useSelector(selectUserCanBanAtOrgLevel);
   // Group TA - has limited permissions within their group
   const isUserGroupTA = useSelector(state => state.config.isGroupTa);
   // Course Staff/Admin - NO discussion privileges (treated as learners)
@@ -492,8 +495,8 @@ export function useActions(contentType, id, hasModerationPrivileges) {
         hasSubmenu = false,
         id: actionId,
       }) => {
-        // Hide ban menu if feature flag is disabled
-        if (actionId === 'ban' && !enableDiscussionBan) {
+        // Hide ban menu if feature flag is disabled OR user lacks course-level ban permissions
+        if (actionId === 'ban' && (!enableDiscussionBan || !canBanAtCourseLevel)) {
           return false;
         }
         // For items with submenus, skip permission check on parent item
@@ -546,6 +549,42 @@ export function useActions(contentType, id, hasModerationPrivileges) {
         };
       }
 
+      // Special handling for ban action based on user permissions
+      if (action.id === 'ban') {
+        // Users without org-level permissions: show direct course-level action only
+        if (!canBanAtOrgLevel) {
+          const isBanned = content.isAuthorBanned;
+          const banScope = content.authorBanScope;
+
+          // Determine which action to show based on ban state
+          // Only show course-level ban/unban for users without org permissions
+          if (isBanned && banScope === 'course') {
+            // User is banned at course level, show simple unban option
+            return {
+              id: 'unban-course',
+              icon: Block,
+              action: ContentActions.UNBAN_COURSE,
+              label: messages.unbanAction,
+              disabled: isActionDisabled('unban-course', content.isDeleted),
+            };
+          } if (isBanned && banScope === 'organization') {
+            // User is banned at org level, users without org permissions can't unban
+            // Don't show any ban action
+            return null;
+          }
+          // User is not banned, show simple ban option
+          return {
+            id: 'ban-course',
+            icon: Block,
+            action: ContentActions.BAN_COURSE,
+            label: messages.banAction,
+            disabled: isActionDisabled('ban-course', content.isDeleted),
+          };
+        }
+
+        // Users with org-level permissions: fall through to normal submenu processing below
+      }
+
       // For actions with submenus, filter submenu items and check permissions
       if (action.submenu) {
         const filteredSubmenu = action.submenu
@@ -559,6 +598,16 @@ export function useActions(contentType, id, hasModerationPrivileges) {
             )) {
               return false;
             }
+
+            // For users without org-level permissions, filter out org-level actions
+            if (!canBanAtOrgLevel && (
+              subAction.action === ContentActions.BAN_ORG
+              || subAction.action === ContentActions.UNBAN_ORG
+              || subAction.action === ContentActions.DELETE_USER_ORG
+            )) {
+              return false;
+            }
+
             return checkPermissions(content, subAction.action, hasModerationPrivileges, contentType, isOwnContent);
           })
           .map(subAction => ({
@@ -604,6 +653,8 @@ export function useActions(contentType, id, hasModerationPrivileges) {
     content,
     hasModerationPrivileges,
     enableDiscussionBan,
+    canBanAtCourseLevel,
+    canBanAtOrgLevel,
     checkConditions,
     checkDisabled,
     isActionDisabled,

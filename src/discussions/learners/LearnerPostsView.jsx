@@ -22,6 +22,8 @@ import useDispatchWithState from '../../data/hooks';
 import { Confirmation } from '../common';
 import DiscussionContext from '../common/context';
 import {
+  selectUserCanBanAtCourseLevel,
+  selectUserCanBanAtOrgLevel,
   selectUserHasBulkDeletePrivileges,
   selectUserHasModerationPrivileges,
   selectUserIsStaff,
@@ -88,8 +90,14 @@ const LearnerPostsView = () => {
   const userHasModerationPrivileges = useSelector(selectUserHasModerationPrivileges);
   const userIsStaff = useSelector(selectUserIsStaff);
   const userHasBulkDeletePrivileges = useSelector(selectUserHasBulkDeletePrivileges);
-  // Only show bulk actions to users with actual moderation privileges (not Course Staff/Admin)
-  const canAccessBulkActions = userHasModerationPrivileges && userHasBulkDeletePrivileges;
+  const userCanBanAtCourseLevel = useSelector(selectUserCanBanAtCourseLevel);
+  const userCanBanAtOrgLevel = useSelector(selectUserCanBanAtOrgLevel);
+  // Show bulk actions to users with bulk delete privileges AND
+  // (moderation privileges OR ban permissions)
+  // This includes Course Instructors who have ban permissions but not moderation privileges
+  const canAccessBulkActions = userHasBulkDeletePrivileges && (
+    userHasModerationPrivileges || userCanBanAtCourseLevel || userCanBanAtOrgLevel
+  );
   const personalMutedUsers = useSelector(selectPersonalMutedUsers());
   const courseWideMutedUsers = useSelector(selectCourseWideMutedUsers());
   const bulkDeleteStats = useSelector(selectBulkDeleteStats());

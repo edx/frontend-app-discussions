@@ -19,6 +19,7 @@ import {
   useCourseBlockData, useCourseDiscussionData, useIsOnTablet, useRedirectToThread, useSidebarVisible,
 } from '../data/hooks';
 import {
+  isCourseStatusValid,
   selectDiscussionProvider,
   selectEnableDiscussionBan,
   selectEnableInContext,
@@ -30,7 +31,6 @@ import EmptyPosts from '../empty-posts/EmptyPosts';
 import { EmptyTopic as InContextEmptyTopics } from '../in-context-topics/components';
 import messages from '../messages';
 import { selectPostEditorVisible } from '../posts/data/selectors';
-import { isCourseStatusValid } from '../utils';
 import useFeedbackWrapper from './FeedbackWrapper';
 
 const FooterSlot = lazy(() => import('@edx/frontend-component-footer').then(module => ({ default: module.FooterSlot })));
