@@ -24,6 +24,47 @@ const mergeThreadsInTopics = (dataFromState, dataFromPayload) => {
   }, {});
 };
 
+// Preserve read state during tab switches to prevent flickering.
+// Only preserve if user marked as read in current session and backend hasn't updated activity markers
+const mergeThreadsPreservingReadState = (existingThreadsById, newThreadsById) => {
+  const merged = { ...existingThreadsById };
+  Object.keys(newThreadsById).forEach(threadId => {
+    const existingThread = merged[threadId];
+    const newThread = newThreadsById[threadId];
+
+    // If thread exists, was marked as read, and backend says unread, check for new activity
+    if (existingThread?.read && !newThread.read) {
+      // Check multiple activity markers to detect new content
+      const hasLastActivityAt = existingThread.lastActivityAt != null && newThread.lastActivityAt != null;
+      const hasCommentCount = existingThread.commentCount != null && newThread.commentCount != null;
+
+      let hasNewActivity = false;
+
+      if (hasLastActivityAt) {
+        // Prefer lastActivityAt if available (most reliable)
+        hasNewActivity = existingThread.lastActivityAt !== newThread.lastActivityAt;
+      } else if (hasCommentCount) {
+        // Fallback to commentCount if lastActivityAt not available
+        hasNewActivity = existingThread.commentCount !== newThread.commentCount;
+      } else {
+        // If no reliable markers exist, trust backend's unread state to be safe
+        hasNewActivity = true;
+      }
+
+      if (!hasNewActivity) {
+        // No new activity detected, preserve client read state (handles stale backend data)
+        merged[threadId] = { ...newThread, read: true, unreadCommentCount: 0 };
+      } else {
+        // New activity detected, trust backend's unread state
+        merged[threadId] = newThread;
+      }
+    } else {
+      merged[threadId] = newThread;
+    }
+  });
+  return merged;
+};
+
 const threadsSlice = createSlice({
   name: 'thread',
   initialState: {
@@ -99,7 +140,7 @@ const threadsSlice = createSlice({
       newState.pages = updatedPages;
 
       newState.status = RequestStatus.SUCCESSFUL;
-      newState.threadsById = { ...newState.threadsById, ...threadsById };
+      newState.threadsById = mergeThreadsPreservingReadState(newState.threadsById, threadsById);
       newState.threadsInTopic = (isFilterChanged || page === 1)
         ? { ...threadsInTopic }
         : mergeThreadsInTopics(newState.threadsInTopic, threadsInTopic);
@@ -133,7 +174,7 @@ const threadsSlice = createSlice({
       {
         ...state,
         status: RequestStatus.SUCCESSFUL,
-        threadsById: { ...state.threadsById, ...payload.threadsById },
+        threadsById: mergeThreadsPreservingReadState(state.threadsById, payload.threadsById),
         avatars: { ...state.avatars, ...payload.avatars },
       }
     ),
@@ -142,7 +183,7 @@ const threadsSlice = createSlice({
         ...state,
         status: RequestStatus.SUCCESSFUL,
         threadsInTopic: { ...payload.threadsInTopic, ...state.threadsInTopic },
-        threadsById: { ...state.threadsById, ...payload.threadsById },
+        threadsById: mergeThreadsPreservingReadState(state.threadsById, payload.threadsById),
         avatars: { ...state.avatars, ...payload.avatars },
       }
     ),

@@ -38,7 +38,7 @@ export function usePost(postId) {
     if (thread && !thread.read) {
       dispatch(markThreadAsRead(postId));
     }
-  }, [postId]);
+  }, [postId, thread?.read, dispatch]);
 
   return thread || {};
 }

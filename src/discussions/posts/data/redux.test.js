@@ -207,4 +207,123 @@ describe('Threads/Posts data layer tests', () => {
       .not
       .toContain(threadId);
   });
+
+  describe('read state preservation', () => {
+    test('preserves read state when lastActivityAt unchanged', async () => {
+      const threadId = 'thread-1';
+      const lastActivityAt = '2023-01-01T00:00:00Z';
+
+      // Initial fetch with read=true
+      axiosMock.onGet(`${threadsApiUrl}${threadId}/`)
+        .replyOnce(200, Factory.build('thread', { id: threadId, read: true, lastActivityAt }));
+      await executeThunk(fetchThread(threadId), store.dispatch, store.getState);
+      expect(store.getState().threads.threadsById[threadId].read).toBe(true);
+
+      // Refetch returns read=false but lastActivityAt unchanged (stale backend data)
+      axiosMock.onGet(`${threadsApiUrl}${threadId}/`)
+        .replyOnce(200, Factory.build('thread', { id: threadId, read: false, lastActivityAt }));
+      await executeThunk(fetchThread(threadId), store.dispatch, store.getState);
+
+      // Should preserve read=true since no new activity
+      expect(store.getState().threads.threadsById[threadId].read).toBe(true);
+      expect(store.getState().threads.threadsById[threadId].unreadCommentCount).toBe(0);
+    });
+
+    test('trusts backend when lastActivityAt changed', async () => {
+      const threadId = 'thread-1';
+
+      // Initial fetch with read=true
+      axiosMock.onGet(`${threadsApiUrl}${threadId}/`)
+        .replyOnce(200, Factory.build('thread', { id: threadId, read: true, lastActivityAt: '2023-01-01T00:00:00Z' }));
+      await executeThunk(fetchThread(threadId), store.dispatch, store.getState);
+      expect(store.getState().threads.threadsById[threadId].read).toBe(true);
+
+      // Refetch returns read=false with new lastActivityAt (new activity)
+      axiosMock.onGet(`${threadsApiUrl}${threadId}/`)
+        .replyOnce(200, Factory.build('thread', {
+          id: threadId, read: false, lastActivityAt: '2023-01-02T00:00:00Z', unread_comment_count: 5,
+        }));
+      await executeThunk(fetchThread(threadId), store.dispatch, store.getState);
+
+      // Should trust backend's unread state since activity changed
+      expect(store.getState().threads.threadsById[threadId].read).toBe(false);
+      expect(store.getState().threads.threadsById[threadId].unreadCommentCount).toBe(5);
+    });
+
+    test('falls back to commentCount when lastActivityAt undefined', async () => {
+      const threadId = 'thread-1';
+
+      // Initial fetch with read=true, no lastActivityAt
+      axiosMock.onGet(`${threadsApiUrl}${threadId}/`)
+        .replyOnce(200, Factory.build('thread', { id: threadId, read: true, comment_count: 10 }));
+      await executeThunk(fetchThread(threadId), store.dispatch, store.getState);
+      expect(store.getState().threads.threadsById[threadId].read).toBe(true);
+
+      // Refetch returns read=false but commentCount unchanged
+      axiosMock.onGet(`${threadsApiUrl}${threadId}/`)
+        .replyOnce(200, Factory.build('thread', { id: threadId, read: false, comment_count: 10 }));
+      await executeThunk(fetchThread(threadId), store.dispatch, store.getState);
+
+      // Should preserve read=true since commentCount unchanged
+      expect(store.getState().threads.threadsById[threadId].read).toBe(true);
+    });
+
+    test('trusts backend when commentCount changed', async () => {
+      const threadId = 'thread-1';
+
+      // Initial fetch with read=true
+      axiosMock.onGet(`${threadsApiUrl}${threadId}/`)
+        .replyOnce(200, Factory.build('thread', { id: threadId, read: true, comment_count: 10 }));
+      await executeThunk(fetchThread(threadId), store.dispatch, store.getState);
+      expect(store.getState().threads.threadsById[threadId].read).toBe(true);
+
+      // Refetch returns read=false with increased commentCount
+      axiosMock.onGet(`${threadsApiUrl}${threadId}/`)
+        .replyOnce(200, Factory.build('thread', {
+          id: threadId, read: false, comment_count: 12, unread_comment_count: 2,
+        }));
+      await executeThunk(fetchThread(threadId), store.dispatch, store.getState);
+
+      // Should trust backend's unread state since commentCount changed
+      expect(store.getState().threads.threadsById[threadId].read).toBe(false);
+      expect(store.getState().threads.threadsById[threadId].unreadCommentCount).toBe(2);
+    });
+
+    test('trusts backend when no reliable activity markers', async () => {
+      const threadId = 'thread-1';
+
+      // Initial fetch with read=true, explicitly remove activity markers
+      axiosMock.onGet(`${threadsApiUrl}${threadId}/`)
+        .replyOnce(200, { ...Factory.build('thread', { id: threadId, read: true }), lastActivityAt: null, comment_count: null });
+      await executeThunk(fetchThread(threadId), store.dispatch, store.getState);
+      expect(store.getState().threads.threadsById[threadId].read).toBe(true);
+
+      // Refetch returns read=false
+      axiosMock.onGet(`${threadsApiUrl}${threadId}/`)
+        .replyOnce(200, { ...Factory.build('thread', { id: threadId, read: false, unread_comment_count: 3 }), lastActivityAt: null, comment_count: null });
+      await executeThunk(fetchThread(threadId), store.dispatch, store.getState);
+
+      // Should trust backend since we can't verify no new activity
+      expect(store.getState().threads.threadsById[threadId].read).toBe(false);
+      expect(store.getState().threads.threadsById[threadId].unreadCommentCount).toBe(3);
+    });
+
+    test('does not preserve when thread was not previously read', async () => {
+      const threadId = 'thread-1';
+
+      // Initial fetch with read=false
+      axiosMock.onGet(`${threadsApiUrl}${threadId}/`)
+        .replyOnce(200, Factory.build('thread', { id: threadId, read: false, lastActivityAt: '2023-01-01T00:00:00Z' }));
+      await executeThunk(fetchThread(threadId), store.dispatch, store.getState);
+      expect(store.getState().threads.threadsById[threadId].read).toBe(false);
+
+      // Refetch still returns read=false
+      axiosMock.onGet(`${threadsApiUrl}${threadId}/`)
+        .replyOnce(200, Factory.build('thread', { id: threadId, read: false, lastActivityAt: '2023-01-01T00:00:00Z' }));
+      await executeThunk(fetchThread(threadId), store.dispatch, store.getState);
+
+      // Should remain false (no preservation logic applies)
+      expect(store.getState().threads.threadsById[threadId].read).toBe(false);
+    });
+  });
 });
