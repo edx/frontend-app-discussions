@@ -3,6 +3,7 @@ import { logError } from '@edx/frontend-platform/logging';
 
 import { selectEnableDiscussionBan } from '../../data/selectors';
 import { setContentCreationRateLimited } from '../../data/slices';
+import { updateThreadAbuseFlaggedCount } from '../../posts/data/slices';
 import { getHttpErrorStatus } from '../../utils';
 import {
   deleteComment, getCommentResponses, getThreadComments, postComment, updateComment,
@@ -143,7 +144,16 @@ export function editComment(commentId, comment) {
     try {
       dispatch(updateCommentRequest({ commentId }));
       const data = await updateComment(commentId, comment);
-      dispatch(updateCommentSuccess(camelCaseObject(data)));
+      const updatedComment = camelCaseObject(data);
+      dispatch(updateCommentSuccess(updatedComment));
+      // If the flagged state changed, update the parent thread's abuseFlaggedCount
+      if (comment.flagged !== undefined) {
+        const { threadId } = updatedComment;
+        if (threadId) {
+          const delta = comment.flagged ? 1 : -1;
+          dispatch(updateThreadAbuseFlaggedCount({ threadId, delta }));
+        }
+      }
     } catch (error) {
       if (getHttpErrorStatus(error) === 403) {
         dispatch(updateCommentDenied());
