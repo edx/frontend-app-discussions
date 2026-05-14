@@ -99,7 +99,18 @@ const threadsSlice = createSlice({
       newState.pages = updatedPages;
 
       newState.status = RequestStatus.SUCCESSFUL;
-      newState.threadsById = { ...newState.threadsById, ...threadsById };
+      // Merge threads while preserving abuseFlaggedCount when the new data doesn't include it
+      // (abuseFlaggedCount is only returned when count_flagged=true is requested)
+      const mergedThreadsById = { ...newState.threadsById };
+      Object.entries(threadsById).forEach(([id, thread]) => {
+        mergedThreadsById[id] = {
+          ...thread,
+          abuseFlaggedCount: thread.abuseFlaggedCount != null
+            ? thread.abuseFlaggedCount
+            : (mergedThreadsById[id]?.abuseFlaggedCount || 0),
+        };
+      });
+      newState.threadsById = mergedThreadsById;
       newState.threadsInTopic = (isFilterChanged || page === 1)
         ? { ...threadsInTopic }
         : mergeThreadsInTopics(newState.threadsInTopic, threadsInTopic);
@@ -129,23 +140,43 @@ const threadsSlice = createSlice({
         status: RequestStatus.IN_PROGRESS,
       }
     ),
-    fetchThreadSuccess: (state, { payload }) => (
-      {
+    fetchThreadSuccess: (state, { payload }) => {
+      // Preserve abuseFlaggedCount from existing state if not present in the new data
+      const mergedThreadsById = { ...state.threadsById };
+      Object.entries(payload.threadsById).forEach(([id, thread]) => {
+        mergedThreadsById[id] = {
+          ...thread,
+          abuseFlaggedCount: thread.abuseFlaggedCount != null
+            ? thread.abuseFlaggedCount
+            : (mergedThreadsById[id]?.abuseFlaggedCount || 0),
+        };
+      });
+      return {
         ...state,
         status: RequestStatus.SUCCESSFUL,
-        threadsById: { ...state.threadsById, ...payload.threadsById },
+        threadsById: mergedThreadsById,
         avatars: { ...state.avatars, ...payload.avatars },
-      }
-    ),
-    fetchThreadByDirectLinkSuccess: (state, { payload }) => (
-      {
+      };
+    },
+    fetchThreadByDirectLinkSuccess: (state, { payload }) => {
+      // Preserve abuseFlaggedCount from existing state if not present in the new data
+      const mergedThreadsById = { ...state.threadsById };
+      Object.entries(payload.threadsById).forEach(([id, thread]) => {
+        mergedThreadsById[id] = {
+          ...thread,
+          abuseFlaggedCount: thread.abuseFlaggedCount != null
+            ? thread.abuseFlaggedCount
+            : (mergedThreadsById[id]?.abuseFlaggedCount || 0),
+        };
+      });
+      return {
         ...state,
         status: RequestStatus.SUCCESSFUL,
         threadsInTopic: { ...payload.threadsInTopic, ...state.threadsInTopic },
-        threadsById: { ...state.threadsById, ...payload.threadsById },
+        threadsById: mergedThreadsById,
         avatars: { ...state.avatars, ...payload.avatars },
-      }
-    ),
+      };
+    },
     fetchThreadFailed: (state) => (
       {
         ...state,
@@ -409,6 +440,22 @@ const threadsSlice = createSlice({
         pages: [], // Clear pages when switching views
       }
     ),
+    updateThreadAbuseFlaggedCount: (state, { payload }) => {
+      const { threadId, delta } = payload;
+      const thread = state.threadsById[threadId];
+      if (!thread) { return state; }
+      const currentCount = thread.abuseFlaggedCount || 0;
+      return {
+        ...state,
+        threadsById: {
+          ...state.threadsById,
+          [threadId]: {
+            ...thread,
+            abuseFlaggedCount: Math.max(0, currentCount + delta),
+          },
+        },
+      };
+    },
   },
 });
 
@@ -453,6 +500,7 @@ export const {
   sendAccountActivationEmailSuccess,
   toggleDeletedView,
   setDeletedView,
+  updateThreadAbuseFlaggedCount,
 } = threadsSlice.actions;
 
 export const threadsReducer = threadsSlice.reducer;
