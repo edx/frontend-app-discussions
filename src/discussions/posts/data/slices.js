@@ -107,7 +107,7 @@ const threadsSlice = createSlice({
           ...thread,
           abuseFlaggedCount: thread.abuseFlaggedCount != null
             ? thread.abuseFlaggedCount
-            : (mergedThreadsById[id]?.abuseFlaggedCount || 0),
+            : mergedThreadsById[id]?.abuseFlaggedCount,
         };
       });
       newState.threadsById = mergedThreadsById;
@@ -148,7 +148,7 @@ const threadsSlice = createSlice({
           ...thread,
           abuseFlaggedCount: thread.abuseFlaggedCount != null
             ? thread.abuseFlaggedCount
-            : (mergedThreadsById[id]?.abuseFlaggedCount || 0),
+            : mergedThreadsById[id]?.abuseFlaggedCount,
         };
       });
       return {
@@ -166,7 +166,7 @@ const threadsSlice = createSlice({
           ...thread,
           abuseFlaggedCount: thread.abuseFlaggedCount != null
             ? thread.abuseFlaggedCount
-            : (mergedThreadsById[id]?.abuseFlaggedCount || 0),
+            : mergedThreadsById[id]?.abuseFlaggedCount,
         };
       });
       return {

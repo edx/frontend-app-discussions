@@ -76,7 +76,7 @@ const PostLink = ({
   })();
   const showAnsweredBadge = hasEndorsed && type === ThreadType.QUESTION;
   const authorLabelColor = AvatarOutlineAndLabelColors[authorLabel];
-  const canSeeReportedBadge = abuseFlagged || abuseFlaggedCount;
+  const canSeeReportedBadge = !!(abuseFlagged || abuseFlaggedCount);
   const isPostRead = read || (!read && commentCount !== unreadCommentCount);
   const shouldUseSingleLineAuthorRole = ['learners', 'posts', 'my-posts'].includes(page);
 
