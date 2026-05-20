@@ -19,13 +19,14 @@ const LearnerActionsDropdown = ({
   userHasBulkDeletePrivileges,
   learnerBanInfo,
   contentStatus,
+  targetAuthorLabel,
 }) => {
   const buttonRef = useRef();
   const intl = useIntl();
   const [isOpen, open, close] = useToggle(false);
   const [target, setTarget] = useState(null);
   const [activeSubmenu, setActiveSubmenu] = useState(null);
-  const actions = useLearnerActions(userHasBulkDeletePrivileges, learnerBanInfo, contentStatus);
+  const actions = useLearnerActions(userHasBulkDeletePrivileges, learnerBanInfo, contentStatus, targetAuthorLabel);
 
   const handleActions = useCallback((action) => {
     const actionFunction = actionHandlers[action];
@@ -175,6 +176,7 @@ LearnerActionsDropdown.propTypes = {
     authorBanScope: PropTypes.string,
   }),
   contentStatus: PropTypes.string,
+  targetAuthorLabel: PropTypes.string,
 };
 
 LearnerActionsDropdown.defaultProps = {
@@ -182,6 +184,7 @@ LearnerActionsDropdown.defaultProps = {
   userHasBulkDeletePrivileges: false,
   learnerBanInfo: {},
   contentStatus: undefined,
+  targetAuthorLabel: null,
 };
 
 export default LearnerActionsDropdown;

@@ -62,7 +62,7 @@ const BanModerationModals = ({
         closeButtonVariant="tertiary"
         confirmButtonVariant="danger"
         confirmButtonText={deleteConfirmText}
-        showBanCheckbox={enableDiscussionBan}
+        showBanCheckbox={showBanCheckboxOnDelete && enableDiscussionBan}
         banCheckboxLabel={intl.formatMessage(discussionMessages.banUserCheckbox)}
         isConfirmButtonPending={isProcessing}
       />
@@ -77,7 +77,7 @@ const BanModerationModals = ({
         closeButtonVariant="tertiary"
         confirmButtonVariant="danger"
         confirmButtonText={deleteConfirmText}
-        showBanCheckbox={enableDiscussionBan}
+        showBanCheckbox={showBanCheckboxOnDelete && enableDiscussionBan}
         banCheckboxLabel={intl.formatMessage(discussionMessages.banUserOrgCheckbox)}
         isConfirmButtonPending={isProcessing}
       />

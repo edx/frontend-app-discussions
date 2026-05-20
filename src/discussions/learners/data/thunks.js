@@ -10,11 +10,13 @@ import {
 import {
   PostsStatusFilter, ThreadType,
 } from '../../../data/constants';
+import { updateAuthorBanStatus as updateCommentAuthorBanStatus } from '../../post-comments/data/slices';
 import {
   fetchLearnerThreadsRequest,
   fetchThreadsDenied,
   fetchThreadsFailed,
   fetchThreadsSuccess,
+  updateAuthorBanStatus as updateThreadAuthorBanStatus,
 } from '../../posts/data/slices';
 import { normaliseThreads } from '../../posts/data/thunks';
 import { getHttpErrorStatus } from '../../utils';
@@ -490,7 +492,8 @@ export function banUser(courseId, username, scope) {
       dispatch(banUserRequest());
       await banUserApi(courseId, username, scope);
       dispatch(banUserSuccess());
-      // Refresh the banned users list
+      dispatch(updateThreadAuthorBanStatus({ author: username, isBanned: true, banScope: scope }));
+      dispatch(updateCommentAuthorBanStatus({ author: username, isBanned: true, banScope: scope }));
       dispatch(fetchBannedUsers(courseId));
     } catch (error) {
       dispatch(banUserFailed());
@@ -533,7 +536,8 @@ export function unbanUser(courseId, username, scope) {
       dispatch(unbanUserRequest());
       await unbanUserApi(courseId, username, scope);
       dispatch(unbanUserSuccess());
-      // Refresh the banned users list
+      dispatch(updateThreadAuthorBanStatus({ author: username, isBanned: false, banScope: null }));
+      dispatch(updateCommentAuthorBanStatus({ author: username, isBanned: false, banScope: null }));
       dispatch(fetchBannedUsers(courseId));
     } catch (error) {
       dispatch(unbanUserFailed());

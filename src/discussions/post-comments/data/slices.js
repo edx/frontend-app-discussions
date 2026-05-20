@@ -272,6 +272,20 @@ const commentsSlice = createSlice({
         draftResponses: payload,
       }
     ),
+    // Update ban status for all comments by a specific author
+    updateAuthorBanStatus: (state, { payload }) => {
+      const { author, isBanned, banScope } = payload;
+      // simplified: concise reduce pattern that only updates matching authors
+      const updatedCommentsById = Object.keys(state.commentsById).reduce((acc, commentId) => {
+        const comment = state.commentsById[commentId];
+        acc[commentId] = comment.author === author
+          ? { ...comment, isAuthorBanned: isBanned, authorBanScope: banScope }
+          : comment;
+        return acc;
+      }, {});
+
+      return { ...state, commentsById: updatedCommentsById };
+    },
   },
 });
 
@@ -299,6 +313,7 @@ export const {
   setCommentSortOrder,
   setDraftComments,
   setDraftResponses,
+  updateAuthorBanStatus,
 } = commentsSlice.actions;
 
 export const commentsReducer = commentsSlice.reducer;

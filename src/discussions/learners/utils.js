@@ -13,6 +13,8 @@ import {
   selectUserCanBanAtCourseLevel,
   selectUserCanBanAtOrgLevel,
   selectUserHasModerationPrivileges,
+  selectUserIsStaff,
+  selectUserRoles,
 } from '../data/selectors';
 import { checkBanActionDisabled } from '../utils/banUtils';
 import { BAN_SCOPES } from './data/constants';
@@ -113,21 +115,42 @@ export function useLearnerActions(
   userHasBulkDeletePrivileges = false,
   learnerBanInfo = {},
   contentStatus = PostsStatusFilter.ACTIVE,
+  targetAuthorLabel = null,
 ) {
   const intl = useIntl();
   const enableDiscussionBan = useSelector(selectEnableDiscussionBan);
   const userHasModerationPrivileges = useSelector(selectUserHasModerationPrivileges);
   const userCanBanAtCourseLevel = useSelector(selectUserCanBanAtCourseLevel);
   const userCanBanAtOrgLevel = useSelector(selectUserCanBanAtOrgLevel);
+  const userRoles = useSelector(selectUserRoles);
+  const userIsGlobalStaff = useSelector(selectUserIsStaff);
 
   const actions = useMemo(() => {
     if (!userHasBulkDeletePrivileges || !userHasModerationPrivileges) {
       return [];
     }
 
+    // Check if user has discussion roles (Administrator or Moderator)
+    const roles = userRoles || [];
+    const userIsAdmin = roles.includes('Administrator');
+    const userIsModerator = roles.includes('Moderator');
+    const userHasDiscussionRole = userIsAdmin || userIsModerator;
+    const targetIsStaffBadge = targetAuthorLabel === 'Staff';
+    const targetIsDiscussionModerator = targetAuthorLabel === 'Moderator';
+    let shouldShowBanOption = true;
+
+    // Global Staff (no discussion role) cannot ban users with Staff or Moderator badges
+    if (userIsGlobalStaff && !userHasDiscussionRole && (targetIsStaffBadge || targetIsDiscussionModerator)) {
+      shouldShowBanOption = false;
+    }
+
+    // Discussion Moderator cannot ban another Discussion Moderator
+    if (userIsModerator && !userIsAdmin && targetIsDiscussionModerator) {
+      shouldShowBanOption = false;
+    }
+
     return LEARNER_ACTIONS_LIST.filter(action => {
-      // Hide ban menu if feature flag is disabled OR user lacks course-level ban permissions
-      if (action.id === 'ban' && (!enableDiscussionBan || !userCanBanAtCourseLevel)) {
+      if (action.id === 'ban' && (!enableDiscussionBan || !userCanBanAtCourseLevel || !shouldShowBanOption)) {
         return false;
       }
 
@@ -253,6 +276,9 @@ export function useLearnerActions(
     contentStatus,
     enableDiscussionBan,
     intl,
+    userRoles,
+    userIsGlobalStaff,
+    targetAuthorLabel,
   ]);
 
   return actions;

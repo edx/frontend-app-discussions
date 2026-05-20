@@ -374,6 +374,7 @@ export function useActions(contentType, id, hasModerationPrivileges) {
   // Check if user can perform course-level and org-level bans
   const canBanAtCourseLevel = useSelector(selectUserCanBanAtCourseLevel);
   const canBanAtOrgLevel = useSelector(selectUserCanBanAtOrgLevel);
+  const userRoles = useSelector(state => state.config.userRoles);
   // Group TA - has limited permissions within their group
   const isUserGroupTA = useSelector(state => state.config.isGroupTa);
   // Course Staff/Admin - NO discussion privileges (treated as learners)
@@ -488,6 +489,26 @@ export function useActions(contentType, id, hasModerationPrivileges) {
     const isOwnContent = (currentUser && baseContent?.author && currentUser === baseContent.author)
       || (currentUserId && baseContent?.authorId && String(currentUserId) === String(baseContent.authorId));
 
+    // Check if user has discussion roles (Administrator or Moderator)
+    const roles = userRoles || [];
+    const userIsAdmin = roles.includes('Administrator');
+    const userIsModerator = roles.includes('Moderator');
+    const userHasDiscussionRole = userIsAdmin || userIsModerator;
+    const targetIsStaffBadge = baseContent?.authorLabel === 'Staff';
+    const targetIsDiscussionModerator = baseContent?.authorLabel === 'Moderator';
+
+    let shouldShowBanOption = true;
+
+    // Global Staff (no discussion role) cannot ban users with Staff or Moderator badges
+    if (isGlobalStaff && !userHasDiscussionRole && (targetIsStaffBadge || targetIsDiscussionModerator)) {
+      shouldShowBanOption = false;
+    }
+
+    // Discussion Moderator cannot ban another Discussion Moderator
+    if (userIsModerator && !userIsAdmin && targetIsDiscussionModerator) {
+      shouldShowBanOption = false;
+    }
+
     const filteredActions = ACTIONS_LIST.filter(
       ({
         action,
@@ -495,8 +516,7 @@ export function useActions(contentType, id, hasModerationPrivileges) {
         hasSubmenu = false,
         id: actionId,
       }) => {
-        // Hide ban menu if feature flag is disabled OR user lacks course-level ban permissions
-        if (actionId === 'ban' && (!enableDiscussionBan || !canBanAtCourseLevel)) {
+        if (actionId === 'ban' && (!enableDiscussionBan || !canBanAtCourseLevel || !shouldShowBanOption)) {
           return false;
         }
         // For items with submenus, skip permission check on parent item
@@ -663,6 +683,7 @@ export function useActions(contentType, id, hasModerationPrivileges) {
     hasDiscussionModeratorPrivileges,
     isUserGroupTA,
     contentType,
+    userRoles,
   ]);
 
   return actions;

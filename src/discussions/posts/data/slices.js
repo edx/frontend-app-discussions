@@ -456,6 +456,21 @@ const threadsSlice = createSlice({
         },
       };
     },
+
+    // Update ban status for all threads by a specific author
+    updateAuthorBanStatus: (state, { payload }) => {
+      const { author, isBanned, banScope } = payload;
+      // simplified: concise reduce pattern that only updates matching authors
+      const updatedThreadsById = Object.keys(state.threadsById).reduce((acc, threadId) => {
+        const thread = state.threadsById[threadId];
+        acc[threadId] = thread.author === author
+          ? { ...thread, isAuthorBanned: isBanned, authorBanScope: banScope }
+          : thread;
+        return acc;
+      }, {});
+
+      return { ...state, threadsById: updatedThreadsById };
+    },
   },
 });
 
@@ -501,6 +516,7 @@ export const {
   toggleDeletedView,
   setDeletedView,
   updateThreadAbuseFlaggedCount,
+  updateAuthorBanStatus,
 } = threadsSlice.actions;
 
 export const threadsReducer = threadsSlice.reducer;
