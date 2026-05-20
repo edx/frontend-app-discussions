@@ -98,14 +98,27 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
   // Compute shouldShowBanOption per authority table
   const userIsAdmin = (userRoles || []).includes('Administrator');
   const userIsModerator = (userRoles || []).includes('Moderator');
-  const userHasDiscussionRole = userIsAdmin || userIsModerator;
+  const userIsDiscussionAdmin = (userRoles || []).includes('Discussion Admin');
+  const userHasDiscussionRole = userIsAdmin || userIsModerator || userIsDiscussionAdmin;
   const targetIsStaffBadge = authorLabel === 'Staff';
   const targetIsDiscussionModerator = authorLabel === 'Moderator';
+  const targetIsDiscussionAdmin = authorLabel === 'Discussion Admin';
   let shouldShowBanOption = true;
-  if (isGlobalStaff && !userHasDiscussionRole && (targetIsStaffBadge || targetIsDiscussionModerator)) {
+
+  // Global Staff without discussion role cannot ban  Moderator
+  if (
+    isGlobalStaff
+    && !userHasDiscussionRole
+    && (targetIsStaffBadge || targetIsDiscussionModerator || targetIsDiscussionAdmin)
+  ) {
     shouldShowBanOption = false;
   }
-  if (userIsModerator && !userIsAdmin && targetIsDiscussionModerator) {
+  // Discussion Moderator cannot ban another Moderator or Admin
+  if (userIsModerator && !userIsAdmin && (targetIsDiscussionModerator || targetIsDiscussionAdmin)) {
+    shouldShowBanOption = false;
+  }
+  // Discussion Admin cannot ban another Admin or Moderator
+  if (userIsDiscussionAdmin && (targetIsDiscussionAdmin || targetIsDiscussionModerator)) {
     shouldShowBanOption = false;
   }
   const shouldShowEmailConfirmation = useSelector(selectShouldShowEmailConfirmation);
