@@ -17,7 +17,7 @@ import { logError } from '@edx/frontend-platform/logging';
 
 import HTMLLoader from '../../../../components/HTMLLoader';
 import {
-  banUser, bulkDeleteUserPosts, unbanUser,
+  bulkDeleteUserPosts,
 } from '../../../../data/api/moderation';
 import {
   AvatarOutlineAndLabelColors,
@@ -43,6 +43,7 @@ import {
   selectShouldShowEmailConfirmation,
 } from '../../../data/selectors';
 import { muteUserThunk, unmuteUserThunk } from '../../../data/thunks';
+import { banUser, unbanUser } from '../../../learners/data/thunks';
 import discussionMessages from '../../../messages';
 // import { selectThread } from '../../../posts/data/selectors';
 import { fetchThread } from '../../../posts/data/thunks';
@@ -268,97 +269,45 @@ const Comment = ({
     }
   }, [author, courseId, threadId, dispatch, hideModal, enableDiscussionBan]);
 
-  const handleBanCourseConfirmation = useCallback(async () => {
-    // Defensive check - feature must be enabled
+  const createBanHandler = useCallback((actionFn, scope, actionName) => async () => {
     if (!enableDiscussionBan) {
-      logError('Ban operation attempted with feature disabled');
+      logError(`${actionName} operation attempted with feature disabled`);
       hideModal();
       return;
     }
-    // Defensive check - author must be defined
     if (!author) {
-      logError('Ban operation attempted without author');
+      logError(`${actionName} operation attempted without author`);
       hideModal();
       return;
     }
     try {
-      await banUser(courseId, author, 'course', 'Banned from course discussions');
+      await dispatch(actionFn(courseId, author, scope));
       hideModal();
-      dispatch(fetchThread(threadId, courseId));
     } catch (error) {
       const errorMsg = error?.message || String(error) || 'Unknown error';
-      logError(`Error banning user (course): ${errorMsg}`);
+      logError(`Error ${actionName.toLowerCase()} user (${scope}): ${errorMsg}`);
     }
-  }, [author, courseId, threadId, dispatch, hideModal, enableDiscussionBan]);
+  }, [author, courseId, dispatch, hideModal, enableDiscussionBan]);
 
-  const handleBanOrgConfirmation = useCallback(async () => {
-    // Defensive check - feature must be enabled
-    if (!enableDiscussionBan) {
-      logError('Ban operation attempted with feature disabled');
-      hideModal();
-      return;
-    }
-    // Defensive check - author must be defined
-    if (!author) {
-      logError('Ban operation attempted without author');
-      hideModal();
-      return;
-    }
-    try {
-      await banUser(courseId, author, 'organization', 'Banned from organization discussions');
-      hideModal();
-      dispatch(fetchThread(threadId, courseId));
-    } catch (error) {
-      const errorMsg = error?.message || String(error) || 'Unknown error';
-      logError(`Error banning user (org): ${errorMsg}`);
-    }
-  }, [author, courseId, threadId, dispatch, hideModal, enableDiscussionBan]);
+  const handleBanCourseConfirmation = useCallback(
+    () => createBanHandler(banUser, 'course', 'Ban')(),
+    [createBanHandler],
+  );
 
-  const handleUnbanCourseConfirmation = useCallback(async () => {
-    // Defensive check - feature must be enabled
-    if (!enableDiscussionBan) {
-      logError('Unban operation attempted with feature disabled');
-      hideModal();
-      return;
-    }
-    // Defensive check - author must be defined
-    if (!author) {
-      logError('Unban operation attempted without author');
-      hideModal();
-      return;
-    }
-    try {
-      await unbanUser(courseId, author, 'course', 'Unbanned from course discussions');
-      hideModal();
-      dispatch(fetchThread(threadId, courseId));
-    } catch (error) {
-      const errorMsg = error?.message || String(error) || 'Unknown error';
-      logError(`Error unbanning user (course): ${errorMsg}`);
-    }
-  }, [author, courseId, threadId, dispatch, hideModal, enableDiscussionBan]);
+  const handleBanOrgConfirmation = useCallback(
+    () => createBanHandler(banUser, 'organization', 'Ban')(),
+    [createBanHandler],
+  );
 
-  const handleUnbanOrgConfirmation = useCallback(async () => {
-    // Defensive check - feature must be enabled
-    if (!enableDiscussionBan) {
-      logError('Unban operation attempted with feature disabled');
-      hideModal();
-      return;
-    }
-    // Defensive check - author must be defined
-    if (!author) {
-      logError('Unban operation attempted without author');
-      hideModal();
-      return;
-    }
-    try {
-      await unbanUser(courseId, author, 'organization', 'Unbanned from organization discussions');
-      hideModal();
-      dispatch(fetchThread(threadId, courseId));
-    } catch (error) {
-      const errorMsg = error?.message || String(error) || 'Unknown error';
-      logError(`Error unbanning user (org): ${errorMsg}`);
-    }
-  }, [author, courseId, threadId, dispatch, hideModal, enableDiscussionBan]);
+  const handleUnbanCourseConfirmation = useCallback(
+    () => createBanHandler(unbanUser, 'course', 'Unban')(),
+    [createBanHandler],
+  );
+
+  const handleUnbanOrgConfirmation = useCallback(
+    () => createBanHandler(unbanUser, 'organization', 'Unban')(),
+    [createBanHandler],
+  );
 
   // Mute modal handler - only for learners (staff use submenu)
   const showMuteModal = useCallback(() => {

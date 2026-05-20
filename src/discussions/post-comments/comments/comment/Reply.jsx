@@ -11,7 +11,7 @@ import { logError } from '@edx/frontend-platform/logging';
 
 import HTMLLoader from '../../../../components/HTMLLoader';
 import {
-  banUser, bulkDeleteUserPosts, unbanUser,
+  bulkDeleteUserPosts,
 } from '../../../../data/api/moderation';
 import { AvatarOutlineAndLabelColors, ContentActions } from '../../../../data/constants';
 import {
@@ -25,6 +25,7 @@ import {
   selectIsUserBanned,
 } from '../../../data/selectors';
 import { muteUserThunk, unmuteUserThunk } from '../../../data/thunks';
+import { banUser, unbanUser } from '../../../learners/data/thunks';
 import discussionMessages from '../../../messages';
 import { selectAuthorAvatar } from '../../../posts/data/selectors';
 import { fetchThread } from '../../../posts/data/thunks';
@@ -145,45 +146,31 @@ const Reply = ({ responseId }) => {
     }
   }, [author, courseId, threadId, hideDeleteUserOrgConfirmation, enableDiscussionBan]);
 
-  const handleBanCourseConfirmation = useCallback(async (reason) => {
+  const executeBanAction = useCallback(async (actionFn, scope, hideFn) => {
     try {
-      await banUser(courseId, author, 'course', reason || 'Banned from course discussions');
-      hideBanCourseConfirmation();
-      dispatch(fetchThread(threadId, courseId));
+      await dispatch(actionFn(courseId, author, scope));
+      hideFn();
     } catch (error) {
       logError(error);
     }
-  }, [author, courseId, threadId, dispatch, hideBanCourseConfirmation]);
+  }, [author, courseId, dispatch]);
 
-  const handleBanOrgConfirmation = useCallback(async (reason) => {
-    try {
-      await banUser(courseId, author, 'organization', reason || 'Banned from organization discussions');
-      hideBanOrgConfirmation();
-      dispatch(fetchThread(threadId, courseId));
-    } catch (error) {
-      logError(error);
-    }
-  }, [author, courseId, threadId, dispatch, hideBanOrgConfirmation]);
-
-  const handleUnbanCourseConfirmation = useCallback(async (reason) => {
-    try {
-      await unbanUser(courseId, author, 'course', reason || 'Unbanned from course discussions');
-      hideUnbanCourseConfirmation();
-      dispatch(fetchThread(threadId, courseId));
-    } catch (error) {
-      logError(error);
-    }
-  }, [author, courseId, threadId, dispatch, hideUnbanCourseConfirmation]);
-
-  const handleUnbanOrgConfirmation = useCallback(async (reason) => {
-    try {
-      await unbanUser(courseId, author, 'organization', reason || 'Unbanned from organization discussions');
-      hideUnbanOrgConfirmation();
-      dispatch(fetchThread(threadId, courseId));
-    } catch (error) {
-      logError(error);
-    }
-  }, [author, courseId, threadId, dispatch, hideUnbanOrgConfirmation]);
+  const handleBanCourseConfirmation = useCallback(
+    () => executeBanAction(banUser, 'course', hideBanCourseConfirmation),
+    [executeBanAction, hideBanCourseConfirmation],
+  );
+  const handleBanOrgConfirmation = useCallback(
+    () => executeBanAction(banUser, 'organization', hideBanOrgConfirmation),
+    [executeBanAction, hideBanOrgConfirmation],
+  );
+  const handleUnbanCourseConfirmation = useCallback(
+    () => executeBanAction(unbanUser, 'course', hideUnbanCourseConfirmation),
+    [executeBanAction, hideUnbanCourseConfirmation],
+  );
+  const handleUnbanOrgConfirmation = useCallback(
+    () => executeBanAction(unbanUser, 'organization', hideUnbanOrgConfirmation),
+    [executeBanAction, hideUnbanOrgConfirmation],
+  );
 
   // Mute modal handler - only for learners (staff use submenu)
   const showMuteModal = useCallback(() => {

@@ -270,6 +270,16 @@ const LearnerPostsView = () => {
     };
   }, [bannedUsers, username]);
 
+  // Get the target user's author label from their first post
+  const targetAuthorLabel = useSelector(state => {
+    const firstThreadId = sortedPostsIds?.[0];
+    if (firstThreadId && state.threads.threadsById) {
+      const thread = state.threads.threadsById[firstThreadId];
+      return thread?.authorLabel || null;
+    }
+    return null;
+  });
+
   const postInstances = useMemo(() => (
     sortedPostsIds?.map((threadId, idx) => (
       <PostLink
@@ -355,6 +365,7 @@ const LearnerPostsView = () => {
                 userHasBulkDeletePrivileges={canAccessBulkActions}
                 learnerBanInfo={learnerBanInfo}
                 contentStatus={postFilter?.contentStatus}
+                targetAuthorLabel={targetAuthorLabel}
                 dropDownIconSize
               />
             </div>

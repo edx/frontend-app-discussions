@@ -30,6 +30,7 @@ import {
   selectContentCreationRateLimited,
   selectIsUserBanned,
   selectShouldShowEmailConfirmation,
+  selectUserCanBanAtCourseLevel,
   selectUserHasModerationPrivileges,
 } from '../../data/selectors';
 import { muteUserThunk, unmuteUserThunk } from '../../data/thunks';
@@ -90,6 +91,23 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
   const [isLearnerMuting, showLearnerMuteModal, hideLearnerMuteModal] = useToggle(false);
   const [isLearnerUnmuting, showLearnerUnmuteModal, hideLearnerUnmuteModal] = useToggle(false);
   const userHasModerationPrivileges = useSelector(selectUserHasModerationPrivileges);
+  const canBanAtCourseLevel = useSelector(selectUserCanBanAtCourseLevel);
+  const userRoles = useSelector(state => state.config.userRoles);
+  const isGlobalStaff = useSelector(state => state.config.isUserAdmin);
+
+  // Compute shouldShowBanOption per authority table
+  const userIsAdmin = (userRoles || []).includes('Administrator');
+  const userIsModerator = (userRoles || []).includes('Moderator');
+  const userHasDiscussionRole = userIsAdmin || userIsModerator;
+  const targetIsStaffBadge = authorLabel === 'Staff';
+  const targetIsDiscussionModerator = authorLabel === 'Moderator';
+  let shouldShowBanOption = true;
+  if (isGlobalStaff && !userHasDiscussionRole && (targetIsStaffBadge || targetIsDiscussionModerator)) {
+    shouldShowBanOption = false;
+  }
+  if (userIsModerator && !userIsAdmin && targetIsDiscussionModerator) {
+    shouldShowBanOption = false;
+  }
   const shouldShowEmailConfirmation = useSelector(selectShouldShowEmailConfirmation);
   const enableDiscussionBan = useSelector(state => state.config.enableDiscussionBan);
   const contentCreationRateLimited = useSelector(selectContentCreationRateLimited);
@@ -508,7 +526,7 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
         onUnbanOrg={handleUnbanOrgConfirmation}
         isProcessing={isProcessing}
         enableDiscussionBan={enableDiscussionBan}
-        showBanCheckboxOnDelete={userHasModerationPrivileges}
+        showBanCheckboxOnDelete={shouldShowBanOption && canBanAtCourseLevel && enableDiscussionBan}
         deleteTitle={intl.formatMessage(messages.deletePostTitle)}
         deleteDescription={intl.formatMessage(messages.deletePostDescription)}
         deleteConfirmText={intl.formatMessage(messages.deleteConfirmationDelete)}
