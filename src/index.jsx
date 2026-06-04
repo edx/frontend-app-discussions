@@ -19,8 +19,24 @@ import store from './store';
 
 import './index.scss';
 
+let lastBlockedPopupTimestamp = 0;
+
 const rootNode = createRoot(document.getElementById('root'));
 subscribe(APP_READY, () => {
+  const { getAuthenticatedHttpClient } = require('@edx/frontend-platform/auth'); // eslint-disable-line global-require
+  getAuthenticatedHttpClient().interceptors.response.use(
+    response => response,
+    (error) => {
+      const statusCode = error?.customAttributes?.httpErrorStatus ?? error?.response?.status;
+      const now = Date.now();
+      if (statusCode === 503 && now - lastBlockedPopupTimestamp > 1500) {
+        lastBlockedPopupTimestamp = now;
+        // eslint-disable-next-line no-alert
+        window.alert('Discussions are temporarily in read-only mode while maintenance is in progress. You can continue viewing content, but posting and other modifications are temporarily unavailable.');
+      }
+      return Promise.reject(error);
+    },
+  );
   rootNode.render(
     <StrictMode>
       <AppProvider store={store}>
