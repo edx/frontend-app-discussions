@@ -555,11 +555,20 @@ export function unbanUser(courseId, username, scope) {
  * @returns {(function(*): Promise<void>)|*}
  */
 export function deleteUserActivity(courseId, username, scope, shouldBanUser = false) {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
     try {
       dispatch(deleteUserActivityRequest());
       const response = await bulkDeleteUserActivity(courseId, username, scope, shouldBanUser);
       dispatch(deleteUserActivitySuccess(camelCaseObject(response)));
+
+      // Refresh learner stats list so deleted counts update immediately
+      const state = getState();
+      dispatch(fetchLearners(courseId, {
+        orderBy: state.learners?.sortedBy,
+        page: 1,
+        usernameSearch: state.learners?.usernameSearch,
+      }));
+
       // Refresh banned users list if user was banned
       if (shouldBanUser) {
         dispatch(fetchBannedUsers(courseId));

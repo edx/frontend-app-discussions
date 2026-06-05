@@ -65,6 +65,7 @@ jest.mock('../../data/selectors', () => ({
 }));
 
 jest.mock('../../utils', () => ({
+  ...jest.requireActual('../../utils'),
   useActions: jest.fn(() => []),
 }));
 

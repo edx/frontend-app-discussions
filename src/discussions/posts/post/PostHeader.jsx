@@ -12,13 +12,15 @@ import { useIntl } from '@edx/frontend-platform/i18n';
 import { AvatarOutlineAndLabelColors, ThreadType } from '../../../data/constants';
 import { AuthorLabel } from '../../common';
 import { useAlertBannerVisible } from '../../data/hooks';
+import { getAuthorRoles } from '../../utils';
 import { selectAuthorAvatar } from '../data/selectors';
 import messages from './messages';
 
 export const PostAvatar = React.memo(({
   author, postType, authorLabel, fromPostLink, read, postUsers,
 }) => {
-  const outlineColor = AvatarOutlineAndLabelColors[authorLabel];
+  const firstRole = getAuthorRoles(authorLabel)[0];
+  const outlineColor = AvatarOutlineAndLabelColors[firstRole];
   const authorAvatars = useSelector(selectAuthorAvatar(author));
 
   const avatarSize = useMemo(() => {
@@ -77,7 +79,7 @@ export const PostAvatar = React.memo(({
 PostAvatar.propTypes = {
   author: PropTypes.string.isRequired,
   postType: PropTypes.string.isRequired,
-  authorLabel: PropTypes.string,
+  authorLabel: PropTypes.oneOfType([PropTypes.string, PropTypes.arrayOf(PropTypes.string)]),
   fromPostLink: PropTypes.bool,
   read: PropTypes.bool,
   postUsers: PropTypes.shape({}).isRequired,
@@ -105,7 +107,8 @@ const PostHeader = ({
 }) => {
   const intl = useIntl();
   const showAnsweredBadge = preview && hasEndorsed && postType === ThreadType.QUESTION;
-  const authorLabelColor = AvatarOutlineAndLabelColors[authorLabel];
+  const firstRole = getAuthorRoles(authorLabel)[0];
+  const authorLabelColor = AvatarOutlineAndLabelColors[firstRole];
   const hasAnyAlert = useAlertBannerVisible({
     author, abuseFlagged, lastEdit, closed,
   });
@@ -155,7 +158,7 @@ PostHeader.propTypes = {
   preview: PropTypes.bool,
   hasEndorsed: PropTypes.bool.isRequired,
   postType: PropTypes.string.isRequired,
-  authorLabel: PropTypes.string,
+  authorLabel: PropTypes.oneOfType([PropTypes.string, PropTypes.arrayOf(PropTypes.string)]),
   author: PropTypes.string.isRequired,
   title: PropTypes.string.isRequired,
   createdAt: PropTypes.string.isRequired,

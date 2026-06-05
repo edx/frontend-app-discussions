@@ -32,6 +32,27 @@ import messages from './messages';
  */
 export const getHttpErrorStatus = error => error?.customAttributes?.httpErrorStatus ?? error?.response?.status;
 
+export function getAuthorRoles(authorLabel) {
+  if (Array.isArray(authorLabel)) {
+    return authorLabel
+      .map(role => (typeof role === 'string' ? role.trim() : ''))
+      .filter(Boolean);
+  }
+
+  if (typeof authorLabel === 'string') {
+    return authorLabel
+      .split(',')
+      .map(role => role.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+export function getAuthorLabelText(authorLabel) {
+  return getAuthorRoles(authorLabel).join(', ');
+}
+
 /**
  * Return true if a field has been modified and is no longer valid
  * @param {string} field Name of field
@@ -401,16 +422,36 @@ export function useActions(contentType, id, hasModerationPrivileges) {
     // Only Global Staff, Discussion Moderators, and Group TAs can mute users
     // Course Staff/Admin are excluded
     if (isGlobalStaff || hasDiscussionModeratorPrivileges || isUserGroupTA) {
-      // Check if post author is staff (this would need to come from post data)
-      // For now, assume non-staff authors can be muted by privileged users
-      return !baseContent.authorLabel
-        || !['Staff', 'Moderator', 'Community TA'].includes(baseContent.authorLabel);
+      // Check if post author is staff (handle both new and legacy label formats)
+      // Privileged users (Global Staff, Course Staff, Discussion Admin/Moderator, Community TA) have authorLabel
+      const targetRoles = getAuthorRoles(baseContent.authorLabel);
+      const targetHasRole = targetRoles.includes('Global Staff')
+        || targetRoles.includes('Course Staff')
+        || targetRoles.includes('Course Instructor')
+        || targetRoles.includes('Administrator')
+        || targetRoles.includes('Community TA')
+        || targetRoles.includes('Group Moderator')
+        || targetRoles.includes('Staff') // Legacy
+        || targetRoles.includes('Moderator'); // Legacy
+
+      return !targetHasRole;
     }
 
-    // Learners can mute other learners but not staff
-    if (baseContent.authorLabel
-      && ['Staff', 'Moderator', 'Community TA'].includes(baseContent.authorLabel)) {
-      return false;
+    // Learners cannot mute staff/privileged users
+    if (baseContent.authorLabel) {
+      const targetRoles = getAuthorRoles(baseContent.authorLabel);
+      const targetHasRole = targetRoles.includes('Global Staff')
+        || targetRoles.includes('Course Staff')
+        || targetRoles.includes('Course Instructor')
+        || targetRoles.includes('Administrator')
+        || targetRoles.includes('Community TA')
+        || targetRoles.includes('Group Moderator')
+        || targetRoles.includes('Staff') // Legacy
+        || targetRoles.includes('Moderator'); // Legacy
+
+      if (targetHasRole) {
+        return false;
+      }
     }
 
     return true;
@@ -494,18 +535,27 @@ export function useActions(contentType, id, hasModerationPrivileges) {
     const userIsAdmin = roles.includes('Administrator');
     const userIsModerator = roles.includes('Moderator');
     const userHasDiscussionRole = userIsAdmin || userIsModerator;
-    const targetIsStaffBadge = baseContent?.authorLabel === 'Staff';
-    const targetIsDiscussionModerator = baseContent?.authorLabel === 'Moderator';
+
+    const targetRoles = getAuthorRoles(baseContent?.authorLabel);
+    const targetIsGlobalStaff = targetRoles.includes('Global Staff') || targetRoles.includes('Staff');
+    const targetIsDiscussionAdmin = targetRoles.includes('Administrator');
+    const targetIsDiscussionModerator = targetRoles.includes('Moderator');
+    const targetHasPrivilegedRole = targetIsGlobalStaff || targetIsDiscussionAdmin || targetIsDiscussionModerator;
 
     let shouldShowBanOption = true;
 
-    // Global Staff (no discussion role) cannot ban users with Staff or Moderator badges
-    if (isGlobalStaff && !userHasDiscussionRole && (targetIsStaffBadge || targetIsDiscussionModerator)) {
+    // Global Staff (no discussion role) cannot ban users with privileged roles
+    if (isGlobalStaff && !userHasDiscussionRole && targetHasPrivilegedRole) {
       shouldShowBanOption = false;
     }
 
-    // Discussion Moderator cannot ban another Discussion Moderator
-    if (userIsModerator && !userIsAdmin && targetIsDiscussionModerator) {
+    // Discussion Moderator cannot ban Discussion Admin or another Discussion Moderator
+    if (userIsModerator && !userIsAdmin && (targetIsDiscussionAdmin || targetIsDiscussionModerator)) {
+      shouldShowBanOption = false;
+    }
+
+    // Discussion Admin cannot ban another Discussion Admin
+    if (userIsAdmin && targetIsDiscussionAdmin) {
       shouldShowBanOption = false;
     }
 
@@ -779,6 +829,31 @@ export function truncatePath(path) {
 
 export function getAuthorLabel(intl, authorLabel) {
   const authorLabelMappings = {
+    'Global Staff': {
+      icon: Institution,
+      authorLabelMessage: intl.formatMessage(messages.authorLabelStaff),
+    },
+    'Course Staff': {
+      icon: Institution,
+      authorLabelMessage: intl.formatMessage(messages.authorLabelCourseStaff),
+    },
+    'Course Instructor': {
+      icon: Institution,
+      authorLabelMessage: intl.formatMessage(messages.authorLabelCourseInstructor),
+    },
+    Administrator: {
+      icon: School,
+      authorLabelMessage: intl.formatMessage(messages.authorLabelAdministrator),
+    },
+    'Community TA': {
+      icon: School,
+      authorLabelMessage: intl.formatMessage(messages.authorLabelTA),
+    },
+    'Group Moderator': {
+      icon: School,
+      authorLabelMessage: intl.formatMessage(messages.authorLabelGroupModerator),
+    },
+    // Legacy mappings for backward compatibility
     Staff: {
       icon: Institution,
       authorLabelMessage: intl.formatMessage(messages.authorLabelStaff),
@@ -787,13 +862,78 @@ export function getAuthorLabel(intl, authorLabel) {
       icon: School,
       authorLabelMessage: intl.formatMessage(messages.authorLabelModerator),
     },
+  };
+
+  if (!authorLabel) {
+    return {};
+  }
+
+  // Handle array or comma-separated roles: display the first matching role
+  const roles = getAuthorRoles(authorLabel);
+  for (const role of roles) {
+    if (authorLabelMappings[role]) {
+      return authorLabelMappings[role];
+    }
+  }
+
+  return {};
+}
+
+/**
+ * Returns an array of all matched role label entries for a comma-separated authorLabel string.
+ * Each entry contains { icon, authorLabelMessage, role }.
+ * Unrecognized roles are skipped. Returns an empty array if authorLabel is falsy.
+ * This function does NOT replace getAuthorLabel — it is additive for multi-role display.
+ *
+ * @param {Object} intl - react-intl intl object
+ * @param {string} authorLabel - comma-separated role string from the API
+ * @returns {Array<{icon: React.Component, authorLabelMessage: string, role: string}>}
+ */
+export function getAuthorLabels(intl, authorLabel) {
+  const authorLabelMappings = {
+    'Global Staff': {
+      icon: Institution,
+      authorLabelMessage: intl.formatMessage(messages.authorLabelStaff),
+    },
+    'Course Staff': {
+      icon: Institution,
+      authorLabelMessage: intl.formatMessage(messages.authorLabelCourseStaff),
+    },
+    'Course Instructor': {
+      icon: Institution,
+      authorLabelMessage: intl.formatMessage(messages.authorLabelCourseInstructor),
+    },
+    Administrator: {
+      icon: School,
+      authorLabelMessage: intl.formatMessage(messages.authorLabelAdministrator),
+    },
     'Community TA': {
       icon: School,
       authorLabelMessage: intl.formatMessage(messages.authorLabelTA),
     },
+    'Group Moderator': {
+      icon: School,
+      authorLabelMessage: intl.formatMessage(messages.authorLabelGroupModerator),
+    },
+    // Legacy mappings for backward compatibility
+    Staff: {
+      icon: Institution,
+      authorLabelMessage: intl.formatMessage(messages.authorLabelStaff),
+    },
+    Moderator: {
+      icon: School,
+      authorLabelMessage: intl.formatMessage(messages.authorLabelModerator),
+    },
   };
 
-  return authorLabelMappings[authorLabel] || {};
+  if (!authorLabel) {
+    return [];
+  }
+
+  const roles = getAuthorRoles(authorLabel);
+  return roles
+    .filter(role => Boolean(authorLabelMappings[role]))
+    .map(role => ({ ...authorLabelMappings[role], role }));
 }
 
 export const extractContent = (content) => {

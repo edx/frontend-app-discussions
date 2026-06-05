@@ -10,10 +10,10 @@ import * as timeago from 'timeago.js';
 
 import { useIntl } from '@edx/frontend-platform/i18n';
 
-import { Routes } from '../../data/constants';
+import { AvatarOutlineAndLabelColors, Routes } from '../../data/constants';
 import { useLearnerStatus } from '../data/hooks/useLearnerStatus';
 import messages from '../messages';
-import { getAuthorLabel } from '../utils';
+import { getAuthorLabel, getAuthorLabels } from '../utils';
 import DiscussionContext from './context';
 import timeLocale from './time-locale';
 
@@ -33,8 +33,13 @@ const AuthorLabel = ({
   timeago.register('time-locale', timeLocale);
   const intl = useIntl();
   const { courseId, enableInContextSidebar } = useContext(DiscussionContext);
-  const { icon, authorLabelMessage } = useMemo(
+  const { authorLabelMessage } = useMemo(
     () => getAuthorLabel(intl, authorLabel),
+    [authorLabel, intl],
+  );
+  // All matched roles for multi-role display
+  const authorRolesList = useMemo(
+    () => getAuthorLabels(intl, authorLabel),
     [authorLabel, intl],
   );
   const { isNewLearner, isRegularLearner } = useLearnerStatus(
@@ -51,12 +56,14 @@ const AuthorLabel = ({
     return personalMutedUsers.includes(author) || courseWideMutedUsers.includes(author);
   }, [author, personalMutedUsers, courseWideMutedUsers]);
 
+  // For multi-role display, avoid applying one shared color to the whole row.
+  const appliedLabelColor = authorRolesList.length > 1 ? '' : labelColor;
+
   const isRetiredUser = author ? author.startsWith('retired__user') : false;
-  const showTextPrimary = !authorLabelMessage && !isRetiredUser && !alert;
   const className = classNames(
     'd-flex align-items-center',
     { 'mb-0.5': !postOrComment },
-    labelColor,
+    appliedLabelColor,
   );
 
   // Check if user is banned from postData
@@ -68,13 +75,6 @@ const AuthorLabel = ({
     && author !== intl.formatMessage(messages.anonymous)
     && !enableInContextSidebar
   );
-  const canDisplayLearnerRole = Boolean(
-    author
-    && !isRetiredUser
-    && author !== intl.formatMessage(messages.anonymous),
-  );
-
-  const hasRecognizedAuthorRole = Boolean(authorLabelMessage && icon);
 
   const authorName = useMemo(
     () => (
@@ -82,6 +82,7 @@ const AuthorLabel = ({
         className={classNames('mr-1.5 font-style font-weight-500 author-name', {
           'text-gray-700': isRetiredUser || !author,
           'text-primary-500': !authorLabelMessage && !isRetiredUser && author,
+          [labelColor]: !!authorLabelMessage && !isRetiredUser && author && !!labelColor,
         })}
         role="heading"
         aria-level="2"
@@ -89,7 +90,7 @@ const AuthorLabel = ({
         {isRetiredUser ? '[Deactivated]' : (author || '[Deleted User]')}
       </span>
     ),
-    [author, authorLabelMessage, isRetiredUser],
+    [author, authorLabelMessage, isRetiredUser, labelColor],
   );
 
   const createLearnerMessage = useCallback(
@@ -179,7 +180,9 @@ const AuthorLabel = ({
 
   const roleContents = useMemo(
     () => {
-      if (hasRecognizedAuthorRole) {
+      if (authorRolesList.length > 0) {
+        const firstRole = authorRolesList[0].role;
+
         return (
           <OverlayTrigger
             placement={authorToolTip ? 'top' : 'right'}
@@ -188,11 +191,13 @@ const AuthorLabel = ({
                 id={
                   authorToolTip
                     ? `endorsed-by-${author}-tooltip`
-                    : `${authorLabel}-label-tooltip`
+                    : `${firstRole.toLowerCase().replace(/\s+/g, '-')}-label-tooltip`
                 }
               >
                 <>
-                  {authorToolTip ? author : authorLabel}
+                  {authorToolTip
+                    ? author
+                    : authorRolesList.map(role => role.authorLabelMessage).join(', ')}
                   <br />
                   {intl.formatMessage(messages.authorAdminDescription)}
                 </>
@@ -200,40 +205,45 @@ const AuthorLabel = ({
             )}
             trigger={['hover', 'focus']}
           >
-            <div className={classNames('d-flex flex-row align-items-center')}>
-              <Icon
-                style={{
-                  width: '1rem',
-                  height: '1rem',
-                }}
-                src={icon}
-                data-testid="author-icon"
-              />
-              <span
-                className={classNames('mr-1.5 font-style font-weight-500', {
-                  'text-primary-500': showTextPrimary,
-                  'text-gray-700': isRetiredUser,
-                })}
-                style={{ marginLeft: '2px' }}
-              >
-                {authorLabelMessage}
-              </span>
+            <div className="d-flex flex-row align-items-center author-role-label">
+              {authorRolesList.map((roleEntry, index) => (
+                <React.Fragment key={roleEntry.role}>
+                  {index > 0 && (
+                    <span className="font-style font-weight-500" style={{ margin: '0 2px' }}>,</span>
+                  )}
+                  <span
+                    className={classNames(
+                      'd-flex flex-row align-items-center',
+                      AvatarOutlineAndLabelColors[roleEntry.role]
+                      && `text-${AvatarOutlineAndLabelColors[roleEntry.role]}`,
+                    )}
+                  >
+                    <Icon
+                      style={{
+                        width: '1rem',
+                        height: '1rem',
+                        flexShrink: 0,
+                        marginLeft: index === 0 ? '0' : '2px',
+                      }}
+                      src={roleEntry.icon}
+                      data-testid="author-icon"
+                    />
+                    <span
+                      className="font-style font-weight-500"
+                      style={{
+                        marginLeft: '2px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {roleEntry.authorLabelMessage}
+                    </span>
+                  </span>
+                </React.Fragment>
+              ))}
             </div>
           </OverlayTrigger>
-        );
-      }
-
-      if (canDisplayLearnerRole) {
-        return (
-          <span
-            className={classNames('font-style font-weight-400', {
-              'text-white': alert,
-              'text-gray-600': !alert,
-            })}
-            style={{ fontSize: '12px', lineHeight: '16px' }}
-          >
-            {intl.formatMessage(messages.learnerMessage)}
-          </span>
         );
       }
 
@@ -241,16 +251,9 @@ const AuthorLabel = ({
     },
     [
       author,
-      authorLabel,
-      authorLabelMessage,
+      authorRolesList,
       authorToolTip,
-      canDisplayLearnerRole,
-      hasRecognizedAuthorRole,
-      icon,
       intl,
-      isRetiredUser,
-      showTextPrimary,
-      alert,
     ],
   );
 
@@ -288,7 +291,7 @@ const AuthorLabel = ({
   if (singleLine) {
     return (
       <div className={className}>
-        <div className={classNames('d-flex align-items-center flex-nowrap', labelColor)}>
+        <div className={classNames('d-flex align-items-center flex-nowrap', appliedLabelColor)} style={{ minWidth: 0, overflow: 'hidden' }}>
           {showUserNameAsLink ? learnerPostsLink : authorName}
           {roleBeforeTimestamp && roleContents}
           {timestamp}
@@ -301,12 +304,12 @@ const AuthorLabel = ({
 
   return showUserNameAsLink ? (
     <div className={`${className} flex-wrap`}>
-      <div className="d-flex flex-column w-100">
-        <div className={classNames('d-flex align-items-center', labelColor)}>
+      <div className="d-flex flex-column w-100" style={{ minWidth: 0 }}>
+        <div className={classNames('d-flex align-items-center', appliedLabelColor)} style={{ minWidth: 0, overflow: 'hidden' }}>
           {learnerPostsLink}
           {timestamp}
         </div>
-        <div className={classNames('d-flex align-items-center', labelColor)}>
+        <div className={classNames('d-flex align-items-center', appliedLabelColor)} style={{ minWidth: 0, overflow: 'hidden' }}>
           {roleContents}
           {bannedIndicator}
         </div>
@@ -315,12 +318,12 @@ const AuthorLabel = ({
     </div>
   ) : (
     <div className={`${className} flex-wrap`}>
-      <div className="d-flex flex-column w-100">
-        <div className={classNames('d-flex align-items-center', labelColor)}>
+      <div className="d-flex flex-column w-100" style={{ minWidth: 0 }}>
+        <div className={classNames('d-flex align-items-center', appliedLabelColor)} style={{ minWidth: 0, overflow: 'hidden' }}>
           {authorName}
           {timestamp}
         </div>
-        <div className={classNames('d-flex align-items-center', labelColor)}>
+        <div className={classNames('d-flex align-items-center', appliedLabelColor)} style={{ minWidth: 0, overflow: 'hidden' }}>
           {roleContents}
           {bannedIndicator}
         </div>
@@ -332,7 +335,7 @@ const AuthorLabel = ({
 
 AuthorLabel.propTypes = {
   author: PropTypes.string,
-  authorLabel: PropTypes.string,
+  authorLabel: PropTypes.oneOfType([PropTypes.string, PropTypes.arrayOf(PropTypes.string)]),
   linkToProfile: PropTypes.bool,
   labelColor: PropTypes.string,
   alert: PropTypes.bool,

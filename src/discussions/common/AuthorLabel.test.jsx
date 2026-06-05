@@ -74,7 +74,7 @@ describe('Author label', () => {
     ['ta_user', 'Community TA', true, 'text-TA-color'],
     ['moderator_user', 'Moderator', true, 'text-TA-color'],
     ['retired__user', null, false, ''],
-    ['staff_user', 'Staff', true, 'text-staff-color'],
+    ['staff_user', 'Global Staff', true, 'text-staff-color'],
     ['learner_user', null, false, ''],
   ])('for %s', (author, authorLabel, linkToProfile, labelColor) => {
     it(
@@ -115,16 +115,16 @@ describe('Author label', () => {
       async () => {
         renderComponent(author, authorLabel, linkToProfile, labelColor);
         const roleLabelByAuthorLabel = {
-          'Community TA': 'CTA',
-          Moderator: 'TA',
-          Staff: 'Staff',
+          'Community TA': 'Community TA',
+          Moderator: 'Discussion Moderator',
+          Staff: 'Global Staff',
         };
         const expectedRoleLabel = roleLabelByAuthorLabel[authorLabel];
 
         if (linkToProfile && expectedRoleLabel) {
           expect(screen.getByText(expectedRoleLabel)).toBeInTheDocument();
         } else {
-          expect(screen.queryByText('CTA')).not.toBeInTheDocument();
+          expect(screen.queryByText('Community TA')).not.toBeInTheDocument();
           expect(screen.queryByText('TA')).not.toBeInTheDocument();
           expect(screen.queryByText('Staff')).not.toBeInTheDocument();
         }
@@ -238,7 +238,7 @@ describe('Author label', () => {
       it('should not display regular learner message in sidebar', () => {
         const postData = { learner_status: 'regular' };
         renderComponent('testuser', null, false, '', false, postData, false);
-        expect(screen.getByText('Learner')).toBeInTheDocument();
+        expect(screen.queryByText('Learner')).not.toBeInTheDocument();
         expect(screen.queryByText('👋 Hi, I am a new learner')).not.toBeInTheDocument();
       });
 
@@ -269,7 +269,7 @@ describe('Author label', () => {
         </IntlProvider>,
       );
 
-      const roleLabel = screen.getByText('Staff');
+      const roleLabel = screen.getByText('Global Staff');
       const timestamp = document.querySelector('.post-summary-timestamp');
 
       expect(timestamp).toBeInTheDocument();
@@ -300,7 +300,7 @@ describe('Author label', () => {
       const authorElement = container.querySelector('[role=heading]');
       expect(authorElement).toHaveTextContent('[Deleted User]');
       // Should still show the staff label even though author is null
-      expect(container).toHaveTextContent('Staff');
+      expect(container).toHaveTextContent('Global Staff');
     });
 
     it('should not display learner messages when author is null', () => {

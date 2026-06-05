@@ -31,6 +31,7 @@ import { selectAuthorAvatar } from '../../../posts/data/selectors';
 import { fetchThread } from '../../../posts/data/thunks';
 import DeleteWithBanConfirmation from '../../../posts/post/DeleteWithBanConfirmation';
 import postMessages from '../../../posts/post/messages';
+import { getAuthorRoles } from '../../../utils';
 import {
   selectCommentOrResponseById,
 } from '../../data/selectors';
@@ -42,10 +43,11 @@ const Reply = ({ responseId }) => {
   timeago.register('time-locale', timeLocale);
   const commentData = useSelector(selectCommentOrResponseById(responseId));
   const {
-    id, abuseFlagged, author, authorLabel, endorsed, lastEdit, closed, closedBy,
+    id, abuseFlagged, author, authorLabel: rawAuthorLabel, authorLabels, endorsed, lastEdit, closed, closedBy,
     closeReason, createdAt, threadId, parentId, rawBody, renderedBody, editByLabel,
     closedByLabel, isDeleted, deletedBy, deletedByLabel, is_spam: isSpam,
   } = commentData;
+  const authorLabel = (authorLabels && authorLabels.length > 0) ? authorLabels : rawAuthorLabel;
   const intl = useIntl();
   const dispatch = useDispatch();
   const { courseId, enableDiscussionBan } = React.useContext(DiscussionContext);
@@ -66,7 +68,8 @@ const Reply = ({ responseId }) => {
   const [isMutingCoursewide, showMuteCourseConfirmation, hideMuteCourseConfirmation] = useToggle(false);
   const [isUnmutingPersonal, showUnmutePersonalConfirmation, hideUnmutePersonalConfirmation] = useToggle(false);
   const [isUnmutingCoursewide, showUnmuteCourseConfirmation, hideUnmuteCourseConfirmation] = useToggle(false);
-  const colorClass = AvatarOutlineAndLabelColors[authorLabel];
+  const firstRole = getAuthorRoles(authorLabel)[0];
+  const colorClass = AvatarOutlineAndLabelColors[firstRole];
   const isSpamFlagged = isSpam || false;
   const hasAnyAlert = useAlertBannerVisible({
     author,
