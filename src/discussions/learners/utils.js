@@ -16,6 +16,7 @@ import {
   selectUserIsStaff,
   selectUserRoles,
 } from '../data/selectors';
+import { getAuthorRoles } from '../utils';
 import { checkBanActionDisabled } from '../utils/banUtils';
 import { BAN_SCOPES } from './data/constants';
 import messages from './messages';
@@ -135,17 +136,35 @@ export function useLearnerActions(
     const userIsAdmin = roles.includes('Administrator');
     const userIsModerator = roles.includes('Moderator');
     const userHasDiscussionRole = userIsAdmin || userIsModerator;
-    const targetIsStaffBadge = targetAuthorLabel === 'Staff';
-    const targetIsDiscussionModerator = targetAuthorLabel === 'Moderator';
+
+    // Check target user's role badges (handle both new and legacy label formats)
+    const targetRoles = getAuthorRoles(targetAuthorLabel);
+
+    const targetIsGlobalStaff = targetRoles.includes('Global Staff')
+      || targetRoles.includes('Staff');
+
+    const targetIsDiscussionAdmin = targetRoles.includes('Administrator');
+
+    const targetIsDiscussionModerator = targetRoles.includes('Moderator');
+
+    const targetHasPrivilegedRole = targetIsGlobalStaff
+      || targetIsDiscussionAdmin
+      || targetIsDiscussionModerator;
+
     let shouldShowBanOption = true;
 
-    // Global Staff (no discussion role) cannot ban users with Staff or Moderator badges
-    if (userIsGlobalStaff && !userHasDiscussionRole && (targetIsStaffBadge || targetIsDiscussionModerator)) {
+    // Global Staff (no discussion role) cannot ban users with privileged roles
+    if (userIsGlobalStaff && !userHasDiscussionRole && targetHasPrivilegedRole) {
       shouldShowBanOption = false;
     }
 
-    // Discussion Moderator cannot ban another Discussion Moderator
-    if (userIsModerator && !userIsAdmin && targetIsDiscussionModerator) {
+    // Discussion Moderator cannot ban Discussion Admin or another Discussion Moderator
+    if (userIsModerator && !userIsAdmin && (targetIsDiscussionAdmin || targetIsDiscussionModerator)) {
+      shouldShowBanOption = false;
+    }
+
+    // Discussion Admin cannot ban another Discussion Admin
+    if (userIsAdmin && targetIsDiscussionAdmin) {
       shouldShowBanOption = false;
     }
 

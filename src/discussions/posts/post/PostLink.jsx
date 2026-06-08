@@ -12,7 +12,7 @@ import { useIntl } from '@edx/frontend-platform/i18n';
 import { AvatarOutlineAndLabelColors, Routes, ThreadType } from '../../../data/constants';
 import AuthorLabel from '../../common/AuthorLabel';
 import DiscussionContext from '../../common/context';
-import { discussionsPath, isPostPreviewAvailable } from '../../utils';
+import { discussionsPath, getAuthorRoles, isPostPreviewAvailable } from '../../utils';
 import { selectThread } from '../data/selectors';
 import messages from './messages';
 import { PostAvatar } from './PostHeader';
@@ -35,10 +35,33 @@ const PostLink = ({
   } = useContext(DiscussionContext);
   const threadData = useSelector(selectThread(postId));
   const {
-    topicId, hasEndorsed, type, author, authorLabel, abuseFlagged, abuseFlaggedCount, read, commentCount,
-    unreadCommentCount, id, pinned, previewBody, title, voted, voteCount, following, groupId, groupName, createdAt,
-    users: postUsers, isDeleted, threadTitle, commentThreadId,
+    topicId,
+    hasEndorsed,
+    type,
+    author,
+    authorLabel: rawAuthorLabel,
+    authorLabels,
+    abuseFlagged,
+    abuseFlaggedCount,
+    read,
+    commentCount,
+    unreadCommentCount,
+    id,
+    pinned,
+    previewBody,
+    title,
+    voted,
+    voteCount,
+    following,
+    groupId,
+    groupName,
+    createdAt,
+    users: postUsers,
+    isDeleted,
+    threadTitle,
+    commentThreadId,
   } = threadData;
+  const authorLabel = (authorLabels && authorLabels.length > 0) ? authorLabels : rawAuthorLabel;
 
   // Get the type label to display
   const getTypeLabel = () => {
@@ -75,7 +98,8 @@ const PostLink = ({
     learnerUsername,
   })();
   const showAnsweredBadge = hasEndorsed && type === ThreadType.QUESTION;
-  const authorLabelColor = AvatarOutlineAndLabelColors[authorLabel];
+  const firstRole = getAuthorRoles(authorLabel)[0];
+  const authorLabelColor = AvatarOutlineAndLabelColors[firstRole];
   const canSeeReportedBadge = !!(abuseFlagged || abuseFlaggedCount);
   const isPostRead = read || (!read && commentCount !== unreadCommentCount);
   const shouldUseSingleLineAuthorRole = ['learners', 'posts', 'my-posts'].includes(page);

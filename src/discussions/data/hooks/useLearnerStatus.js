@@ -9,15 +9,17 @@ import { useMemo } from 'react';
  * @param {Object} postData - The thread or comment data from the API that includes learner_status field
  * @param {string} author - The username of the author; used to check for anonymous and retired users
  * to suppress learner messages
- * @param {string} authorLabel - The author's role label (Staff, Moderator, etc.)
+ * @param {string|string[]|null} authorLabel - The author's role label(s)
  * @returns {Object} - { isNewLearner: boolean, isRegularLearner: boolean }
  */
 export const useLearnerStatus = (postData, author, authorLabel) => useMemo(() => {
+  const hasAuthorRole = Array.isArray(authorLabel) ? authorLabel.length > 0 : Boolean(authorLabel);
+
   // Users with special roles (Staff, Moderator, Community TA) should not display learner messages
   // Anonymous, retired, and deleted users should also not display learner messages
   if (
     !author
-    || authorLabel
+    || hasAuthorRole
     || author === 'anonymous'
     || author.startsWith('retired__user')
   ) {

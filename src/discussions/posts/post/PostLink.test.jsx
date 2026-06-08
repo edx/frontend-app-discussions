@@ -158,7 +158,9 @@ describe('Post username', () => {
       const authorName = screen.getByRole('heading', { name: 'staff-user' });
       const singleLineRow = authorName.closest('div.d-flex.align-items-center.flex-nowrap');
       expect(singleLineRow).toBeInTheDocument();
-      expect(within(singleLineRow).getByText('Staff')).toBeInTheDocument();
+      expect(
+        within(singleLineRow).getByText((content) => content.includes('Global Staff')),
+      ).toBeInTheDocument();
     },
   );
 });

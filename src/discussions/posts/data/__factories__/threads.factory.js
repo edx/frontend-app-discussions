@@ -31,6 +31,7 @@ Factory.define('thread')
     author: 'test_user',
     author_id: '1',
     author_label: null,
+    author_labels: null,
     abuse_flagged: false,
     can_delete: true,
     voted: false,

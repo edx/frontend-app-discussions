@@ -36,7 +36,7 @@ import {
 import { muteUserThunk, unmuteUserThunk } from '../../data/thunks';
 import discussionMessages from '../../messages';
 import { selectTopic } from '../../topics/data/selectors';
-import { truncatePath } from '../../utils';
+import { getAuthorRoles, truncatePath } from '../../utils';
 import { selectThread } from '../data/selectors';
 import {
   fetchThread,
@@ -73,10 +73,38 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
 
   const threadData = useSelector(selectThread(postId));
   const {
-    topicId, abuseFlagged, closed, pinned, voted, hasEndorsed, following, closedBy, voteCount, groupId, groupName,
-    closeReason, authorLabel, type: postType, author, title, createdAt, renderedBody, lastEdit, editByLabel,
-    closedByLabel, users: postUsers, isDeleted, deletedBy, deletedByLabel, is_spam: isSpam,
+    topicId,
+    abuseFlagged,
+    closed,
+    pinned,
+    voted,
+    hasEndorsed,
+    following,
+    closedBy,
+    voteCount,
+    groupId,
+    groupName,
+    closeReason,
+    authorLabel: rawAuthorLabel,
+    authorLabels,
+    type: postType,
+    author,
+    title,
+    createdAt,
+    renderedBody,
+    lastEdit,
+    editByLabel,
+    closedByLabel,
+    users: postUsers,
+    isDeleted,
+    deletedBy,
+    deletedByLabel,
+    is_spam: isSpam,
   } = threadData;
+
+  // Prefer the new authorLabels array when available; fall back to the legacy string.
+  // This keeps a single variable flowing through the entire component tree.
+  const authorLabel = (authorLabels && authorLabels.length > 0) ? authorLabels : rawAuthorLabel;
 
   const intl = useIntl();
   const location = useLocation();
@@ -98,18 +126,29 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
   // Compute shouldShowBanOption per authority table
   const userIsAdmin = (userRoles || []).includes('Administrator');
   const userIsModerator = (userRoles || []).includes('Moderator');
-  const userIsDiscussionAdmin = (userRoles || []).includes('Discussion Admin');
-  const userHasDiscussionRole = userIsAdmin || userIsModerator || userIsDiscussionAdmin;
-  const targetIsStaffBadge = authorLabel === 'Staff';
-  const targetIsDiscussionModerator = authorLabel === 'Moderator';
-  const targetIsDiscussionAdmin = authorLabel === 'Discussion Admin';
+  const userHasDiscussionRole = userIsAdmin || userIsModerator;
+
+  // Check target user's role badges (authorLabel can be comma-separated for multi-role users)
+  const targetRoles = getAuthorRoles(authorLabel);
+
+  const targetIsGlobalStaff = targetRoles.includes('Global Staff')
+    || targetRoles.includes('Staff');
+
+  const targetIsDiscussionAdmin = targetRoles.includes('Administrator');
+
+  const targetIsDiscussionModerator = targetRoles.includes('Moderator');
+
+  const targetHasPrivilegedRole = targetIsGlobalStaff
+    || targetIsDiscussionAdmin
+    || targetIsDiscussionModerator;
+
   let shouldShowBanOption = true;
 
-  // Global Staff without discussion role cannot ban  Moderator
+  // Global Staff without discussion role cannot ban privileged users
   if (
     isGlobalStaff
     && !userHasDiscussionRole
-    && (targetIsStaffBadge || targetIsDiscussionModerator || targetIsDiscussionAdmin)
+    && targetHasPrivilegedRole
   ) {
     shouldShowBanOption = false;
   }
@@ -117,10 +156,11 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
   if (userIsModerator && !userIsAdmin && (targetIsDiscussionModerator || targetIsDiscussionAdmin)) {
     shouldShowBanOption = false;
   }
-  // Discussion Admin cannot ban another Admin or Moderator
-  if (userIsDiscussionAdmin && (targetIsDiscussionAdmin || targetIsDiscussionModerator)) {
+  // Discussion Admin cannot ban another Admin
+  if (userIsAdmin && targetIsDiscussionAdmin) {
     shouldShowBanOption = false;
   }
+
   const shouldShowEmailConfirmation = useSelector(selectShouldShowEmailConfirmation);
   const enableDiscussionBan = useSelector(state => state.config.enableDiscussionBan);
   const contentCreationRateLimited = useSelector(selectContentCreationRateLimited);
@@ -629,15 +669,15 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
         isUserBanned={isUserBanned}
       />
       {
-    isDeleted && deletedBy && (
-      <DeletedByBanner
-        deletedBy={deletedBy}
-        deletedByLabel={deletedByLabel}
-        message={intl.formatMessage(messages.deletedBy)}
-        postData={threadData}
-      />
-    )
-  }
+        isDeleted && deletedBy && (
+          <DeletedByBanner
+            deletedBy={deletedBy}
+            deletedByLabel={deletedByLabel}
+            message={intl.formatMessage(messages.deletedBy)}
+            postData={threadData}
+          />
+        )
+      }
       <AlertBanner
         author={author}
         abuseFlagged={abuseFlagged}
@@ -667,48 +707,48 @@ const Post = ({ handleAddResponseButton, openRestrictionDialogue }) => {
         <HTMLLoader htmlNode={renderedBody} componentId="post" cssClassName="html-loader w-100" testId={postId} />
       </div>
       {
-    (topicContext || topic) && (
-      <div
-        className={classNames('mt-14px font-style', { 'w-100': enableInContextSidebar, 'mb-1': !displayPostFooter })}
-        style={{ lineHeight: '20px' }}
-      >
-        <span className="text-gray-500" style={{ lineHeight: '20px' }}>
-          {intl.formatMessage(messages.relatedTo)}{' '}
-        </span>
-        <Hyperlink
-          target="_top"
-          destination={topicContext ? (
-            topicContext.unitLink
-          ) : (
-            `${getConfig().BASE_URL}/${courseId}/topics/${topicId}`
-          )}
-        >
-          {(topicContext && !topic) ? (
-            <span>
-              {topicContext.chapterName} / {topicContext.verticalName} / {topicContext.unitName}
+        (topicContext || topic) && (
+          <div
+            className={classNames('mt-14px font-style', { 'w-100': enableInContextSidebar, 'mb-1': !displayPostFooter })}
+            style={{ lineHeight: '20px' }}
+          >
+            <span className="text-gray-500" style={{ lineHeight: '20px' }}>
+              {intl.formatMessage(messages.relatedTo)}{' '}
             </span>
-          ) : (
-            getTopicInfo(topic)
-          )}
-        </Hyperlink>
-      </div>
-    )
-  }
+            <Hyperlink
+              target="_top"
+              destination={topicContext ? (
+                topicContext.unitLink
+              ) : (
+                `${getConfig().BASE_URL}/${courseId}/topics/${topicId}`
+              )}
+            >
+              {(topicContext && !topic) ? (
+                <span>
+                  {topicContext.chapterName} / {topicContext.verticalName} / {topicContext.unitName}
+                </span>
+              ) : (
+                getTopicInfo(topic)
+              )}
+            </Hyperlink>
+          </div>
+        )
+      }
       {
-    displayPostFooter && (
-      <PostFooter
-        id={postId}
-        voteCount={voteCount}
-        voted={voted}
-        following={following}
-        groupId={toString(groupId)}
-        groupName={groupName}
-        closed={closed}
-        userHasModerationPrivileges={userHasModerationPrivileges}
-        isUserBanned={isUserBanned}
-      />
-    )
-  }
+        displayPostFooter && (
+          <PostFooter
+            id={postId}
+            voteCount={voteCount}
+            voted={voted}
+            following={following}
+            groupId={toString(groupId)}
+            groupName={groupName}
+            closed={closed}
+            userHasModerationPrivileges={userHasModerationPrivileges}
+            isUserBanned={isUserBanned}
+          />
+        )
+      }
       <ClosePostReasonModal
         isOpen={isClosing}
         onCancel={hideModal}
