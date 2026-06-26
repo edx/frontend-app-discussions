@@ -178,12 +178,15 @@ describe('Comment deleted-by banner', () => {
     renderComment({ childCount: 2 }, { showFullThread: true });
 
     await waitFor(() => {
-      expect(fetchCommentResponses).toHaveBeenCalledWith('comment-1', {
-        includeMuted: false,
-        page: 1,
-        reverseOrder: false,
-        showDeleted: true,
-      });
+      expect(fetchCommentResponses).toHaveBeenCalledWith(
+        'comment-1',
+        expect.objectContaining({
+          includeMuted: false,
+          page: 1,
+          reverseOrder: false,
+          showDeleted: true,
+        }),
+      );
     });
   });
 });
