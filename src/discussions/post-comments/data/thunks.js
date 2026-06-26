@@ -6,13 +6,14 @@ import { setContentCreationRateLimited } from '../../data/slices';
 import { updateThreadAbuseFlaggedCount } from '../../posts/data/slices';
 import { getHttpErrorStatus } from '../../utils';
 import {
-  deleteComment, getCommentResponses, getThreadComments, postComment, updateComment,
+  deleteComment, getBatchCommentResponses, getCommentResponses, getThreadComments, postComment, updateComment,
 } from './api';
 import {
   deleteCommentDenied,
   deleteCommentFailed,
   deleteCommentRequest,
   deleteCommentSuccess,
+  fetchBatchCommentResponsesSuccess,
   fetchCommentResponsesDenied,
   fetchCommentResponsesFailed,
   fetchCommentResponsesRequest,
@@ -92,7 +93,7 @@ export function fetchThreadComments(
 ) {
   return async (dispatch, getState) => {
     try {
-      dispatch(fetchCommentsRequest());
+      dispatch(fetchCommentsRequest(page === 1 ? { threadId } : {}));
       const enableDiscussionBan = selectEnableDiscussionBan(getState());
       const data = await getThreadComments(threadId, {
         page, reverseOrder, threadType, enableInContextSidebar, showDeleted, enableDiscussionBan, signal, includeMuted,
@@ -114,14 +115,14 @@ export function fetchThreadComments(
 }
 
 export function fetchCommentResponses(commentId, {
-  page = 1, reverseOrder = true, showDeleted = false, includeMuted,
+  page = 1, reverseOrder = true, signal, includeMuted, showDeleted,
 } = {}) {
   return async (dispatch, getState) => {
     try {
       dispatch(fetchCommentResponsesRequest({ commentId }));
       const enableDiscussionBan = selectEnableDiscussionBan(getState());
       const data = await getCommentResponses(commentId, {
-        page, reverseOrder, showDeleted, enableDiscussionBan, includeMuted,
+        page, reverseOrder, signal, includeMuted, showDeleted, enableDiscussionBan,
       });
       dispatch(fetchCommentResponsesSuccess({
         ...normaliseComments(camelCaseObject(data)),
@@ -129,10 +130,13 @@ export function fetchCommentResponses(commentId, {
         commentId,
       }));
     } catch (error) {
+      if (error.name === 'AbortError' || error?.code === 'ERR_CANCELED') {
+        return;
+      }
       if (getHttpErrorStatus(error) === 403) {
-        dispatch(fetchCommentResponsesDenied());
+        dispatch(fetchCommentResponsesDenied({ commentId }));
       } else {
-        dispatch(fetchCommentResponsesFailed());
+        dispatch(fetchCommentResponsesFailed({ commentId }));
       }
       logError(error);
     }
@@ -221,6 +225,51 @@ export function performRestoreComment(commentId, courseId) {
     } catch (error) {
       logError(error);
       return { success: false, error: error.message };
+    }
+  };
+}
+
+/**
+ * Fetches child replies for multiple parent response IDs in a single batch request.
+ * Used when a thread loads and multiple responses have children.
+ *
+ * @param {string[]} parentIds - Array of parent comment IDs with children
+ * @param {Object} options
+ */
+export function fetchBatchCommentResponses(parentIds, {
+  reverseOrder = true, signal, includeMuted, showDeleted,
+} = {}) {
+  return async (dispatch, getState) => {
+    try {
+      dispatch(fetchCommentResponsesRequest({ commentId: parentIds[0] }));
+      const enableDiscussionBan = selectEnableDiscussionBan(getState());
+      const data = await getBatchCommentResponses(parentIds, {
+        reverseOrder, signal, includeMuted, showDeleted, enableDiscussionBan,
+      });
+
+      // Normalize each parent's results and build a batchResults map
+      const batchResults = {};
+      Object.entries(data.results).forEach(([parentId, parentData]) => {
+        const normalized = normaliseComments(camelCaseObject({
+          results: parentData.results,
+          pagination: parentData.pagination,
+        }));
+        batchResults[parentId] = {
+          ...normalized,
+          page: normalized.pagination?.currentPage || 1,
+          pagination: normalized.pagination,
+          commentsInComments: normalized.commentsInComments,
+          commentsById: normalized.commentsById,
+        };
+      });
+
+      dispatch(fetchBatchCommentResponsesSuccess({ batchResults }));
+    } catch (error) {
+      if (error.name === 'AbortError' || error?.code === 'ERR_CANCELED') {
+        return;
+      }
+      dispatch(fetchCommentResponsesFailed({}));
+      logError(error);
     }
   };
 }

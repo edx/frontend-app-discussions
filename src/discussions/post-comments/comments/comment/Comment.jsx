@@ -74,6 +74,7 @@ const Comment = ({
   commentId,
   marginBottom,
   showFullThread = true,
+  skipChildFetch = false,
   openRestrictionDialogue,
 }) => {
   const comment = useSelector(selectCommentOrResponseById(commentId));
@@ -195,16 +196,23 @@ const Comment = ({
   // If isSpam is not provided in the API response, default to false
   const isSpamFlagged = isSpam || false;
   useEffect(() => {
-    // If the comment has a parent comment, it won't have any children, so don't fetch them.
+    // If batch already fetched children from CommentsView, skip individual fetch.
+    if (skipChildFetch) {
+      return undefined;
+    }
     if (hasChildren && showFullThread) {
+      const abortController = new AbortController();
       dispatch(fetchCommentResponses(id, {
         page: 1,
         reverseOrder: sortedOrder,
         includeMuted: shouldIncludeMuted,
         showDeleted,
+        signal: abortController.signal,
       }));
+      return () => { abortController.abort(); };
     }
-  }, [id, sortedOrder, showDeleted, shouldIncludeMuted]);
+    return undefined;
+  }, [id, sortedOrder, showDeleted, shouldIncludeMuted, skipChildFetch]);
 
   const endorseIcons = useMemo(() => (
     actions.find(({ action }) => action === EndorsementStatus.ENDORSED)
@@ -690,12 +698,14 @@ Comment.propTypes = {
   commentId: PropTypes.string.isRequired,
   marginBottom: PropTypes.bool,
   showFullThread: PropTypes.bool,
+  skipChildFetch: PropTypes.bool,
   openRestrictionDialogue: PropTypes.func.isRequired,
 };
 
 Comment.defaultProps = {
   marginBottom: false,
   showFullThread: true,
+  skipChildFetch: false,
 };
 
 export default React.memo(withPostingRestrictions(Comment));

@@ -55,7 +55,7 @@ export const getThreadComments = async (threadId, {
     includeMuted,
   });
 
-  const { data } = await getAuthenticatedHttpClient().get(getCommentsApiUrl(), { params: { ...params, signal } });
+  const { data } = await getAuthenticatedHttpClient().get(getCommentsApiUrl(), { params, signal });
   return data;
 };
 
@@ -70,22 +70,22 @@ export const getCommentResponses = async (commentId, {
   page,
   pageSize,
   reverseOrder,
-  showDeleted = false,
-  enableDiscussionBan = false,
+  signal,
   includeMuted,
+  showDeleted,
+  enableDiscussionBan = false,
 } = {}) => {
   const url = `${getCommentsApiUrl()}${commentId}/`;
-
   const params = snakeCaseObject({
     page,
     pageSize,
     requestedFields: buildRequestedFields(enableDiscussionBan),
-    includeMuted,
     reverseOrder,
+    includeMuted,
     showDeleted,
   });
-
-  const { data } = await getAuthenticatedHttpClient().get(url, { params });
+  const { data } = await getAuthenticatedHttpClient()
+    .get(url, { params, signal });
   return data;
 };
 /**
@@ -164,5 +164,38 @@ export const restoreComment = async (commentId, courseId) => {
     content_id: commentId,
     course_id: courseId,
   });
+  return data;
+};
+
+/**
+ * Fetches child replies for multiple parent response IDs in a single request.
+ * @param {string[]} parentIds - Array of parent comment IDs
+ * @param {Object} options
+ * @param {number} [options.pageSize]
+ * @param {boolean} [options.reverseOrder]
+ * @param {boolean} [options.includeMuted]
+ * @param {boolean} [options.showDeleted]
+ * @param {AbortSignal} [options.signal]
+ * @returns {Promise<Object>} Grouped results keyed by parent ID
+ */
+export const getBatchCommentResponses = async (parentIds, {
+  pageSize,
+  reverseOrder,
+  includeMuted,
+  showDeleted,
+  signal,
+  enableDiscussionBan = false,
+} = {}) => {
+  const url = `${getConfig().LMS_BASE_URL}/api/discussion/v1/batch_responses/`;
+  const params = snakeCaseObject({
+    parentIds: parentIds.join(','),
+    pageSize,
+    requestedFields: buildRequestedFields(enableDiscussionBan),
+    reverseOrder,
+    includeMuted,
+    showDeleted,
+  });
+  const { data } = await getAuthenticatedHttpClient()
+    .get(url, { params, signal });
   return data;
 };

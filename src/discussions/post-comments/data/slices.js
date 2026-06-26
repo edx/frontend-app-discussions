@@ -26,19 +26,45 @@ const commentsSlice = createSlice({
     draftComments: {},
   },
   reducers: {
-    fetchCommentsRequest: (state) => (
-      {
+    fetchBatchCommentResponsesSuccess: (state, { payload }) => {
+      const allCommentsById = {};
+      const allCommentsInComments = {};
+      const allResponsesPagination = {};
+
+      Object.entries(payload.batchResults).forEach(([parentId, data]) => {
+        Object.assign(allCommentsById, data.commentsById);
+        allCommentsInComments[parentId] = data.commentsInComments[parentId] || [];
+        allResponsesPagination[parentId] = {
+          currentPage: data.page,
+          totalPages: data.pagination.numPages,
+          hasMorePages: Boolean(data.pagination.next),
+        };
+      });
+
+      return {
+        ...state,
+        status: RequestStatus.SUCCESSFUL,
+        commentsById: { ...state.commentsById, ...allCommentsById },
+        commentsInComments: { ...state.commentsInComments, ...allCommentsInComments },
+        responsesPagination: { ...state.responsesPagination, ...allResponsesPagination },
+      };
+    },
+    fetchCommentsRequest: (state, { payload }) => {
+      const isPageOne = Boolean(payload?.threadId);
+      return {
         ...state,
         status: RequestStatus.IN_PROGRESS,
-      }
-    ),
+        ...(isPageOne && {
+          commentsInThreads: { ...state.commentsInThreads, [payload.threadId]: [] },
+          commentsInComments: {},
+          responsesPagination: {},
+        }),
+      };
+    },
     fetchCommentsSuccess: (state, { payload }) => {
       const { threadId, page } = payload;
-
       const newState = { ...state };
-
       newState.status = RequestStatus.SUCCESSFUL;
-
       newState.pagination = {
         ...newState.pagination,
         [threadId]: newState.pagination[threadId] || {},
@@ -47,10 +73,13 @@ const commentsSlice = createSlice({
       if (page === 1) {
         newState.commentsInThreads = {
           ...newState.commentsInThreads,
-          [threadId]: payload.commentsInThreads[threadId] ? [...payload.commentsInThreads[threadId]] : [],
+          [threadId]: payload.commentsInThreads[threadId]
+            ? [...payload.commentsInThreads[threadId]]
+            : [],
         };
       } else {
         newState.commentsInThreads = {
+          ...newState.commentsInThreads,
           [threadId]: [
             ...new Set([
               ...(newState.commentsInThreads[threadId] || []),
@@ -71,7 +100,6 @@ const commentsSlice = createSlice({
       };
 
       newState.commentsById = { ...newState.commentsById, ...payload.commentsById };
-
       return newState;
     },
     fetchCommentsFailed: (state) => (
@@ -290,6 +318,7 @@ const commentsSlice = createSlice({
 });
 
 export const {
+  fetchBatchCommentResponsesSuccess,
   fetchCommentResponsesDenied,
   fetchCommentResponsesFailed,
   fetchCommentResponsesRequest,
