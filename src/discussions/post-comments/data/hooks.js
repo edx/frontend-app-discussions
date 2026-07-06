@@ -55,7 +55,11 @@ export function usePostComments(threadType) {
   const { enableInContextSidebar, postId, learnerUsername } = useContext(DiscussionContext);
   const { includeMuted: includeMutedFromContext } = useContext(PostCommentsContext);
   const [isLoading, dispatch] = useDispatchWithState();
-  const comments = useSelector(selectThreadComments(postId, learnerUsername));
+  const commentsSelector = useMemo(
+    () => selectThreadComments(postId, learnerUsername),
+    [postId, learnerUsername],
+  );
+  const comments = useSelector(commentsSelector);
   const reverseOrder = useSelector(selectCommentSortOrder);
   const hasMorePages = useSelector(selectThreadHasMorePages(postId));
   const currentPage = useSelector(selectThreadCurrentPage(postId));
@@ -63,8 +67,8 @@ export function usePostComments(threadType) {
 
   // Check if the post author is muted by the current user
   const thread = useSelector(selectThread(postId));
-  const personalMutedUsers = useSelector(state => state.learners?.mutedUsers?.personal || []);
-  const courseWideMutedUsers = useSelector(state => state.learners?.mutedUsers?.course || []);
+  const personalMutedUsers = useSelector(state => state.learners.mutedUsers.personal);
+  const courseWideMutedUsers = useSelector(state => state.learners.mutedUsers.course);
   const isAuthorMuted = thread?.author
     ? (personalMutedUsers.includes(thread.author) || courseWideMutedUsers.includes(thread.author))
     : false;
@@ -121,15 +125,11 @@ export function usePostComments(threadType) {
 
 export function useCommentsCount(postId) {
   const { learnerUsername } = useContext(DiscussionContext);
-  const discussions = useSelector(selectThreadComments(postId, learnerUsername));
-  const endorsedQuestions = useSelector(selectThreadComments(postId, learnerUsername));
-  const unendorsedQuestions = useSelector(selectThreadComments(postId, learnerUsername));
-
-  const commentsLength = useMemo(() => (
-    [...discussions, ...endorsedQuestions, ...unendorsedQuestions].length
-  ), [discussions, endorsedQuestions, unendorsedQuestions]);
-
-  return commentsLength;
+  const commentsSelector = useMemo(
+    () => selectThreadComments(postId, learnerUsername),
+    [postId, learnerUsername],
+  );
+  return useSelector(commentsSelector).length;
 }
 
 export const useDraftContent = () => {

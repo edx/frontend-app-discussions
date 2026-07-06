@@ -67,9 +67,11 @@ export function normaliseThreads(data, topicIds = null) {
   const threadsById = {};
   let avatars = {};
   const ids = [];
+  const seenInTopics = {};
   if (topicIds) {
     topicIds.forEach(topicId => {
       threadsInTopic[topicId] = [];
+      seenInTopics[topicId] = new Set();
     });
   }
   threads.forEach(
@@ -78,8 +80,10 @@ export function normaliseThreads(data, topicIds = null) {
       ids.push(id);
       if (!threadsInTopic[topicId]) {
         threadsInTopic[topicId] = [];
+        seenInTopics[topicId] = new Set();
       }
-      if (!threadsInTopic[topicId].includes(id)) {
+      if (!seenInTopics[topicId].has(id)) {
+        seenInTopics[topicId].add(id);
         threadsInTopic[topicId].push(id);
       }
       // Normalize editableFields to always be an array
@@ -94,6 +98,8 @@ export function normaliseThreads(data, topicIds = null) {
     ids, threadsById, threadsInTopic, avatars, ...normalized,
   };
 }
+
+const pendingThreadsFetches = new Set();
 
 /**
  * Fetches the threads for the course specified va the threadIds.
@@ -155,6 +161,11 @@ export function fetchThreads(courseId, {
     options.isDeleted = true;
   }
   return async (dispatch, getState) => {
+    const requestKey = `${courseId}|${page}|${options.orderBy}|${options.author}|${options.following}|${options.view}|${options.flagged}|${options.threadType}|${options.textSearch}|${options.cohort}|${options.isDeleted}|${options.includeMuted}|${options.countFlagged}|${(options.topicIds || []).join(',')}`;
+    if (pendingThreadsFetches.has(requestKey)) {
+      return;
+    }
+    pendingThreadsFetches.add(requestKey);
     try {
       dispatch(fetchThreadsRequest({ courseId }));
       const enableDiscussionBan = selectEnableDiscussionBan(getState());
@@ -170,6 +181,8 @@ export function fetchThreads(courseId, {
         dispatch(fetchThreadsFailed());
       }
       logError(error);
+    } finally {
+      pendingThreadsFetches.delete(requestKey);
     }
   };
 }
