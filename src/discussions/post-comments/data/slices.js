@@ -26,12 +26,23 @@ const commentsSlice = createSlice({
     draftComments: {},
   },
   reducers: {
-    fetchCommentsRequest: (state) => (
-      {
+    fetchCommentsRequest: (state, { payload } = {}) => {
+      const newState = {
         ...state,
         status: RequestStatus.IN_PROGRESS,
+      };
+
+      if (payload?.threadId && (!payload?.page || payload.page === 1)) {
+        newState.commentsInThreads = {
+          ...state.commentsInThreads,
+          [payload.threadId]: [],
+        };
+        newState.commentsInComments = {};
+        newState.responsesPagination = {};
       }
-    ),
+
+      return newState;
+    },
     fetchCommentsSuccess: (state, { payload }) => {
       const { threadId, page } = payload;
 

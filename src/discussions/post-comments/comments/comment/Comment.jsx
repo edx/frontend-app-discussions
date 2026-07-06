@@ -195,15 +195,18 @@ const Comment = ({
   // If isSpam is not provided in the API response, default to false
   const isSpamFlagged = isSpam || false;
   useEffect(() => {
-    // If the comment has a parent comment, it won't have any children, so don't fetch them.
     if (hasChildren && showFullThread) {
+      const abortController = new AbortController();
       dispatch(fetchCommentResponses(id, {
         page: 1,
         reverseOrder: sortedOrder,
         includeMuted: shouldIncludeMuted,
         showDeleted,
+        signal: abortController.signal,
       }));
+      return () => { abortController.abort(); };
     }
+    return undefined;
   }, [id, sortedOrder, showDeleted, shouldIncludeMuted]);
 
   const endorseIcons = useMemo(() => (

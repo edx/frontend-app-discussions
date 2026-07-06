@@ -55,7 +55,7 @@ export const getThreadComments = async (threadId, {
     includeMuted,
   });
 
-  const { data } = await getAuthenticatedHttpClient().get(getCommentsApiUrl(), { params: { ...params, signal } });
+  const { data } = await getAuthenticatedHttpClient().get(getCommentsApiUrl(), { params, signal });
   return data;
 };
 
@@ -67,25 +67,18 @@ export const getThreadComments = async (threadId, {
  * @returns {Promise<{}>}
  */
 export const getCommentResponses = async (commentId, {
-  page,
-  pageSize,
-  reverseOrder,
-  showDeleted = false,
-  enableDiscussionBan = false,
-  includeMuted,
+  page, pageSize, reverseOrder, signal, showDeleted, enableDiscussionBan, includeMuted,
 } = {}) => {
   const url = `${getCommentsApiUrl()}${commentId}/`;
-
   const params = snakeCaseObject({
     page,
     pageSize,
     requestedFields: buildRequestedFields(enableDiscussionBan),
-    includeMuted,
     reverseOrder,
     showDeleted,
+    includeMuted,
   });
-
-  const { data } = await getAuthenticatedHttpClient().get(url, { params });
+  const { data } = await getAuthenticatedHttpClient().get(url, { params, signal });
   return data;
 };
 /**

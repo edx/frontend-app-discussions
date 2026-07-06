@@ -92,7 +92,7 @@ export function fetchThreadComments(
 ) {
   return async (dispatch, getState) => {
     try {
-      dispatch(fetchCommentsRequest());
+      dispatch(fetchCommentsRequest({ threadId, page }));
       const enableDiscussionBan = selectEnableDiscussionBan(getState());
       const data = await getThreadComments(threadId, {
         page, reverseOrder, threadType, enableInContextSidebar, showDeleted, enableDiscussionBan, signal, includeMuted,
@@ -114,14 +114,14 @@ export function fetchThreadComments(
 }
 
 export function fetchCommentResponses(commentId, {
-  page = 1, reverseOrder = true, showDeleted = false, includeMuted,
+  page = 1, reverseOrder = true, signal, showDeleted = false, includeMuted,
 } = {}) {
   return async (dispatch, getState) => {
     try {
       dispatch(fetchCommentResponsesRequest({ commentId }));
       const enableDiscussionBan = selectEnableDiscussionBan(getState());
       const data = await getCommentResponses(commentId, {
-        page, reverseOrder, showDeleted, enableDiscussionBan, includeMuted,
+        page, reverseOrder, signal, showDeleted, enableDiscussionBan, includeMuted,
       });
       dispatch(fetchCommentResponsesSuccess({
         ...normaliseComments(camelCaseObject(data)),
@@ -129,6 +129,9 @@ export function fetchCommentResponses(commentId, {
         commentId,
       }));
     } catch (error) {
+      if (error.name === 'AbortError' || error?.code === 'ERR_CANCELED') {
+        return;
+      }
       if (getHttpErrorStatus(error) === 403) {
         dispatch(fetchCommentResponsesDenied());
       } else {
