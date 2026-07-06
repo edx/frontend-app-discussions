@@ -183,6 +183,7 @@ describe('Comment deleted-by banner', () => {
         page: 1,
         reverseOrder: false,
         showDeleted: true,
+        signal: expect.any(AbortSignal),
       });
     });
   });
