@@ -204,7 +204,7 @@ const Comment = ({
         showDeleted,
       }));
     }
-  }, [id, sortedOrder, showDeleted, shouldIncludeMuted]);
+  }, [id, sortedOrder, showDeleted, shouldIncludeMuted, hasChildren, showFullThread, dispatch]);
 
   const endorseIcons = useMemo(() => (
     actions.find(({ action }) => action === EndorsementStatus.ENDORSED)
