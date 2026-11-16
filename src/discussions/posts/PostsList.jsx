@@ -11,6 +11,7 @@ import { AppContext } from '@edx/frontend-platform/react';
 
 import { RequestStatus } from '../../data/constants';
 import DiscussionContext from '../common/context';
+import LoadError from '../common/LoadError';
 import { selectConfigLoadingStatus, selectUserHasModerationPrivileges, selectUserIsStaff } from '../data/selectors';
 import { fetchUserPosts } from '../learners/data/thunks';
 import messages from '../messages';
@@ -84,6 +85,10 @@ const PostsList = ({
     <>
       {!parentIsLoading && postInstances}
       {sortedPostsIds?.length === 0 && loadingStatus === RequestStatus.SUCCESSFUL && <NoResults />}
+      {loadingStatus === RequestStatus.FAILED && !parentIsLoading && (
+        // Without this a failed request leaves the list blank, with no way to retry.
+        <LoadError message={messages.postsLoadError} onRetry={() => loadThreads(topicsIds)} />
+      )}
       {loadingStatus === RequestStatus.IN_PROGRESS || parentIsLoading ? (
         <div className="d-flex justify-content-center p-4 mx-auto my-auto">
           <Spinner animation="border" variant="primary" size="lg" />

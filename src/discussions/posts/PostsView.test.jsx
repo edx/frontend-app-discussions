@@ -140,6 +140,37 @@ describe('PostsView', () => {
       expect(screen.getAllByText(/this is thread-\d+/i)).toHaveLength(threadCount);
     });
 
+    test('offers a retry when posts fail to load, instead of a blank list', async () => {
+      setupStore();
+      let failRequests = true;
+      axiosMock.onGet(threadsApiUrl).reply(() => {
+        if (failRequests) {
+          return [500];
+        }
+        return [200, Factory.build('threadsResult', {}, {
+          topicId: undefined,
+          count: threadCount,
+          threadAttrs: { previewBody: 'thread preview body' },
+          pageSize: 6,
+        })];
+      });
+
+      await act(async () => {
+        await renderComponent();
+      });
+
+      expect(screen.getByText("Posts couldn't be loaded.")).toBeInTheDocument();
+      expect(screen.queryAllByText(/this is thread-\d+/i)).toHaveLength(0);
+
+      failRequests = false;
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+      });
+
+      expect(screen.queryByText("Posts couldn't be loaded.")).not.toBeInTheDocument();
+      expect(screen.getAllByText(/this is thread-\d+/i)).toHaveLength(threadCount);
+    });
+
     test('displays a list of user posts', async () => {
       setupStore();
       axiosMock.onGet(`${coursesApiUrl}${courseId}/learner/`, { username, count_flagged: true })

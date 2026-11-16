@@ -116,6 +116,10 @@ export function fetchThreadComments(
         threadId,
       }));
     } catch (error) {
+      if (signal?.aborted) {
+        // Cancelled because the user moved on; not a failure to show.
+        return;
+      }
       if (getHttpErrorStatus(error) === 403) {
         dispatch(fetchCommentsDenied());
       } else {

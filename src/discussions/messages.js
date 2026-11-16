@@ -331,6 +331,21 @@ const messages = defineMessages({
     defaultMessage: 'No results found',
     description: 'Title on the discussion sidebar when there are now results after filtering',
   },
+  postsLoadError: {
+    id: 'discussions.posts.loadError',
+    defaultMessage: "Posts couldn't be loaded.",
+    description: 'Shown in the posts list when the request for posts failed.',
+  },
+  responsesLoadError: {
+    id: 'discussions.comments.loadError',
+    defaultMessage: "Responses couldn't be loaded.",
+    description: 'Shown under a post when the request for its responses failed.',
+  },
+  loadErrorRetry: {
+    id: 'discussions.loadError.retry',
+    defaultMessage: 'Try again',
+    description: 'Button that repeats a failed request for posts or responses.',
+  },
   differentKeywords: {
     id: 'discussions.sidebar.differentKeywords',
     defaultMessage: 'Try searching different keywords',

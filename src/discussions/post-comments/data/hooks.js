@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { sendTrackEvent } from '@edx/frontend-platform/analytics';
 
-import { PostsStatusFilter } from '../../../data/constants';
+import { PostsStatusFilter, RequestStatus } from '../../../data/constants';
 import useDispatchWithState from '../../../data/hooks';
 import DiscussionContext from '../../common/context';
 import { selectThread } from '../../posts/data/selectors';
@@ -15,7 +15,7 @@ import { markThreadAsRead } from '../../posts/data/thunks';
 import { filterPosts } from '../../utils';
 import PostCommentsContext from '../postCommentsContext';
 import {
-  selectCommentSortOrder, selectDraftComments, selectDraftResponses,
+  selectCommentSortOrder, selectCommentsStatus, selectDraftComments, selectDraftResponses,
   selectThreadComments, selectThreadCurrentPage, selectThreadHasMorePages,
 } from './selectors';
 import { fetchThreadComments } from './thunks';
@@ -96,30 +96,42 @@ export function usePostComments(threadType) {
     trackLoadMoreEvent(postId, params);
   }, [currentPage, threadType, postId, reverseOrder, showDeleted, shouldIncludeMuted]);
 
+  const fetchFirstPage = useCallback((signal) => dispatch(fetchThreadComments(postId, {
+    threadType,
+    page: 1,
+    reverseOrder,
+    enableInContextSidebar,
+    showDeleted,
+    signal,
+    includeMuted: shouldIncludeMuted,
+  })), [postId, threadType, reverseOrder, enableInContextSidebar, showDeleted, shouldIncludeMuted]);
+
   useEffect(() => {
     const abortController = new AbortController();
 
-    dispatch(fetchThreadComments(postId, {
-      threadType,
-      page: 1,
-      reverseOrder,
-      enableInContextSidebar,
-      showDeleted,
-      signal: abortController.signal,
-      includeMuted: shouldIncludeMuted,
-    }));
+    fetchFirstPage(abortController.signal);
 
     return () => {
       abortController.abort();
     };
-  }, [postId, threadType, reverseOrder, enableInContextSidebar, showDeleted, shouldIncludeMuted]);
+  }, [fetchFirstPage]);
+
+  const handleRetry = useCallback(() => fetchFirstPage(), [fetchFirstPage]);
+
+  // The request for this post's responses failed and nothing was loaded. Without this,
+  // the empty list reads as "No responses".
+  const commentsStatus = useSelector(selectCommentsStatus);
+  const hasFailed = !isLoading && commentsStatus === RequestStatus.FAILED
+    && endorsedCommentsIds.length === 0 && unEndorsedCommentsIds.length === 0;
 
   return {
     endorsedCommentsIds,
     unEndorsedCommentsIds,
     hasMorePages,
     isLoading,
+    hasFailed,
     handleLoadMoreResponses,
+    handleRetry,
   };
 }
 

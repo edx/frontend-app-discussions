@@ -7,6 +7,7 @@ import { useSelector } from 'react-redux';
 import { useIntl } from '@edx/frontend-platform/i18n';
 
 import { ThreadType } from '../../../data/constants';
+import LoadError from '../../common/LoadError';
 import withPostingRestrictions from '../../common/withPostingRestrictions';
 import { useUserPostingEnabled } from '../../data/hooks';
 import {
@@ -14,6 +15,7 @@ import {
   selectIsUserBanned,
   selectShouldShowEmailConfirmation,
 } from '../../data/selectors';
+import discussionsMessages from '../../messages';
 import { isLastElementOfList } from '../../utils';
 import { usePostComments } from '../data/hooks';
 import messages from '../messages';
@@ -34,7 +36,9 @@ const CommentsView = ({ threadType, openRestrictionDialogue }) => {
     unEndorsedCommentsIds,
     hasMorePages,
     isLoading,
+    hasFailed,
     handleLoadMoreResponses,
+    handleRetry,
   } = usePostComments(threadType);
 
   const handleAddResponse = useCallback(() => {
@@ -70,6 +74,10 @@ const CommentsView = ({ threadType, openRestrictionDialogue }) => {
       ))}
     </div>
   ), []);
+
+  if (hasFailed) {
+    return <LoadError message={discussionsMessages.responsesLoadError} onRetry={handleRetry} />;
+  }
 
   return (
     <>
