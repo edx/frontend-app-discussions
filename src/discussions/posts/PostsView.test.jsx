@@ -171,6 +171,48 @@ describe('PostsView', () => {
       expect(screen.getAllByText(/this is thread-\d+/i)).toHaveLength(threadCount);
     });
 
+    test('retries the page that failed when loading more posts fails', async () => {
+      setupStore();
+      let failPageTwo = true;
+      axiosMock.onGet(threadsApiUrl).reply(({ params }) => {
+        if (params.page === 2 && failPageTwo) {
+          return [500];
+        }
+        return [200, Factory.build('threadsResult', {}, {
+          topicId: undefined,
+          count: 6,
+          page: params.page,
+          pageSize: 3,
+          threadAttrs: { previewBody: 'thread preview body' },
+        })];
+      });
+
+      await act(async () => {
+        await renderComponent();
+      });
+      expect(screen.getAllByText(/this is thread-\d+/i)).toHaveLength(3);
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Load more posts' }));
+      });
+
+      // The posts already shown stay, with the error and retry below them.
+      expect(screen.getByText("Posts couldn't be loaded.")).toBeInTheDocument();
+      expect(screen.getAllByText(/this is thread-\d+/i)).toHaveLength(3);
+
+      failPageTwo = false;
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+      });
+
+      const requestedPages = axiosMock.history.get
+        .filter(({ url }) => url === threadsApiUrl)
+        .map(({ params }) => params.page);
+      expect(requestedPages[requestedPages.length - 1]).toEqual(2);
+      expect(screen.queryByText("Posts couldn't be loaded.")).not.toBeInTheDocument();
+      expect(screen.getAllByText(/this is thread-\d+/i)).toHaveLength(6);
+    });
+
     test('displays a list of user posts', async () => {
       setupStore();
       axiosMock.onGet(`${coursesApiUrl}${courseId}/learner/`, { username, count_flagged: true })

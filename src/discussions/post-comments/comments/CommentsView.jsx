@@ -15,7 +15,6 @@ import {
   selectIsUserBanned,
   selectShouldShowEmailConfirmation,
 } from '../../data/selectors';
-import discussionsMessages from '../../messages';
 import { isLastElementOfList } from '../../utils';
 import { usePostComments } from '../data/hooks';
 import messages from '../messages';
@@ -75,10 +74,6 @@ const CommentsView = ({ threadType, openRestrictionDialogue }) => {
     </div>
   ), []);
 
-  if (hasFailed) {
-    return <LoadError message={discussionsMessages.responsesLoadError} onRetry={handleRetry} />;
-  }
-
   return (
     <>
       {(!isLoading || hasMorePages) && (
@@ -89,7 +84,10 @@ const CommentsView = ({ threadType, openRestrictionDialogue }) => {
           {handleComments(endorsedCommentsIds)}
         </>
         )}
-        {handleDefinition(messages.responseCount, unEndorsedCommentsIds.length)}
+        {hasFailed ? (
+          // In place of "No responses", which a failed request would otherwise show.
+          <LoadError message={messages.responsesLoadError} onRetry={handleRetry} />
+        ) : handleDefinition(messages.responseCount, unEndorsedCommentsIds.length)}
         {unEndorsedCommentsIds.length > 0 && handleComments(unEndorsedCommentsIds)}
         {hasMorePages && !isLoading && (!!unEndorsedCommentsIds.length || !!endorsedCommentsIds.length) && (
         <Button

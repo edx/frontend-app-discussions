@@ -4,7 +4,7 @@ import { Factory } from 'rosie';
 import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
 import { initializeMockApp } from '@edx/frontend-platform/testing';
 
-import { ThreadType } from '../../../data/constants';
+import { RequestStatus, ThreadType } from '../../../data/constants';
 import { initializeStore } from '../../../store';
 import executeThunk from '../../../test-utils';
 import { setContentCreationRateLimited } from '../../data/slices';
@@ -37,6 +37,26 @@ describe('Comments/Responses data layer tests', () => {
 
   afterEach(() => {
     axiosMock.reset();
+  });
+
+  test('reports a failed request for responses', async () => {
+    axiosMock.onGet(commentsApiUrl).reply(500);
+
+    const result = await store.dispatch(fetchThreadComments('test-thread'));
+
+    expect(result).toEqual(RequestStatus.FAILED);
+    expect(store.getState().comments.status).toEqual(RequestStatus.FAILED);
+  });
+
+  test('does not record a cancelled request for responses as a failure', async () => {
+    axiosMock.onGet(commentsApiUrl).reply(500);
+    const abortController = new AbortController();
+    abortController.abort();
+
+    const result = await store.dispatch(fetchThreadComments('test-thread', { signal: abortController.signal }));
+
+    expect(result).toBeUndefined();
+    expect(store.getState().comments.status).not.toEqual(RequestStatus.FAILED);
   });
 
   test.each([

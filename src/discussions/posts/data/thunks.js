@@ -2,7 +2,7 @@ import { camelCaseObject } from '@edx/frontend-platform';
 import { logError } from '@edx/frontend-platform/logging';
 
 import {
-  PostsStatusFilter, ThreadType,
+  PostsStatusFilter, RequestStatus, ThreadType,
 } from '../../../data/constants';
 import { selectEnableDiscussionBan } from '../../data/selectors';
 import { setContentCreationRateLimited } from '../../data/slices';
@@ -163,7 +163,8 @@ export function fetchThreads(courseId, {
   return async (dispatch, getState) => {
     const requestKey = `${courseId}|${page}|${options.orderBy}|${options.author}|${options.following}|${options.view}|${options.flagged}|${options.threadType}|${options.textSearch}|${options.cohort}|${options.isDeleted}|${options.includeMuted}|${options.countFlagged}|${(options.topicIds || []).join(',')}`;
     if (pendingThreadsFetches.has(requestKey)) {
-      return;
+      // The same request is already in flight; its own caller handles the result.
+      return undefined;
     }
     pendingThreadsFetches.add(requestKey);
     try {
@@ -174,13 +175,15 @@ export function fetchThreads(courseId, {
       dispatch(fetchThreadsSuccess({
         ...normalisedData, page, author, textSearchRewrite: data.text_search_rewrite, isFilterChanged,
       }));
+      return RequestStatus.SUCCESSFUL;
     } catch (error) {
+      logError(error);
       if (getHttpErrorStatus(error) === 403) {
         dispatch(fetchThreadsDenied());
-      } else {
-        dispatch(fetchThreadsFailed());
+        return RequestStatus.DENIED;
       }
-      logError(error);
+      dispatch(fetchThreadsFailed());
+      return RequestStatus.FAILED;
     } finally {
       pendingThreadsFetches.delete(requestKey);
     }

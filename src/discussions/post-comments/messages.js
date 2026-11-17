@@ -35,6 +35,11 @@ const messages = defineMessages({
     defaultMessage: 'Back to list',
     description: 'Back to Posts list button text',
   },
+  responsesLoadError: {
+    id: 'discussions.comments.loadError',
+    defaultMessage: "Responses couldn't be loaded.",
+    description: 'Shown under a post, in place of the response count, when the request for its responses failed.',
+  },
   responseCount: {
     id: 'discussions.comments.comment.responseCount',
     defaultMessage: `{num, plural,

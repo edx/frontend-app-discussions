@@ -1,6 +1,7 @@
 import { camelCaseObject } from '@edx/frontend-platform';
 import { logError } from '@edx/frontend-platform/logging';
 
+import { RequestStatus } from '../../../data/constants';
 import { selectEnableDiscussionBan } from '../../data/selectors';
 import { setContentCreationRateLimited } from '../../data/slices';
 import { updateThreadAbuseFlaggedCount } from '../../posts/data/slices';
@@ -101,7 +102,8 @@ export function fetchThreadComments(
   return async (dispatch, getState) => {
     const requestKey = `${threadId}-p${page}-r${reverseOrder}-d${showDeleted}-m${includeMuted}`;
     if (pendingThreadFetches.has(requestKey)) {
-      return;
+      // The same request is already in flight; its own caller handles the result.
+      return undefined;
     }
     pendingThreadFetches.add(requestKey);
     try {
@@ -115,17 +117,20 @@ export function fetchThreadComments(
         page,
         threadId,
       }));
+      return RequestStatus.SUCCESSFUL;
     } catch (error) {
       if (signal?.aborted) {
-        // Cancelled because the user moved on; not a failure to show.
-        return;
-      }
-      if (getHttpErrorStatus(error) === 403) {
-        dispatch(fetchCommentsDenied());
-      } else {
-        dispatch(fetchCommentsFailed());
+        // Cancelled because the user moved on. That isn't a failure to show, so
+        // nothing reads the result; the error UI is tracked per post by the caller.
+        return undefined;
       }
       logError(error);
+      if (getHttpErrorStatus(error) === 403) {
+        dispatch(fetchCommentsDenied());
+        return RequestStatus.DENIED;
+      }
+      dispatch(fetchCommentsFailed());
+      return RequestStatus.FAILED;
     } finally {
       pendingThreadFetches.delete(requestKey);
     }

@@ -336,11 +336,6 @@ const messages = defineMessages({
     defaultMessage: "Posts couldn't be loaded.",
     description: 'Shown in the posts list when the request for posts failed.',
   },
-  responsesLoadError: {
-    id: 'discussions.comments.loadError',
-    defaultMessage: "Responses couldn't be loaded.",
-    description: 'Shown under a post when the request for its responses failed.',
-  },
   loadErrorRetry: {
     id: 'discussions.loadError.retry',
     defaultMessage: 'Try again',

@@ -303,6 +303,25 @@ describe('ThreadView', () => {
       expect(screen.queryByText("Responses couldn't be loaded.")).not.toBeInTheDocument();
     });
 
+    it('should show "No responses", not an error, for a post with no responses', async () => {
+      axiosMock.onGet(commentsApiUrl).reply(200, Factory.build('commentsResult', {}, {
+        threadId: discussionPostId,
+        count: 0,
+      }));
+      await waitFor(() => renderComponent(discussionPostId));
+
+      expect(await screen.findByText('No responses')).toBeInTheDocument();
+      expect(screen.queryByText("Responses couldn't be loaded.")).not.toBeInTheDocument();
+    });
+
+    it('should not offer a retry when the responses are denied (403)', async () => {
+      axiosMock.onGet(commentsApiUrl).reply(403);
+      await waitFor(() => renderComponent(discussionPostId));
+
+      expect(await screen.findByText('No responses')).toBeInTheDocument();
+      expect(screen.queryByText("Responses couldn't be loaded.")).not.toBeInTheDocument();
+    });
+
     it('should not show post footer', async () => {
       Factory.resetAll();
       await getThreadAPIResponse({

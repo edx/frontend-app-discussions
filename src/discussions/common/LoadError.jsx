@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import { Button } from '@openedx/paragon';
@@ -13,11 +13,22 @@ import messages from '../messages';
  */
 const LoadError = ({ message, onRetry }) => {
   const intl = useIntl();
+  const [isRetrying, setIsRetrying] = useState(false);
+
+  // Disabled until the retry settles, so repeated clicks don't queue requests.
+  const handleRetry = useCallback(async () => {
+    setIsRetrying(true);
+    try {
+      await onRetry();
+    } finally {
+      setIsRetrying(false);
+    }
+  }, [onRetry]);
 
   return (
     <div className="d-flex flex-column align-items-center text-center mx-4 my-3" role="alert">
       <span className="text-gray-700 mb-2">{intl.formatMessage(message)}</span>
-      <Button variant="outline-primary" size="sm" onClick={onRetry}>
+      <Button variant="outline-primary" size="sm" onClick={handleRetry} disabled={isRetrying}>
         {intl.formatMessage(messages.loadErrorRetry)}
       </Button>
     </div>

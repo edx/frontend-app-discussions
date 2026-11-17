@@ -1,5 +1,5 @@
 import {
-  useCallback, useContext, useEffect, useMemo,
+  useCallback, useContext, useEffect, useMemo, useRef, useState,
 } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
@@ -15,7 +15,7 @@ import { markThreadAsRead } from '../../posts/data/thunks';
 import { filterPosts } from '../../utils';
 import PostCommentsContext from '../postCommentsContext';
 import {
-  selectCommentSortOrder, selectCommentsStatus, selectDraftComments, selectDraftResponses,
+  selectCommentSortOrder, selectDraftComments, selectDraftResponses,
   selectThreadComments, selectThreadCurrentPage, selectThreadHasMorePages,
 } from './selectors';
 import { fetchThreadComments } from './thunks';
@@ -96,32 +96,44 @@ export function usePostComments(threadType) {
     trackLoadMoreEvent(postId, params);
   }, [currentPage, threadType, postId, reverseOrder, showDeleted, shouldIncludeMuted]);
 
-  const fetchFirstPage = useCallback((signal) => dispatch(fetchThreadComments(postId, {
-    threadType,
-    page: 1,
-    reverseOrder,
-    enableInContextSidebar,
-    showDeleted,
-    signal,
-    includeMuted: shouldIncludeMuted,
-  })), [postId, threadType, reverseOrder, enableInContextSidebar, showDeleted, shouldIncludeMuted]);
+  // The post whose first page of responses last failed to load. It is tracked here,
+  // not read from the shared comments status, so another post's failure (or a failed
+  // load of replies) never shows as this post's error.
+  const [failedPostId, setFailedPostId] = useState(null);
+  const firstPageRequest = useRef(null);
+
+  // Used for the initial load and for "Try again". A new load, a change of post or
+  // unmounting aborts the one before, so a late result is never applied.
+  const fetchFirstPage = useCallback(async () => {
+    firstPageRequest.current?.abort();
+    const abortController = new AbortController();
+    firstPageRequest.current = abortController;
+
+    const result = await dispatch(fetchThreadComments(postId, {
+      threadType,
+      page: 1,
+      reverseOrder,
+      enableInContextSidebar,
+      showDeleted,
+      signal: abortController.signal,
+      includeMuted: shouldIncludeMuted,
+    }));
+    if (!abortController.signal.aborted) {
+      setFailedPostId(result === RequestStatus.FAILED ? postId : null);
+    }
+  }, [postId, threadType, reverseOrder, enableInContextSidebar, showDeleted, shouldIncludeMuted]);
 
   useEffect(() => {
-    const abortController = new AbortController();
-
-    fetchFirstPage(abortController.signal);
+    fetchFirstPage();
 
     return () => {
-      abortController.abort();
+      firstPageRequest.current?.abort();
     };
   }, [fetchFirstPage]);
 
-  const handleRetry = useCallback(() => fetchFirstPage(), [fetchFirstPage]);
-
-  // The request for this post's responses failed and nothing was loaded. Without this,
-  // the empty list reads as "No responses".
-  const commentsStatus = useSelector(selectCommentsStatus);
-  const hasFailed = !isLoading && commentsStatus === RequestStatus.FAILED
+  // This post's responses failed to load and nothing was loaded. Without this, the
+  // empty list reads as "No responses".
+  const hasFailed = !isLoading && failedPostId === postId
     && endorsedCommentsIds.length === 0 && unEndorsedCommentsIds.length === 0;
 
   return {
@@ -131,7 +143,7 @@ export function usePostComments(threadType) {
     isLoading,
     hasFailed,
     handleLoadMoreResponses,
-    handleRetry,
+    handleRetry: fetchFirstPage,
   };
 }
 
