@@ -85,7 +85,10 @@ function normaliseComments(data) {
   };
 }
 
-const pendingThreadFetches = new Set();
+// In-flight requests by key. Each value is that request's own entry, holding its
+// abort signal, so a cancelled request never blocks an identical new one, and
+// only the request that owns the key removes it.
+const pendingThreadFetches = new Map();
 
 export function fetchThreadComments(
   threadId,
@@ -101,11 +104,13 @@ export function fetchThreadComments(
 ) {
   return async (dispatch, getState) => {
     const requestKey = `${threadId}-p${page}-r${reverseOrder}-d${showDeleted}-m${includeMuted}`;
-    if (pendingThreadFetches.has(requestKey)) {
+    const pending = pendingThreadFetches.get(requestKey);
+    if (pending && !pending.signal?.aborted) {
       // The same request is already in flight; its own caller handles the result.
       return undefined;
     }
-    pendingThreadFetches.add(requestKey);
+    const entry = { signal };
+    pendingThreadFetches.set(requestKey, entry);
     try {
       dispatch(fetchCommentsRequest());
       const enableDiscussionBan = selectEnableDiscussionBan(getState());
@@ -132,7 +137,10 @@ export function fetchThreadComments(
       dispatch(fetchCommentsFailed());
       return RequestStatus.FAILED;
     } finally {
-      pendingThreadFetches.delete(requestKey);
+      // A newer request may have taken over the key after this one was cancelled.
+      if (pendingThreadFetches.get(requestKey) === entry) {
+        pendingThreadFetches.delete(requestKey);
+      }
     }
   };
 }

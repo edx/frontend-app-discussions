@@ -101,7 +101,7 @@ const PostsList = ({
   return (
     <>
       {!parentIsLoading && postInstances}
-      {sortedPostsIds?.length === 0 && loadingStatus === RequestStatus.SUCCESSFUL && <NoResults />}
+      {sortedPostsIds?.length === 0 && loadingStatus === RequestStatus.SUCCESSFUL && !failedLoad && <NoResults />}
       {failedLoad && loadingStatus !== RequestStatus.IN_PROGRESS && !parentIsLoading && (
         // Without this a failed request leaves the list blank, with no way to retry.
         <LoadError message={messages.postsLoadError} onRetry={retryFailedLoad} />
