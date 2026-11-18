@@ -20,8 +20,9 @@ export default function useDispatchWithState() {
 
   const dispatchWithState = async (thunk) => {
     setDispatching(true);
-    await dispatch(thunk);
+    const result = await dispatch(thunk);
     setDispatching(false);
+    return result;
   };
 
   return [

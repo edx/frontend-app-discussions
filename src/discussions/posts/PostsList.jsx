@@ -1,5 +1,5 @@
 import React, {
-  useCallback, useContext, useEffect, useMemo,
+  useCallback, useContext, useEffect, useMemo, useRef, useState,
 } from 'react';
 import PropTypes from 'prop-types';
 
@@ -11,6 +11,7 @@ import { AppContext } from '@edx/frontend-platform/react';
 
 import { RequestStatus } from '../../data/constants';
 import DiscussionContext from '../common/context';
+import LoadError from '../common/LoadError';
 import { selectConfigLoadingStatus, selectUserHasModerationPrivileges, selectUserIsStaff } from '../data/selectors';
 import { fetchUserPosts } from '../learners/data/thunks';
 import messages from '../messages';
@@ -39,7 +40,13 @@ const PostsList = ({
   const sortedPostsIds = usePostList(postsIds);
   const showOwnPosts = page === 'my-posts';
 
-  const loadThreads = useCallback((topicIds, pageNum = undefined, isFilterChanged = false) => {
+  // The arguments of this list's latest load, kept when it failed so "Try again"
+  // repeats that same load (including a "Load more" page). It is tracked here, not
+  // read from the shared threads status, so another list's failure doesn't show here.
+  const [failedLoad, setFailedLoad] = useState(null);
+  const latestLoadKey = useRef(null);
+
+  const loadThreads = useCallback(async (topicIds, pageNum = undefined, isFilterChanged = false) => {
     const params = {
       orderBy,
       filters,
@@ -50,12 +57,23 @@ const PostsList = ({
       isFilterChanged,
     };
 
-    if (showOwnPosts && filters.search === '') {
-      dispatch(fetchUserPosts(courseId, params));
-    } else {
-      dispatch(fetchThreads(courseId, params));
+    // Identifies the request. A repeat of an in-flight request is skipped by the
+    // thunk, so the first call's result still counts; a different, newer request
+    // makes the older result stale.
+    const loadKey = JSON.stringify([courseId, orderBy, filters, showOwnPosts, topicIds, pageNum ?? 1]);
+    latestLoadKey.current = loadKey;
+    setFailedLoad(null);
+    const result = await dispatch(showOwnPosts && filters.search === ''
+      ? fetchUserPosts(courseId, params)
+      : fetchThreads(courseId, params));
+    if (latestLoadKey.current === loadKey && result === RequestStatus.FAILED) {
+      setFailedLoad({ topicIds, pageNum, isFilterChanged });
     }
   }, [courseId, orderBy, filters, showOwnPosts, authenticatedUser.username, userHasModerationPrivileges, userIsStaff]);
+
+  const retryFailedLoad = useCallback(() => (
+    failedLoad && loadThreads(failedLoad.topicIds, failedLoad.pageNum, failedLoad.isFilterChanged)
+  ), [failedLoad, loadThreads]);
 
   useEffect(() => {
     if (topicsIds !== undefined && configStatus === RequestStatus.SUCCESSFUL) {
@@ -83,7 +101,11 @@ const PostsList = ({
   return (
     <>
       {!parentIsLoading && postInstances}
-      {sortedPostsIds?.length === 0 && loadingStatus === RequestStatus.SUCCESSFUL && <NoResults />}
+      {sortedPostsIds?.length === 0 && loadingStatus === RequestStatus.SUCCESSFUL && !failedLoad && <NoResults />}
+      {failedLoad && loadingStatus !== RequestStatus.IN_PROGRESS && !parentIsLoading && (
+        // Without this a failed request leaves the list blank, with no way to retry.
+        <LoadError message={messages.postsLoadError} onRetry={retryFailedLoad} />
+      )}
       {loadingStatus === RequestStatus.IN_PROGRESS || parentIsLoading ? (
         <div className="d-flex justify-content-center p-4 mx-auto my-auto">
           <Spinner animation="border" variant="primary" size="lg" />

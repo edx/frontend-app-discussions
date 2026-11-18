@@ -8,7 +8,7 @@ import {
   unbanUser as unbanUserApi,
 } from '../../../data/api/moderation';
 import {
-  PostsStatusFilter, ThreadType,
+  PostsStatusFilter, RequestStatus, ThreadType,
 } from '../../../data/constants';
 import { updateAuthorBanStatus as updateCommentAuthorBanStatus } from '../../post-comments/data/slices';
 import {
@@ -152,13 +152,15 @@ export function fetchUserPosts(courseId, {
       const normalisedData = normaliseThreads(camelCaseObject(data));
 
       dispatch(fetchThreadsSuccess({ ...normalisedData, page, author }));
+      return RequestStatus.SUCCESSFUL;
     } catch (error) {
+      logError(error);
       if (getHttpErrorStatus(error) === 403) {
         dispatch(fetchThreadsDenied());
-      } else {
-        dispatch(fetchThreadsFailed());
+        return RequestStatus.DENIED;
       }
-      logError(error);
+      dispatch(fetchThreadsFailed());
+      return RequestStatus.FAILED;
     }
   };
 }

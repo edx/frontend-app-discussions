@@ -7,6 +7,7 @@ import { useSelector } from 'react-redux';
 import { useIntl } from '@edx/frontend-platform/i18n';
 
 import { ThreadType } from '../../../data/constants';
+import LoadError from '../../common/LoadError';
 import withPostingRestrictions from '../../common/withPostingRestrictions';
 import { useUserPostingEnabled } from '../../data/hooks';
 import {
@@ -34,7 +35,9 @@ const CommentsView = ({ threadType, openRestrictionDialogue }) => {
     unEndorsedCommentsIds,
     hasMorePages,
     isLoading,
+    hasFailed,
     handleLoadMoreResponses,
+    handleRetry,
   } = usePostComments(threadType);
 
   const handleAddResponse = useCallback(() => {
@@ -81,7 +84,10 @@ const CommentsView = ({ threadType, openRestrictionDialogue }) => {
           {handleComments(endorsedCommentsIds)}
         </>
         )}
-        {handleDefinition(messages.responseCount, unEndorsedCommentsIds.length)}
+        {hasFailed ? (
+          // In place of "No responses", which a failed request would otherwise show.
+          <LoadError message={messages.responsesLoadError} onRetry={handleRetry} />
+        ) : handleDefinition(messages.responseCount, unEndorsedCommentsIds.length)}
         {unEndorsedCommentsIds.length > 0 && handleComments(unEndorsedCommentsIds)}
         {hasMorePages && !isLoading && (!!unEndorsedCommentsIds.length || !!endorsedCommentsIds.length) && (
         <Button

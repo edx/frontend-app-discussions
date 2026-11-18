@@ -1,6 +1,7 @@
 import { camelCaseObject } from '@edx/frontend-platform';
 import { logError } from '@edx/frontend-platform/logging';
 
+import { RequestStatus } from '../../../data/constants';
 import { selectEnableDiscussionBan } from '../../data/selectors';
 import { setContentCreationRateLimited } from '../../data/slices';
 import { updateThreadAbuseFlaggedCount } from '../../posts/data/slices';
@@ -84,7 +85,10 @@ function normaliseComments(data) {
   };
 }
 
-const pendingThreadFetches = new Set();
+// In-flight requests by key. Each value is that request's own entry, holding its
+// abort signal, so a cancelled request never blocks an identical new one, and
+// only the request that owns the key removes it.
+const pendingThreadFetches = new Map();
 
 export function fetchThreadComments(
   threadId,
@@ -100,10 +104,13 @@ export function fetchThreadComments(
 ) {
   return async (dispatch, getState) => {
     const requestKey = `${threadId}-p${page}-r${reverseOrder}-d${showDeleted}-m${includeMuted}`;
-    if (pendingThreadFetches.has(requestKey)) {
-      return;
+    const pending = pendingThreadFetches.get(requestKey);
+    if (pending && !pending.signal?.aborted) {
+      // The same request is already in flight; its own caller handles the result.
+      return undefined;
     }
-    pendingThreadFetches.add(requestKey);
+    const entry = { signal };
+    pendingThreadFetches.set(requestKey, entry);
     try {
       dispatch(fetchCommentsRequest());
       const enableDiscussionBan = selectEnableDiscussionBan(getState());
@@ -115,15 +122,25 @@ export function fetchThreadComments(
         page,
         threadId,
       }));
+      return RequestStatus.SUCCESSFUL;
     } catch (error) {
-      if (getHttpErrorStatus(error) === 403) {
-        dispatch(fetchCommentsDenied());
-      } else {
-        dispatch(fetchCommentsFailed());
+      if (signal?.aborted) {
+        // Cancelled because the user moved on. That isn't a failure to show, so
+        // nothing reads the result; the error UI is tracked per post by the caller.
+        return undefined;
       }
       logError(error);
+      if (getHttpErrorStatus(error) === 403) {
+        dispatch(fetchCommentsDenied());
+        return RequestStatus.DENIED;
+      }
+      dispatch(fetchCommentsFailed());
+      return RequestStatus.FAILED;
     } finally {
-      pendingThreadFetches.delete(requestKey);
+      // A newer request may have taken over the key after this one was cancelled.
+      if (pendingThreadFetches.get(requestKey) === entry) {
+        pendingThreadFetches.delete(requestKey);
+      }
     }
   };
 }

@@ -4,7 +4,7 @@ import { Factory } from 'rosie';
 import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
 import { initializeMockApp } from '@edx/frontend-platform/testing';
 
-import { ThreadType } from '../../../data/constants';
+import { RequestStatus, ThreadType } from '../../../data/constants';
 import { initializeStore } from '../../../store';
 import executeThunk from '../../../test-utils';
 import { setContentCreationRateLimited } from '../../data/slices';
@@ -37,6 +37,56 @@ describe('Comments/Responses data layer tests', () => {
 
   afterEach(() => {
     axiosMock.reset();
+  });
+
+  test('reports a failed request for responses', async () => {
+    axiosMock.onGet(commentsApiUrl).reply(500);
+
+    const result = await store.dispatch(fetchThreadComments('test-thread'));
+
+    expect(result).toEqual(RequestStatus.FAILED);
+    expect(store.getState().comments.status).toEqual(RequestStatus.FAILED);
+  });
+
+  test('does not record a cancelled request for responses as a failure', async () => {
+    axiosMock.onGet(commentsApiUrl).reply(500);
+    const abortController = new AbortController();
+    abortController.abort();
+
+    const result = await store.dispatch(fetchThreadComments('test-thread', { signal: abortController.signal }));
+
+    expect(result).toBeUndefined();
+    expect(store.getState().comments.status).not.toEqual(RequestStatus.FAILED);
+  });
+
+  test('a cancelled request for responses does not block an identical new one', async () => {
+    axiosMock.onGet(commentsApiUrl).reply(200, Factory.build('commentsResult'));
+    const cancelled = new AbortController();
+
+    const cancelledCall = store.dispatch(fetchThreadComments('test-thread', { signal: cancelled.signal }));
+    cancelled.abort();
+    const result = await store.dispatch(
+      fetchThreadComments('test-thread', { signal: new AbortController().signal }),
+    );
+    await cancelledCall;
+
+    expect(result).toEqual(RequestStatus.SUCCESSFUL);
+    expect(axiosMock.history.get.filter(({ url }) => url === commentsApiUrl)).toHaveLength(2);
+    expect(store.getState().comments.commentsInThreads['test-thread'])
+      .toEqual(['comment-1', 'comment-2', 'comment-3']);
+  });
+
+  test('an identical request for responses already in flight is not sent again', async () => {
+    axiosMock.onGet(commentsApiUrl).reply(200, Factory.build('commentsResult'));
+
+    const [first, repeat] = await Promise.all([
+      store.dispatch(fetchThreadComments('test-thread')),
+      store.dispatch(fetchThreadComments('test-thread')),
+    ]);
+
+    expect(first).toEqual(RequestStatus.SUCCESSFUL);
+    expect(repeat).toBeUndefined();
+    expect(axiosMock.history.get.filter(({ url }) => url === commentsApiUrl)).toHaveLength(1);
   });
 
   test.each([
